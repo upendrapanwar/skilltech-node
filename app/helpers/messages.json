@@ -1,0 +1,34 @@
+{
+    "common": {
+        "400_error": "Bad Request.",
+        "no_user_err": "User not found.",
+        "no_data_err": "Data not found.",
+        "invalid": "Invalid inputs",
+        "success": "Signup successfully.",
+        "error": "Signup failed."
+    },
+    "user": {
+        "signup": {
+            "success": "Signup successfully.",
+            "error": "Signup failed."
+        },
+        "login": {
+            "success": "Login successfully.",
+            "error": "Invalid login credentials.",
+            "active": "User not activated."
+        },
+        "password": {
+            "verif_link": "Verification link sent successfully, please check your email inbox.",
+            "verif_link_err": "Verification link is not valid.",
+            "email_exist": "Email is not registered with us.",
+            "reset_success": "Password reset successfully.",
+            "update_success": "Password updated successfully.",
+            "confirm_pass_err": "Confirm password not matched.",
+            "old_pass_err": "Old password not matched"
+        },
+        "profile": {
+            "update_success": "Profile updated successfully."
+        }
+
+    } 
+}
