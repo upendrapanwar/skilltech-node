@@ -69,7 +69,7 @@ const options = {
             },
         },
         servers: [{
-            url: "https://skilltech-node-eljl.onrender.com",
+            url: SWAG_URL + ':' + PORT,
             description: ENV + ' server',
         }, ],
     },
