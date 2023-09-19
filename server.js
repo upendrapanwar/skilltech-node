@@ -76,11 +76,14 @@ const options = {
     apis: ['./app/swagger_operations/*.js'],
 };
 const specs = swaggerJsdoc(options);
+console.log('SWAG_URL',SWAG_URL)
 app.use(
     "/documentation",
     swaggerUi.serve,
     swaggerUi.setup(specs)
 );
+console.log(swaggerUi.serve)
+console.log(swaggerUi.setup(specs))
 var certOptions = {
     key: fs.readFileSync("./cert/key.pem", 'utf8'),
     cert: fs.readFileSync("./cert/cert.pem", 'utf8')
