@@ -69,7 +69,7 @@ const options = {
             },
         },
         servers: [{
-            url: SWAG_URL,
+            url: "https://skilltech-node-eljl.onrender.com",
             description: ENV + ' server',
         }, ],
     },
@@ -82,8 +82,7 @@ app.use(
     swaggerUi.serve,
     swaggerUi.setup(specs)
 );
-console.log(swaggerUi.serve)
-console.log(swaggerUi.setup(specs))
+
 var certOptions = {
     key: fs.readFileSync("./cert/key.pem", 'utf8'),
     cert: fs.readFileSync("./cert/cert.pem", 'utf8')
