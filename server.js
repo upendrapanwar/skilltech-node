@@ -15,18 +15,18 @@ const swaggerUi = require('swagger-ui-express');
 const ENV = config.app_env;
 var SWAG_URL = (ENV == 'local') ? config.local_url : config.dev_url;
 var PORT = (ENV == 'local') ? config.local_port : config.dev_port;
-/*var corsOptions = {
+var corsOptions = {
   origin: '*',
   credentials: true
-}*/
+}
 app.get('/', function(req, res) { res.redirect('/documentation'); });
 
-//app.use(jwt());
+app.use(jwt());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(cors());
-//app.use(cors(corsOptions));
+//app.use(cors());
+app.use(cors(corsOptions));
 
 app.use(bodyParser.json());
 app.use(express.static(__dirname));
