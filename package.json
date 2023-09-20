@@ -4,16 +4,16 @@
   "description": "This manages all the api call and database operations",
   "main": "server.js",
   "scripts": {
-    "start":"node server.js",
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {
     "node": "*"
   },
-
   "author": "skilltech",
   "license": "ISC",
   "dependencies": {
+    "@apidevtools/swagger-parser": "^10.1.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
@@ -23,6 +23,7 @@
     "fs-extra": "^11.1.1",
     "html-webpack-plugin": "^5.5.3",
     "https": "^1.0.0",
+    "install-peerdeps": "^3.0.3",
     "joi": "^17.10.0",
     "joi-objectid": "^4.0.2",
     "jsonwebtoken": "^9.0.1",
