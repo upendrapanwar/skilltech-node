@@ -22,7 +22,7 @@ var corsOptions = {
 }
 app.get('/api/v1', function(req, res) { res.redirect('/documentation'); });
 
-app.use(jwt());
+//app.use(jwt());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
