@@ -69,7 +69,7 @@ const options = {
             },
         },
         servers: [{
-            url: SWAG_URL + ':' + PORT,
+            url: SWAG_URL,
             description: ENV + ' server',
         }, ],
     },
