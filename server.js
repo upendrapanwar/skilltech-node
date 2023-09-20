@@ -14,7 +14,7 @@ const swaggerUi = require('swagger-ui-express');
 
 const ENV = config.app_env;
 var SWAG_URL = (ENV == 'local') ? config.local_url : config.dev_url;
-var PORT = (ENV == 'local') ? config.local_port : config.dev_port;
+//var PORT = (ENV == 'local') ? config.local_port : config.dev_port;
 
 var corsOptions = {
   origin: '*',
