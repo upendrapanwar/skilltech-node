@@ -11,6 +11,7 @@ const https = require('https');
 const fs = require('fs');
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require('swagger-ui-express');
+var cron = require('node-cron');
 
 const ENV = config.app_env;
 var SWAG_URL = (ENV == 'local') ? config.local_url : config.dev_url;
@@ -89,6 +90,9 @@ var certOptions = {
     cert: fs.readFileSync("./cert/cert.pem", 'utf8')
     
 };
+cron.schedule('*/2 * * * *', () => {
+  console.log('running a task every two minutes');
+});
 /*
 // set port, listen for requests
 const httpsServer = https.createServer(certOptions, app);
