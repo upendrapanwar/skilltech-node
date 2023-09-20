@@ -1,4 +1,4 @@
-/*require('rootpath')();
+require('rootpath')();
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
@@ -20,9 +20,9 @@ var corsOptions = {
   origin: '*',
   credentials: true
 }
-app.get('/', function(req, res) { res.redirect('/documentation'); });
+app.get('/api/v1', function(req, res) { res.redirect('/documentation'); });
 
-app.use(jwt());
+//app.use(jwt());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -77,13 +77,14 @@ const options = {
     apis: ['./app/swagger_operations/*.js'],
 };
 const specs = swaggerJsdoc(options);
-console.log('SWAG_URL',SWAG_URL)
+console.log('SWAG_URL',specs)
 app.use(
     "/documentation",
     swaggerUi.serve,
     swaggerUi.setup(specs)
 );
-
+console.log('serve',swaggerUi.serve)
+console.log('setup',swaggerUi.setup(specs))
 var certOptions = {
     key: fs.readFileSync("./cert/key.pem", 'utf8'),
     cert: fs.readFileSync("./cert/cert.pem", 'utf8')
@@ -94,12 +95,12 @@ const httpsServer = https.createServer(certOptions, app);
 //const httpsServer = https.createServer(null, app);
 httpsServer.listen(PORT, () => {
     console.log('HTTPS Server running on port ' + PORT);
-});*/
+});
 
 //app.listen(PORT, () => {
 //  console.log(`Server is running on port ${PORT}.`);
 //});
-
+/*
 var http = require('http');
 var server = http.createServer(function(req, res) {
     res.writeHead(200, {'Content-Type': 'text/plain'});
@@ -108,4 +109,4 @@ var server = http.createServer(function(req, res) {
         response = [message, version].join('\n');
     res.end(response);
 });
-server.listen();
+server.listen();*/
