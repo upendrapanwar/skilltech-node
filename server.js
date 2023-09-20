@@ -1,4 +1,4 @@
-/*require('rootpath')();
+require('rootpath')();
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
@@ -22,7 +22,7 @@ var corsOptions = {
 }
 app.get('/api/v1', function(req, res) { res.redirect('/documentation'); });
 
-//app.use(jwt());
+app.use(jwt());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -89,17 +89,18 @@ var certOptions = {
     cert: fs.readFileSync("./cert/cert.pem", 'utf8')
     
 };
+/*
 // set port, listen for requests
 const httpsServer = https.createServer(certOptions, app);
 //const httpsServer = https.createServer(null, app);
 httpsServer.listen(PORT, () => {
     console.log('HTTPS Server running on port ' + PORT);
 });*/
-
-//app.listen(PORT, () => {
-//  console.log(`Server is running on port ${PORT}.`);
-//});
-
+const PORT = config.dev_port || 8800;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}.`);
+});
+/*
 var http = require('http');
 var server = http.createServer(function(req, res) {
     res.writeHead(200, {'Content-Type': 'text/plain'});
@@ -108,4 +109,4 @@ var server = http.createServer(function(req, res) {
         response = [message, version].join('\n');
     res.end(response);
 });
-server.listen();
+server.listen();*/
