@@ -70,7 +70,7 @@ const options = {
             },
         },
         servers: [{
-            url: SWAG_URL,
+            url: SWAG_URL + ':' + PORT,
             description: ENV + ' server',
         }, ],
     },
@@ -83,8 +83,7 @@ app.use(
     swaggerUi.serve,
     swaggerUi.setup(specs)
 );
-console.log('serve',swaggerUi.serve)
-console.log('setup',swaggerUi.setup(specs))
+
 var certOptions = {
     key: fs.readFileSync("./cert/key.pem", 'utf8'),
     cert: fs.readFileSync("./cert/cert.pem", 'utf8')
