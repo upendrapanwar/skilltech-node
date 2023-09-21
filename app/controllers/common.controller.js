@@ -17,7 +17,7 @@ const msg = require('../helpers/messages.json');
 router.post('/signup', registerValidation, register);
 router.post('/signin', authenticate);
 router.post('/subscription', subscription);
-
+router.post('/ambassador-subscription', ambassadorSubscription);
 
 module.exports = router;
 
@@ -69,6 +69,24 @@ function authenticate(req, res, next) {
 
 function subscription(req, res, next) {
     commonService.subscription(req.body)
+        .then(user => user ? (console.log(user) || user && user.is_active == true ? res.json({ status: true, message: msg.user.login.success, data: user })  : res.status(400).json({ status: false, message: msg.user.login.active })) : res.status(400).json({ status: false, message: msg.user.login.error }))
+        .catch(err => next(err));
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+
+/**
+ * Function used for subscription purpose for ambassador
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * 
+ * @return JSON|null
+ */
+
+function ambassadorSubscription(req, res, next) {
+    commonService.ambassador_subscription(req.body)
         .then(user => user ? (console.log(user) || user && user.is_active == true ? res.json({ status: true, message: msg.user.login.success, data: user })  : res.status(400).json({ status: false, message: msg.user.login.active })) : res.status(400).json({ status: false, message: msg.user.login.error }))
         .catch(err => next(err));
 }

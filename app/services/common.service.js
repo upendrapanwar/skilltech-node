@@ -21,7 +21,8 @@ const { User } = require('../helpers/db');
 module.exports = {
     create,
     authenticate,
-    subscription
+    subscription,
+    ambassador_subscription
 };
 
 /*****************************************************************************************/
@@ -280,6 +281,104 @@ async function subscription(param) {
             signed_place: param.signed_place,
             signed_on: param.signed_on,
             role: "subscriber",
+        } }])
+        //console.log('user',result);
+        
+        if (result) {
+
+            let res = await User.findById(param.uid).select("-password -community -social_accounts -reset_password -image_url -phone");
+    
+            if (res) {
+                return res;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+    
+    //const data = await user.save();
+    
+    
+}
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+
+/**
+ * Manages user for ambassador subscription
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+async function ambassador_subscription(param) {
+    
+    var whereCondition = { _id: param.uid};
+    const test = User.findOne(whereCondition);
+    console.log('test',test);
+    if (await User.findOne(whereCondition)) {
+        const user = new User({
+            firstname: param.firstname,
+            surname: param.surname,
+            id_number: param.id_number,
+            subscriber_email: param.email,
+            mobile_number: param.mobile_number,
+            alternate_mobile_number: param.alternate_mobile_number,
+            account_holder_title: param.account_holder_title,
+            account_holder_name: param.account_holder_name,
+            account_holder_surname: param.account_holder_surname,
+            bank: param.bank,
+            branch: param.bank,
+            branch_code: param.branch_code,
+            type_of_account: param.type_of_account,
+            account_number: param.account_number,
+            referredby: param.referredby,
+            referredby_firstname: param.referredby_firstname,
+            referredby_surname: param.referredby_surname,
+            referral_code: param.referral_code,
+            referredby_email: param.referredby_email,
+            referredby_mobile_number: param.referredby_mobile_number,
+            refer_friend: param.refer_friend,
+            center_to_assist: param.center_to_assist,
+            pop: param.pop,
+            signature: param.signature,
+            signed_place: param.signed_place,
+            signed_on: param.signed_on,
+            role: "ambassador",
+        });
+        result = await User.updateMany({_id: param.uid}, [{ $set: {
+            firstname: param.firstname,
+            surname: param.surname,
+            id_number: param.id_number,
+            subscriber_email: param.email,
+            mobile_number: param.mobile_number,
+            alternate_mobile_number: param.alternate_mobile_number,
+            account_holder_title: param.account_holder_title,
+            account_holder_name: param.account_holder_name,
+            account_holder_surname: param.account_holder_surname,
+            bank: param.bank,
+            branch: param.branch,
+            branch_code: param.branch_code,
+            type_of_account: param.type_of_account,
+            account_number: param.account_number,
+            referredby: param.referredby,
+            referredby_firstname: param.referredby_firstname,
+            referredby_surname: param.referredby_surname,
+            referral_code: param.referral_code,
+            referredby_email: param.referredby_email,
+            referredby_mobile_number: param.referredby_mobile_number,
+            refer_friend: param.refer_friend,
+            center_to_assist: param.center_to_assist,
+            pop: param.pop,
+            authname: param.firstname +' '+param.surname,
+            signature: param.signature,
+            signed_place: param.signed_place,
+            signed_on: param.signed_on,
+            role: "ambassador",
         } }])
         //console.log('user',result);
         

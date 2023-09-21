@@ -78,7 +78,7 @@ const options = {
     apis: ['./app/swagger_operations/*.js'],
 };
 const specs = swaggerJsdoc(options);
-console.log('SWAG_URL',specs)
+
 app.use(
     "/documentation",
     swaggerUi.serve,
