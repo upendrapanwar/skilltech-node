@@ -48,7 +48,7 @@ const schema = new Schema({
     referredby_firstname: { type: String, required: false, default: '' },
     referredby_surname: { type: String, required: false, default: '' },
     referral_code: { type: String, required: false, default: '' },
-    referredby_email: { type: String, unique: false, required: false, index: true, default: '' },
+    referredby_email: { type: String, default: '' },
     referredby_mobile_number: { type: String, required: false, default: '' },
     refer_friend: { type: String, required: false, default: '' },
     center_to_assist: { type: String, required: false, default: '' },
