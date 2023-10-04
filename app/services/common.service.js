@@ -230,8 +230,9 @@ async function ambassador_subscription(param) {
     
     var whereCondition = { _id: param.uid};
     const test = User.findOne(whereCondition);
-    console.log('test',test);
-    if (await User.findOne(whereCondition)) {
+    //console.log('test',test);
+    //console.log('param',param);
+    /*if (await User.findOne(whereCondition)) {
         result = await User.updateMany({_id: param.uid}, [{ $set: {
             //firstname: param.firstname,
             //surname: param.surname,
@@ -284,7 +285,7 @@ async function ambassador_subscription(param) {
     } else {
         return false;
     }
-    
+    */
     //const data = await user.save();
     
     

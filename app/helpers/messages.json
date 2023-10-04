@@ -12,6 +12,10 @@
             "success": "Signup successfully.",
             "error": "Signup failed."
         },
+        "ambessador": {
+            "success": "Submitted successfully.",
+            "error": "Error while saving."
+        },
         "login": {
             "success": "Login successfully.",
             "error": "Invalid login credentials.",
