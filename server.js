@@ -90,9 +90,9 @@ var certOptions = {
     cert: fs.readFileSync("./cert/cert.pem", 'utf8')
     
 };
-cron.schedule('*/2 * * * *', () => {
-  console.log('running a task every two minutes');
-});
+//cron.schedule('*/2 * * * *', () => {
+//  console.log('running a task every two minutes');
+//});
 /*
 // set port, listen for requests
 const httpsServer = https.createServer(certOptions, app);
