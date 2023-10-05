@@ -12,7 +12,8 @@ mongoose.connect(process.env.MONGODB_URI || config.connectionString, { useNewUrl
 mongoose.Promise = global.Promise;
 
 const jwt = require("jsonwebtoken");
-const fs = require('fs-extra');
+const fs = require('fs');
+const path = require('path');
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const msg = require("../helpers/messages.json");
@@ -227,12 +228,26 @@ async function subscription(param) {
  * @returns Object|null
  */
 async function ambassador_subscription(param) {
-    
+    const res = param.certificate;
+    const base64Data = res.replace(/^data:([A-Za-z-+/]+);base64,/, '');
+    let certificateName = "CER-" + Math.floor(Math.random() * 1000000) + "-" + Date.now() + ".pdf";
+    let certificatePath = path.join(__dirname, '../../uploads/certificate/'+ certificateName);
+    fs.writeFileSync(certificatePath,base64Data,{encoding: 'base64'}); 
+    param.certificate = 'uploads/certificate/'+ certificateName;
+
+    const res_bankproof = param.bank_proof;
+    const base64DataBankProof = res_bankproof.replace(/^data:([A-Za-z-+/]+);base64,/, '');
+    let bankProofName = "CER-" + Math.floor(Math.random() * 1000000) + "-" + Date.now() + ".pdf";
+    let bankProofPath = path.join(__dirname, '../../uploads/bank_proof/'+ bankProofName);
+    fs.writeFileSync(bankProofPath,base64DataBankProof,{encoding: 'base64'});
+    param.bank_proof = 'uploads/bank_proof/'+ bankProofName;
+
     var whereCondition = { _id: param.uid};
     const test = User.findOne(whereCondition);
+    
     //console.log('test',test);
-    //console.log('param',param);
-    /*if (await User.findOne(whereCondition)) {
+    console.log('param',param);
+    if (await User.findOne(whereCondition)) {
         result = await User.updateMany({_id: param.uid}, [{ $set: {
             //firstname: param.firstname,
             //surname: param.surname,
@@ -285,7 +300,7 @@ async function ambassador_subscription(param) {
     } else {
         return false;
     }
-    */
+    
     //const data = await user.save();
     
     

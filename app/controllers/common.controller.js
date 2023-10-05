@@ -27,7 +27,6 @@ var storageCertificate = multer.diskStorage({
         let extArray = file.mimetype.split("/");
         let extension = extArray[extArray.length - 1];
         let newName = "IMG-" + Math.floor(Math.random() * 1000000) + "-" + Date.now() + "." + extension;
-        console.log('testingn1');
         console.log('newName',newName);
         req.body.file = newName; 
         cb(null, newName);
@@ -37,10 +36,10 @@ var storageCertificate = multer.diskStorage({
 const fileFilterCertificate = function (req, file, cb) {
     console.log('file',file);
     // Accept images only
-    if (!file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF)$/)) {
-        req.fileValidationError = 'Only image files are allowed!';
-        return cb(new Error('Only image files are allowed!'), false);
-    }
+    //if (!file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF)$/)) {
+        //req.fileValidationError = 'Only image files are allowed!';
+        //return cb(new Error('Only image files are allowed!'), false);
+    //}
     cb(null, true);
 };
 
@@ -54,12 +53,14 @@ var uploadCertificate = multer({ storage: storageCertificate,
     onFileUploadComplete: function (file) {
         console.log(file.fieldname + ' uploaded to  ' + file.path)
     },
-    fileFilter: fileFilterCertificate , limits: { fileSize: 1024 * 1024 * 5 }, }).fields([{ name: 'certificate', maxCount: 1 }, { name: 'bank_proof', maxCount: 1 }])
+    //fileFilter: fileFilterCertificate,
+    limits: { fileSize: 1024 * 1024 * 5 }, }).fields([{ name: 'certificate', maxCount: 1 }, { name: 'bank_proof', maxCount: 1 }])
+    
 
 router.post('/signup', registerValidation, register);
 router.post('/signin', authenticate);
 router.post('/subscription', subscription);
-router.post('/ambassador-subscription',uploadCertificate, ambassadorSubscription);
+router.post('/ambassador-subscription', ambassadorSubscription);
 
 module.exports = router;
 
@@ -127,10 +128,7 @@ function subscription(req, res, next) {
  */
 
 function ambassadorSubscription(req, res, next) {
-    console.log("Body: ", req.body);
-    console.log("certificate: ", req.certificate);
-    console.log("File: ", req.file);
-    console.log("Files: ", req.files);
+    
     commonService.ambassador_subscription(req.body)
         .then(user => user ? (console.log(user) || user && user.is_active == true ? res.json({ status: true, message: msg.user.ambessador.success, data: user })  : res.status(400).json({ status: false, message: msg.user.ambessador.success })) : res.status(400).json({ status: false, message: msg.user.ambessador.error }))
         .catch(err => next(err));

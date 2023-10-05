@@ -70,6 +70,9 @@ const schema = new Schema({
     privacy: { type: String, required: false, default: '' },
     deals_promotion: { type: String, required: false, default: '' },
     in_loop: { type: String, required: false, default: '' },
+    confirm_details: { type: String, required: false, default: '' },
+    terms_n_condition: { type: String, required: false, default: '' },
+    update_information: { type: String, required: false, default: '' },
     password: { type: String, required: false, default: '' },
     social_accounts: {
         google: {
