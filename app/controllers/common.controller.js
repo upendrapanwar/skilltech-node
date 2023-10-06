@@ -111,8 +111,8 @@ function authenticate(req, res, next) {
 
 function subscription(req, res, next) {
     commonService.subscription(req.body)
-        .then(user => user ? (console.log(user) || user && user.is_active == true ? res.json({ status: true, message: msg.user.login.success, data: user })  : res.status(400).json({ status: false, message: msg.user.login.active })) : res.status(400).json({ status: false, message: msg.user.login.error }))
-        .catch(err => next(err));
+        .then(user => user ? res.status(201).json({ status: true, message: msg.user.signup.success, data: user }) : res.status(400).json({ status: false, message: msg.user.signup.error }))
+        .catch(err => next(res.status(400).json({ status: false, message: err })));    
 }
 /*****************************************************************************************/
 /*****************************************************************************************/
