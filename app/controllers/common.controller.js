@@ -61,6 +61,7 @@ router.post('/signup', registerValidation, register);
 router.post('/signin', authenticate);
 router.post('/subscription', subscription);
 router.post('/ambassador-subscription', ambassadorSubscription);
+router.post('/complete-registration', completeRegisteration);
 
 module.exports = router;
 
@@ -130,6 +131,23 @@ function subscription(req, res, next) {
 function ambassadorSubscription(req, res, next) {
     
     commonService.ambassador_subscription(req.body)
+        .then(user => user ? (console.log(user) || user && user.is_active == true ? res.json({ status: true, message: msg.user.ambessador.success, data: user })  : res.status(400).json({ status: false, message: msg.user.ambessador.success })) : res.status(400).json({ status: false, message: msg.user.ambessador.error }))
+        .catch(err => next(err));
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function used to check if registration is complete
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * 
+ * @return JSON|null
+ */
+
+function completeRegisteration(req, res, next) {
+    commonService.completeRegisteration(req.body)
         .then(user => user ? (console.log(user) || user && user.is_active == true ? res.json({ status: true, message: msg.user.ambessador.success, data: user })  : res.status(400).json({ status: false, message: msg.user.ambessador.success })) : res.status(400).json({ status: false, message: msg.user.ambessador.error }))
         .catch(err => next(err));
 }

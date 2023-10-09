@@ -23,7 +23,8 @@ module.exports = {
     create,
     authenticate,
     subscription,
-    ambassador_subscription
+    ambassador_subscription,
+    completeRegisteration
 };
 
 /*****************************************************************************************/
@@ -163,7 +164,7 @@ async function subscription(param) {
     //console.log("param",param);
     var whereCondition = { _id: param.uid};
     const test = User.findOne(whereCondition);
-    console.log('test',test);
+    //console.log('test',test);
     
     if (await User.findOne(whereCondition)) {
         
@@ -246,7 +247,7 @@ async function ambassador_subscription(param) {
     const test = User.findOne(whereCondition);
     
     //console.log('test',test);
-    console.log('param',param);
+    //console.log('param',param);
     if (await User.findOne(whereCondition)) {
         result = await User.updateMany({_id: param.uid}, [{ $set: {
             //firstname: param.firstname,
@@ -303,6 +304,27 @@ async function ambassador_subscription(param) {
     
     //const data = await user.save();
     
+    
+}
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+
+/**
+ * Complete registration
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+async function completeRegisteration(param) {
+    let res = await User.findById(param.userid).select("role");
+    console.log("res",res.role);
+    if (res.role === 'subscriber') {
+        return false;
+    } else {
+        return true;
+    }
     
 }
 
