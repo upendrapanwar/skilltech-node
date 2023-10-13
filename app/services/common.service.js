@@ -80,10 +80,11 @@ async function create(param) {
         }
     
         const user = new User({
-            name: param.name,
+            firstname: param.firstname,
+            surname: param.surname,
             email: param.email,
             password: bcrypt.hashSync(param.password, 10),
-            role: param.role,
+            role: 'subscriber',
             isActive: true
         });
         //Email send functionality.
@@ -167,7 +168,7 @@ async function subscription(param) {
     //console.log('test',test);
     
     if (await User.findOne(whereCondition)) {
-        
+        console.log('testttt');
         result = await User.updateMany({_id: param.uid}, [{ $set: {
             firstname: param.firstname,
             surname: param.surname,
@@ -191,6 +192,7 @@ async function subscription(param) {
             opt_in_promotional: param.opt_in_promotional,
             authname: param.firstname +' '+param.surname,
             privacy: param.privacy,
+            ecommercePolicy: param.ecommercePolicy,
             deals_promotion: param.deals_promotion,
             in_loop:param.in_loop,
             role: "subscriber",
@@ -200,16 +202,20 @@ async function subscription(param) {
         if (result) {
 
             let res = await User.findById(param.uid).select("-password -community -social_accounts -reset_password -image_url -phone");
-    
+            console.log('res=',res);
             if (res) {
+                console.log('if');
                 return res;
             } else {
+                console.log('else');
                 return false;
             }
         } else {
+            console.log('ifelse');
             return false;
         }
     } else {
+        console.log('elseee');
         return false;
     }
     
@@ -274,7 +280,7 @@ async function ambassador_subscription(param) {
             refer_friend: param.refer_friend,
             certificate:param.certificate,
             confirm_details:param.confirm_details,
-            terms_n_condition:param.terms_n_condition,
+            //terms_n_condition:param.terms_n_condition,
             update_information:param.update_information,
             //center_to_assist: param.center_to_assist,
             //pop: param.pop,

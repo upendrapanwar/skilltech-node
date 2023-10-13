@@ -68,6 +68,7 @@ const schema = new Schema({
     //signed_place: { type: String, required: false, default: '' },
     //signed_on: { type: String, required: false, default: '' },
     privacy: { type: String, required: false, default: '' },
+    ecommercePolicy: { type: String, required: false, default: '' },
     deals_promotion: { type: String, required: false, default: '' },
     in_loop: { type: String, required: false, default: '' },
     confirm_details: { type: String, required: false, default: '' },

@@ -76,7 +76,7 @@ module.exports = router;
  */
 function register(req, res, next) {
     commonService.create(req.body)
-    .then(user => user ? res.status(201).json({ status: true, message: msg.user.signup.success, data: user }) : res.status(400).json({ status: false, message: msg.user.signup.error }))
+    .then(user => user ? res.status(201).json({ status: true, message: msg.user.signup.success, data: user }) : res.status(400).json({ status: false, message: 'User already Exist!' }))
     .catch(err => next(res.status(400).json({ status: false, message: err })));
 }
 

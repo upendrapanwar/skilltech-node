@@ -10,7 +10,13 @@ joi.objectId = require('joi-objectid')(joi);
 
 const schema = {
     register: joi.object({
-        name: joi.string().min(3).max(50).label("Name").required().messages({
+        firstname: joi.string().min(3).max(50).label("First name").required().messages({
+            "string.empty": "{{#label}} is required.",
+            "any.required": "{{#label}} is required.",
+            "string.min": "{{#label}} should not be less than 3 characters.",
+            "string.max": "{{#label}} should not be greater than 50 characters.",
+        }),
+        surname: joi.string().min(3).max(50).label("Last name").required().messages({
             "string.empty": "{{#label}} is required.",
             "any.required": "{{#label}} is required.",
             "string.min": "{{#label}} should not be less than 3 characters.",
@@ -20,7 +26,7 @@ const schema = {
             "string.empty": "{{#label}} is required.",
             "any.required": "{{#label}} is required."
         }),
-        role: joi.string().label('Role').required(),
+        //role: joi.string().label('Role').required(),
         password: joi.string().min(6).max(20).label("Password").required().messages({
             "string.empty": "{{#label}} is required.",
             "any.required": "{{#label}} is required.",
