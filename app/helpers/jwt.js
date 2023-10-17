@@ -30,12 +30,12 @@ async function isRevoked(req, payload) {
     const url = req.originalUrl;
     
     if(url.includes('commmon/') == true) {
-        let param = { id: payload, role: "learner" };
+        let param = { id: payload, role: "subscriber" || "ambassador" };
         //onst user = await userService
         return true;
     }
     if(url.includes('user/') == true) {
-        let param = { id: payload, role: "user" };
+        let param = { id: payload, role: "subscriber" || "ambassador" };
         //onst user = await userService
 
     }
