@@ -46,7 +46,7 @@ const schema = {
             "string.empty": "{{#label}} is required.",
             "any.required": "{{#label}} is required."
         }),
-        role: joi.string().label('Role').required(),
+        //role: joi.string().label('Role').required(),
         password: joi.string().min(6).max(20).label("Password").required().messages({
             "string.empty": "{{#label}} is required.",
             "any.required": "{{#label}} is required.",

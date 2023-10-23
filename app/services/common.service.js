@@ -131,9 +131,9 @@ async function create(param) {
  * 
  * @returns Object|null
  */
-async function authenticate({ email, password, role }) {
-    
-    const user = await User.findOne({ email, role });
+async function authenticate({ email, password }) {
+    console.log()
+    const user = await User.findOne({ email });
     
     if (user && bcrypt.compareSync(password, user.password)) {
         const { password, reset_password, __v, createdAt, updatedAt, social_accounts, ...userWithoutHash } = user.toObject();
