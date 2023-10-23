@@ -18,13 +18,15 @@ const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const msg = require("../helpers/messages.json");
 const { User } = require('../helpers/db');
+const crypto = require("crypto");
 
 module.exports = {
     create,
     authenticate,
     subscription,
     ambassador_subscription,
-    completeRegisteration
+    completeRegisteration,
+    generateSignature
 };
 
 /*****************************************************************************************/
@@ -340,3 +342,33 @@ async function completeRegisteration(param) {
 
 /*****************************************************************************************/
 /*****************************************************************************************/
+/**
+ * generate signature
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+async function generateSignature(param) {
+    // Create parameter string
+    let pfOutput = "";
+    for (let key in data) {
+    if(data.hasOwnProperty(key)){
+        if (data[key] !== "") {
+        pfOutput +=`${key}=${encodeURIComponent(data[key].trim()).replace(/%20/g, "+")}&`
+        }
+    }
+    }
+
+    // Remove last ampersand
+    let getString = pfOutput.slice(0, -1);
+    if (passPhrase !== null) {
+    getString +=`&passphrase=${encodeURIComponent(passPhrase.trim()).replace(/%20/g, "+")}`;
+    }
+
+    return crypto.createHash("md5").update(getString).digest("hex");
+}
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+
