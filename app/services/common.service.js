@@ -350,12 +350,16 @@ async function completeRegisteration(param) {
  * @returns Object|null
  */
 async function generateSignature(param) {
+    //console.log('param=',param);
     // Create parameter string
     let pfOutput = "";
+    var data = param.merchantData;
+    var passPhrase = param.passPhrase;
     for (let key in data) {
     if(data.hasOwnProperty(key)){
         if (data[key] !== "") {
-        pfOutput +=`${key}=${encodeURIComponent(data[key].trim()).replace(/%20/g, "+")}&`
+            
+            pfOutput +=`${key}=${encodeURIComponent(data[key]).replace(/%20/g, "+")}&`
         }
     }
     }
@@ -363,8 +367,9 @@ async function generateSignature(param) {
     // Remove last ampersand
     let getString = pfOutput.slice(0, -1);
     if (passPhrase !== null) {
-    getString +=`&passphrase=${encodeURIComponent(passPhrase.trim()).replace(/%20/g, "+")}`;
+        getString +=`&passphrase=${encodeURIComponent(passPhrase).replace(/%20/g, "+")}`;
     }
+    //console.log('getstring=',getString);
 
     return crypto.createHash("md5").update(getString).digest("hex");
 }

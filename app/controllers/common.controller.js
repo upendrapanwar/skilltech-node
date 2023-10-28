@@ -62,7 +62,7 @@ router.post('/signin', authenticate);
 router.post('/subscription', subscription);
 router.post('/ambassador-subscription', ambassadorSubscription);
 router.post('/complete-registration', completeRegisteration);
-router.get('/generate-signature', generateSignature);
+router.post('/generate-signature', generateSignature);
 
 module.exports = router;
 
@@ -164,9 +164,13 @@ function completeRegisteration(req, res, next) {
  * @return JSON|null
  */
 function generateSignature(req, res, next) {
+    
+    //commonService.generateSignature(req.body)
+    //    .then(user => user ? (console.log(user) || user && user.is_active == true ? res.json({ status: true, message: msg.user.ambessador.success, data: user })  : res.status(400).json({ status: false, message: msg.user.ambessador.success })) : res.status(400).json({ status: false, message: msg.user.ambessador.error }))
+    //    .catch(err => next(err));
     commonService.generateSignature(req.body)
-        .then(user => user ? (console.log(user) || user && user.is_active == true ? res.json({ status: true, message: msg.user.ambessador.success, data: user })  : res.status(400).json({ status: false, message: msg.user.ambessador.success })) : res.status(400).json({ status: false, message: msg.user.ambessador.error }))
-        .catch(err => next(err));
+        .then(user => user ? res.status(200).json({ status: true, data: user }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
+        .catch(err => next(res.json({ status: false, message: err })));
     
 }
 /*****************************************************************************************/
