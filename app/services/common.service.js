@@ -17,7 +17,7 @@ const path = require('path');
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const msg = require("../helpers/messages.json");
-const { User } = require('../helpers/db');
+const { User, Subscriptionpayment } = require('../helpers/db');
 const crypto = require("crypto");
 
 module.exports = {
@@ -26,7 +26,10 @@ module.exports = {
     subscription,
     ambassador_subscription,
     completeRegisteration,
-    generateSignature
+    generateSignature,
+    saveMembershipSubscription,
+    getReferralCode,
+    fetchAmbassadorCode
 };
 
 /*****************************************************************************************/
@@ -170,7 +173,7 @@ async function subscription(param) {
     //console.log('test',test);
     
     if (await User.findOne(whereCondition)) {
-        console.log('testttt');
+       // console.log('testttt');
         result = await User.updateMany({_id: param.uid}, [{ $set: {
             firstname: param.firstname,
             surname: param.surname,
@@ -204,20 +207,20 @@ async function subscription(param) {
         if (result) {
 
             let res = await User.findById(param.uid).select("-password -community -social_accounts -reset_password -image_url -phone");
-            console.log('res=',res);
+           // console.log('res=',res);
             if (res) {
-                console.log('if');
+               // console.log('if');
                 return res;
             } else {
-                console.log('else');
+             //   console.log('else');
                 return false;
             }
         } else {
-            console.log('ifelse');
+           // console.log('ifelse');
             return false;
         }
     } else {
-        console.log('elseee');
+        //console.log('elseee');
         return false;
     }
     
@@ -226,6 +229,55 @@ async function subscription(param) {
     
 }
 
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Manages user for subscription
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+async function saveMembershipSubscription(param) {
+    try {
+        //console.log('params=',param.merchantData);
+        const subscriptionPayment = new Subscriptionpayment({
+            plan_name: param.merchantData.item_name,
+            subscription_type: param.merchantData.subscription_type,
+            frequency: param.merchantData.frequency,
+            billing_date: param.merchantData.billing_date,
+            payment_mode: 'Credit Card',
+            payment_status: param.payment_status,
+            amount: param.merchantData.amount,
+            payment_cycle: param.merchantData.cycles,
+            item_name: param.merchantData.item_name,
+            item_description: param.merchantData.item_description,
+            m_payment_id: param.merchantData.m_payment_id,
+            is_recurring: param.is_recurring,
+            userid: param.userid,
+            merchantData: JSON.stringify(param.merchantData),
+            is_active: param.is_active
+        });
+        const data = await subscriptionPayment.save();
+        //console.log('subscriberdata=',data);
+        if (data) {
+    
+            let res = await Subscriptionpayment.findById(data.id).select("-plan_name -payment_mode -payment_status -amount -payment_cycle -is_recurring -userid -is_active");
+    
+            if (res) {
+                //sendMail(mailOptions);
+                return res;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    } catch (err) {
+        console.log('Error', err);
+        return false;
+    }
+}
 /*****************************************************************************************/
 /*****************************************************************************************/
 
@@ -257,6 +309,7 @@ async function ambassador_subscription(param) {
     //console.log('test',test);
     //console.log('param',param);
     if (await User.findOne(whereCondition)) {
+        //console.log('inside');
         result = await User.updateMany({_id: param.uid}, [{ $set: {
             //firstname: param.firstname,
             //surname: param.surname,
@@ -276,7 +329,7 @@ async function ambassador_subscription(param) {
             //referredby: param.referredby,
             //referredby_firstname: param.referredby_firstname,
             //referredby_surname: param.referredby_surname,
-            //referral_code: param.referral_code,
+            referral_code: param.referralCode,
             //referredby_email: param.referredby_email,
             //referredby_mobile_number: param.referredby_mobile_number,
             refer_friend: param.refer_friend,
@@ -292,7 +345,7 @@ async function ambassador_subscription(param) {
            // signed_on: param.signed_on,
             role: "ambassador",
         } }])
-        //console.log('user',result);
+        //console.log('ambassador=',result);
         
         if (result) {
 
@@ -376,4 +429,38 @@ async function generateSignature(param) {
 
 /*****************************************************************************************/
 /*****************************************************************************************/
+/**
+ * generate referral code
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+async function getReferralCode(param) {
+    let countReferral = await User.find({role:'ambassador'}).count();
+    
+    if(countReferral) {
+        return countReferral;
+    } else {
+        return null;
+    }
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
 
+/**
+ * generate referral code
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+async function fetchAmbassadorCode(param) {
+    let referralCode = await User.findById(param.userid).select("referral_code");
+    
+    if(referralCode) {
+        return referralCode;
+    } else {
+        return null;
+    }
+}

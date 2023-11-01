@@ -63,6 +63,9 @@ router.post('/subscription', subscription);
 router.post('/ambassador-subscription', ambassadorSubscription);
 router.post('/complete-registration', completeRegisteration);
 router.post('/generate-signature', generateSignature);
+router.post('/save-subscription', saveMembershipSubscription);
+router.get('/get-referral-code', getReferralCode);
+router.post('/fetch-ambassador-code', fetchAmbassadorCode);
 
 module.exports = router;
 
@@ -118,7 +121,54 @@ function subscription(req, res, next) {
 }
 /*****************************************************************************************/
 /*****************************************************************************************/
-
+/**
+ * Function saves paid subscription for high vista
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * 
+ * @return JSON|null
+ */
+function saveMembershipSubscription(req, res, next) {
+    commonService.saveMembershipSubscription(req.body)
+    .then(subscriber => subscriber ? res.status(200).json({ status: true, data: subscriber }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
+    .catch(err => next(res.json({ status: false, message: err })));
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function generates the referral code for ambassador
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * 
+ * @return JSON|null
+ */
+function getReferralCode(req, res, next) {
+    commonService.getReferralCode(req.body)
+    .then(referralcode => referralcode ? res.status(200).json({ status: true, data: referralcode }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
+    .catch(err => next(res.json({ status: false, message: err })));
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function to get the referral code for ambassador
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * 
+ * @return JSON|null
+ */
+function fetchAmbassadorCode(req, res, next) {
+    commonService.fetchAmbassadorCode(req.body)
+    .then(referralcode => referralcode ? res.status(200).json({ status: true, data: referralcode }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
+    .catch(err => next(res.json({ status: false, message: err })));
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
 /**
  * Function used for subscription purpose for ambassador
  * 
