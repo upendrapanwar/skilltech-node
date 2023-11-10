@@ -29,7 +29,9 @@ module.exports = {
     generateSignature,
     saveMembershipSubscription,
     getReferralCode,
-    fetchAmbassadorCode
+    fetchAmbassadorCode,
+    checkReferralCode,
+    getMyCourses
 };
 
 /*****************************************************************************************/
@@ -441,6 +443,46 @@ async function getReferralCode(param) {
     
     if(countReferral) {
         return countReferral;
+    } else {
+        return null;
+    }
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * check if referral code exists
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+async function checkReferralCode(param) {
+    console.log('code',param.code);
+    let countReferral = await User.find({referral_code:param.code}).count();
+    
+    if(countReferral) {
+        return countReferral;
+    } else {
+        return null;
+    }
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+
+/*****************************************************************************************/
+/**
+ * get user courses
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+async function getMyCourses(param) {
+    console.log('code',param.id);
+    let courseData = await Subscriptionpayment.find({userid:param.id}).select("plan_name subscription_type frequency billing_date payment_mode payment_status amount payment_cycle item_name item_description m_payment_id is_recurring userid merchantData is_active createdAt");
+    
+    if(courseData) {
+        return courseData;
     } else {
         return null;
     }
