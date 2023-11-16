@@ -100,7 +100,7 @@ function register(req, res, next) {
  */
 
 function authenticate(req, res, next) {
-	
+	console.log('authenticate');
     commonService.authenticate(req.body)
         .then(user => user ? (console.log(user) || user && user.is_active == true ? res.json({ status: true, message: msg.user.login.success, data: user })  : res.status(400).json({ status: false, message: msg.user.login.active })) : res.status(400).json({ status: false, message: msg.user.login.error }))
         .catch(err => next(err));
