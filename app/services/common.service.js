@@ -169,7 +169,7 @@ async function authenticate({ email, password }) {
  * @returns Object|null
  */
 async function subscription(param) {
-    //console.log("param",param);
+    console.log("param",param);
     var whereCondition = { _id: param.uid};
     const test = User.findOne(whereCondition);
     //console.log('test',test);
@@ -383,10 +383,10 @@ async function ambassador_subscription(param) {
 async function completeRegisteration(param) {
     let res = await User.findById(param.userid).select("firstname surname id_number email mobile_number street street_name suburb_district town_city province postal_code race gender qualification method_of_communication privacy opt_in_promotional deals_promotion");
     let bool = 0;
-    if (res.firstname === null || res.surname === null || res.id_number === null || res.email === null || res.mobile_number === null || res.street === null || res.street_name === null || res.suburb_district === null || res.town_city === null || res.province === null || res.postal_code === null || res.race === null || res.gender === null || res.qualification === null || res.method_of_communication === null || res.privacy === null || res.opt_in_promotional === null || res.deals_promotion === null) {
+    if (res.id_number === null || res.email === null || res.mobile_number === null || res.street === null || res.street_name === null || res.suburb_district === null || res.town_city === null || res.province === null || res.postal_code === null || res.race === null || res.gender === null || res.qualification === null || res.method_of_communication === null || res.privacy === null || res.opt_in_promotional === null || res.deals_promotion === null) {
         bool=1;
     }
-    console.log(bool);
+    console.log('bool=',bool);
     if(bool) {
         return false;
     } else {
