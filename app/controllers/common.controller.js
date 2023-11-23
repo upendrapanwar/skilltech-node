@@ -68,7 +68,7 @@ router.get('/get-referral-code', getReferralCode);
 router.post('/fetch-ambassador-code', fetchAmbassadorCode);
 router.get('/check-referral-code/:code', checkReferralCode);
 router.get('/get-my-courses/:id', getMyCourses);
-
+router.get('/get-user-courses/:id', getUserCourses);
 
 module.exports = router;
 
@@ -172,6 +172,22 @@ function checkReferralCode(req, res, next) {
  */
 function getMyCourses(req, res, next) {
     commonService.getMyCourses(req.params)
+    .then(courses => courses ? res.status(200).json({ status: true, data: courses }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
+    .catch(err => next(res.json({ status: false, message: err })));
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function to get all the user courses
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * 
+ * @return JSON|null
+ */
+function getUserCourses(req, res, next) {
+    commonService.getUserCourses(req.params)
     .then(courses => courses ? res.status(200).json({ status: true, data: courses }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
     .catch(err => next(res.json({ status: false, message: err })));
 }

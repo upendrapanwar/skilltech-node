@@ -17,7 +17,7 @@ const path = require('path');
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const msg = require("../helpers/messages.json");
-const { User, Subscriptionpayment } = require('../helpers/db');
+const { User, Subscriptionpayment, Purchasedcourses } = require('../helpers/db');
 const crypto = require("crypto");
 
 module.exports = {
@@ -31,7 +31,8 @@ module.exports = {
     getReferralCode,
     fetchAmbassadorCode,
     checkReferralCode,
-    getMyCourses
+    getMyCourses,
+    getUserCourses
 };
 
 /*****************************************************************************************/
@@ -265,8 +266,29 @@ async function saveMembershipSubscription(param) {
         if (data) {
     
             let res = await Subscriptionpayment.findById(data.id).select("-plan_name -payment_mode -payment_status -amount -payment_cycle -is_recurring -userid -is_active");
-    
+            
             if (res) {
+                let courseDatas = param.coursesData;
+                
+                if(courseDatas) {
+                    for(var i=0;i<Object.keys(courseDatas).length;i++) {
+                        
+                        const purchasedcourses = new Purchasedcourses({
+                            courseid:courseDatas[i].id,
+                            orderid: data.id,
+                            quantity: courseDatas[i].quantity,
+                            userId: param.userid,
+                            course_title: courseDatas[i].title,
+                            course_price: courseDatas[i].price,
+                            paymentType: courseDatas[i].paymentType,
+                            image: courseDatas[i].image,
+                            course_category: ''
+                        });
+                        await purchasedcourses.save();
+                    }
+                    
+                }
+                
                 //sendMail(mailOptions);
                 return res;
             } else {
@@ -479,8 +501,60 @@ async function checkReferralCode(param) {
  */
 async function getMyCourses(param) {
     console.log('code',param.id);
-    let courseData = await Subscriptionpayment.find({userid:param.id}).select("plan_name subscription_type frequency billing_date payment_mode payment_status amount payment_cycle item_name item_description m_payment_id is_recurring userid merchantData is_active createdAt");
-    
+    let courseData = await Subscriptionpayment.find({userid:param.id})
+        .select("plan_name subscription_type frequency billing_date payment_mode payment_status amount payment_cycle item_name item_description m_payment_id is_recurring userid createdAt updatedAt").sort({ createdAt: 'desc' });
+    if(courseData) {
+        return courseData;
+    } else {
+        return null;
+    }
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * get user courses
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+async function getUserCourses(param) {
+    console.log('code',param.id);
+    let courseData = await Purchasedcourses.find({userId:param.id})
+        .select("courseid quantity orderid userId course_title course_price image paymentType createdAt updatedAt").sort({ createdAt: 'desc' });
+    if(courseData) {
+        return courseData;
+    } else {
+        return null;
+    }
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+
+/**
+ * get user order history
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+async function getOrderHistory(param) {
+    console.log('code',param.id);
+    let courseData = await Purchasedcourses.find({userId:param.id})
+        .select("courseid quantity orderid userId course_title course_price image paymentType course_category")
+        .populate([{
+            path: "orderid",
+            model: Subscriptionpayment,
+            select: "plan_name subscription_type frequency billing_date payment_mode payment_status amount payment_cycle item_name item_description m_payment_id is_recurring userid merchantData is_active createdAt",
+            match: { is_active: true}
+        },
+        {
+            path: "userId",
+            model: User,
+            select: "firstname surname email",
+            match: { is_active: true }
+        }
+        ]).sort({ createdAt: 'desc' });
     if(courseData) {
         return courseData;
     } else {
