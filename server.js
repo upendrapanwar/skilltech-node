@@ -47,6 +47,7 @@ app.use((req, res, next) => {
 
 // Require routes
 app.use('/common', require('./app/controllers/common.controller'));
+app.use('/admin', require('./app/controllers/admin.controller'));
 app.use('/user', require('./app/controllers/user.controller'));
 app.use('/' + config.uploadDir, express.static(__dirname + '/' + config.uploadDir));
 app.use(errorHandler);
