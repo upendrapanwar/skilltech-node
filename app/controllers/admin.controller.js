@@ -9,6 +9,7 @@ const msg = require('../helpers/messages.json');
 const multer = require('multer');
 
 router.get('/agent-subscription', agentSubscription);
+router.get('/agent-subscription-by-id/:id', agentSubscriptionById);
 
 module.exports = router;
 
@@ -40,6 +41,23 @@ module.exports = router;
  * @return JSON|null
  */
 function agentSubscription(req, res, next) {
+    adminService.agentSubscription(req.params)
+    .then(subscription => subscription ? res.status(200).json({ status: true, data: subscription }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
+    .catch(err => next(res.json({ status: false, message: err })));
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+
+/**
+ * Function to get agent subscription by id
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * 
+ * @return JSON|null
+ */
+function agentSubscriptionById(req, res, next) {
     adminService.agentSubscription(req.params)
     .then(subscription => subscription ? res.status(200).json({ status: true, data: subscription }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
     .catch(err => next(res.json({ status: false, message: err })));
