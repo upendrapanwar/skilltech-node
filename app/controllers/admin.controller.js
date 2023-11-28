@@ -8,7 +8,7 @@ const msg = require('../helpers/messages.json');
 
 const multer = require('multer');
 
-router.post('/signup', registerValidation, register);
+router.get('/agent-subscription', agentSubscription);
 
 module.exports = router;
 
@@ -21,11 +21,28 @@ module.exports = router;
  * 
  * @return JSON|null
  */
-function register(req, res, next) {
+/*function register(req, res, next) {
     userService.create(req.body)
     .then(user => user ? res.status(201).json({ status: true, message: msg.user.signup.success, data: user }) : res.status(400).json({ status: false, message: msg.user.signup.error }))
     .catch(err => next(res.status(400).json({ status: false, message: err })));
-}
+}*/
 
+/*****************************************************************************************/
+/*****************************************************************************************/
+
+/**
+ * Function to get all the user subscription
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * 
+ * @return JSON|null
+ */
+function agentSubscription(req, res, next) {
+    adminService.agentSubscription(req.params)
+    .then(subscription => subscription ? res.status(200).json({ status: true, data: subscription }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
+    .catch(err => next(res.json({ status: false, message: err })));
+}
 /*****************************************************************************************/
 /*****************************************************************************************/
