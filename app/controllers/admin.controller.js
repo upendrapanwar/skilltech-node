@@ -10,6 +10,8 @@ const multer = require('multer');
 
 router.get('/agent-subscription', agentSubscription);
 router.get('/agent-subscription-by-id/:id', agentSubscriptionById);
+router.get('/get-active-agents', getActiveAgents);
+router.get('/get-agents-byid/:id', getAgentById);
 
 module.exports = router;
 
@@ -43,6 +45,38 @@ module.exports = router;
 function agentSubscription(req, res, next) {
     adminService.agentSubscription(req.params)
     .then(subscription => subscription ? res.status(200).json({ status: true, data: subscription }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
+    .catch(err => next(res.json({ status: false, message: err })));
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function to get all the user list
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * 
+ * @return JSON|null
+ */
+function getActiveAgents(req, res, next) {
+    adminService.getActiveAgents(req.params)
+    .then(activeAgents => activeAgents ? res.status(200).json({ status: true, data: activeAgents }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
+    .catch(err => next(res.json({ status: false, message: err })));
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function to get agent data by id
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * 
+ * @return JSON|null
+ */
+function getAgentById(req, res, next) {
+    adminService.getAgentById(req.params)
+    .then(agent => agent ? res.status(200).json({ status: true, data: agent }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
     .catch(err => next(res.json({ status: false, message: err })));
 }
 /*****************************************************************************************/

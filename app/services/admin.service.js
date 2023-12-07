@@ -21,7 +21,9 @@ const { User, Subscriptionpayment, Purchasedcourses } = require('../helpers/db')
 const crypto = require("crypto");
 
 module.exports = {
-    agentSubscription
+    agentSubscription,
+    getActiveAgents,
+    getAgentById
 };
 
 /*****************************************************************************************/
@@ -81,4 +83,40 @@ async function agentSubscription(param) {
 }
 /*****************************************************************************************/
 /*****************************************************************************************/
+/**
+ * get all active agents
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+async function getActiveAgents(param) {
+    
+    let agentsData = await User.find({is_active:true,role:'subscriber'}).sort({ createdAt: 'desc' });
+    if(agentsData) {
+        return agentsData;
+    } else {
+        return null;
+    }
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
 
+/**
+ * get agent by id
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+async function getAgentById(param) {
+    
+    let agentData = await User.find({_id:param.id}).sort({ createdAt: 'desc' });
+    if(agentData) {
+        return agentData;
+    } else {
+        return null;
+    }
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
