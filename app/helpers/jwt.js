@@ -14,6 +14,7 @@ function jwt() {
             '/common/signup',
             '/common/signin',
             '/common/subscription',
+            '/common/notify',
             //user
             '/user/login',
             '/user/social-login',
