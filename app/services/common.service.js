@@ -554,6 +554,7 @@ async function getReferralCode(param) {
  * @returns Object|null
  */
 async function payFastNotify(param) {
+  console.log('param=',param);
   const subscriptionPayment = new Subscriptionpayment({
     merchantData: JSON.stringify(param),
     uuid : JSON.stringify(param)

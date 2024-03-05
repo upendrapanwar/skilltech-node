@@ -454,7 +454,7 @@ function removeMyCourses(req, res, next) {
  */
 function payFastNotify(req, res, next) {
   commonService
-    .payFastNotify(req)
+    .payFastNotify(req.body)
     .then((payFastResponse) =>
       payFastResponse
         ? res.status(200).json({ status: true, data: payFastResponse })
