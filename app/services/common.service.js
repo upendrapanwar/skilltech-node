@@ -44,6 +44,7 @@ module.exports = {
   getUserCourses,
   saveQuery,
   removeMyCourses,
+  payFastNotify
 };
 
 /*****************************************************************************************/
@@ -546,6 +547,31 @@ async function getReferralCode(param) {
 /*****************************************************************************************/
 /*****************************************************************************************/
 /**
+ * notify from payfast
+ *
+ * @param {param}
+ *
+ * @returns Object|null
+ */
+async function payFastNotify(param) {
+  const subscriptionPayment = new Subscriptionpayment({
+    merchantData: JSON.stringify(param),
+    uuid : JSON.stringify(param)
+  });
+  const data = await subscriptionPayment.save();
+  console.log('payfast',param);
+  /*let countReferral = await User.find({ role: "ambassador" }).count();
+
+  if (countReferral) {
+    return countReferral;
+  } else {
+    return null;
+  }*/
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+
+/**
  * check if referral code exists
  *
  * @param {param}
@@ -756,18 +782,6 @@ async function removeMyCourses(req) {
     throw err;
   }
 }
-
-/*****************************************************************************************/
-/*****************************************************************************************/
-/**
- * remove user courses
- *
- * @param {param}
- *
- * @returns Object|null
- */
-const subscriptionUuId = uuidv4();
-console.log("Subscription UuID:", subscriptionUuId);
 
 /*****************************************************************************************/
 /*****************************************************************************************/

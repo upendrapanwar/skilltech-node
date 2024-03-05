@@ -84,6 +84,7 @@ router.get("/get-my-courses/:id", getMyCourses);
 router.get("/get-user-courses/:id", getUserCourses);
 router.post("/save-query", saveQuery);
 router.put("/remove-course/:id", removeMyCourses);
+router.get("/notify", payFastNotify);
 
 module.exports = router;
 
@@ -433,6 +434,30 @@ function removeMyCourses(req, res, next) {
     .then((removedCourse) =>
       removedCourse
         ? res.status(200).json({ status: true, data: removedCourse })
+        : res
+            .status(400)
+            .json({ status: false, message: msg.common.no_data_err, data: [] })
+    )
+    .catch((err) => next(res.json({ status: false, message: err })));
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+
+/**
+ * Function to get response from payfast notify url
+ *
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
+ *
+ * @return JSON|null
+ */
+function payFastNotify(req, res, next) {
+  commonService
+    .payFastNotify(req)
+    .then((payFastResponse) =>
+      payFastResponse
+        ? res.status(200).json({ status: true, data: payFastResponse })
         : res
             .status(400)
             .json({ status: false, message: msg.common.no_data_err, data: [] })
