@@ -268,10 +268,10 @@ async function subscription(param) {
 async function saveMembershipSubscription(param) {
   try {
     //console.log('params=',param.merchantData);
-    const subscriptionPayment = new Subscriptionpayment({
+    //const subscriptionPayment = new Subscriptionpayment({
       
-    });
-    const data = await subscriptionPayment.save();
+    //});
+    //const data = await subscriptionPayment.save();
 
     await Subscriptionpayment.findByIdAndUpdate(
       { _id: param.id },
@@ -612,10 +612,8 @@ async function payFastNotify(param,spay) {
  * @returns Object|null
  */
 async function getSubscriptionId() {
-  const requestData = param;
   const subscriptionPayment = new Subscriptionpayment({
-    merchantData: "N/A",
-    
+    uuid: "1",
   });
   const data = await subscriptionPayment.save();
 
