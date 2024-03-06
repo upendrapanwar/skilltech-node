@@ -85,7 +85,7 @@ router.get("/get-user-courses/:id", getUserCourses);
 router.post("/save-query", saveQuery);
 router.put("/remove-course/:id", removeMyCourses);
 router.post("/notify/:id", payFastNotify);
-router.post("/getSubscriptionId",getSubscriptionId);
+router.get("/getSubscriptionId",getSubscriptionId);
 
 module.exports = router;
 
