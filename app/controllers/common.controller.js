@@ -84,7 +84,8 @@ router.get("/get-my-courses/:id", getMyCourses);
 router.get("/get-user-courses/:id", getUserCourses);
 router.post("/save-query", saveQuery);
 router.put("/remove-course/:id", removeMyCourses);
-router.post("/notify", payFastNotify);
+router.post("/notify/:id", payFastNotify);
+router.post("/getSubscriptionId",getSubscriptionId);
 
 module.exports = router;
 
@@ -454,7 +455,7 @@ function removeMyCourses(req, res, next) {
  */
 function payFastNotify(req, res, next) {
   commonService
-    .payFastNotify(req.body)
+    .payFastNotify(req.body,req.params)
     .then((payFastResponse) =>
       payFastResponse
         ? res.status(200).json({ status: true, data: payFastResponse })
@@ -466,3 +467,24 @@ function payFastNotify(req, res, next) {
 }
 /*****************************************************************************************/
 /*****************************************************************************************/
+/**
+ * Function to get subscription Id
+ *
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
+ *
+ * @return JSON|null
+ */
+function getSubscriptionId(req, res, next) {
+  commonService
+    .getSubscriptionId()
+    .then((response) =>
+      response
+        ? res.status(200).json({ status: true, data: response })
+        : res
+            .status(400)
+            .json({ status: false, message: msg.common.no_data_err, data: [] })
+    )
+    .catch((err) => next(res.json({ status: false, message: err })));  
+}

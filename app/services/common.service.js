@@ -44,7 +44,8 @@ module.exports = {
   getUserCourses,
   saveQuery,
   removeMyCourses,
-  payFastNotify
+  payFastNotify,
+  getSubscriptionId
 };
 
 /*****************************************************************************************/
@@ -268,24 +269,33 @@ async function saveMembershipSubscription(param) {
   try {
     //console.log('params=',param.merchantData);
     const subscriptionPayment = new Subscriptionpayment({
-      plan_name: param.merchantData.item_name,
-      subscription_type: param.merchantData.subscription_type,
-      frequency: param.merchantData.frequency,
-      billing_date: param.merchantData.billing_date,
-      payment_mode: "Credit Card",
-      payment_status: param.payment_status,
-      amount: param.merchantData.amount,
-      payment_cycle: param.merchantData.cycles,
-      item_name: param.merchantData.item_name,
-      item_description: param.merchantData.item_description,
-      m_payment_id: param.merchantData.m_payment_id,
-      is_recurring: param.is_recurring,
-      userid: param.userid,
-      merchantData: JSON.stringify(param.merchantData),
-      is_active: param.is_active,
-      uuid : param.uuid
+      
     });
     const data = await subscriptionPayment.save();
+
+    await Subscriptionpayment.findByIdAndUpdate(
+      { _id: param.id },
+      {
+        $set: {
+          // role: "subscriber",
+          plan_name: param.merchantData.item_name,
+          subscription_type: param.merchantData.subscription_type,
+          frequency: param.merchantData.frequency,
+          billing_date: param.merchantData.billing_date,
+          payment_mode: "Credit Card",
+          payment_status: param.payment_status,
+          amount: param.merchantData.amount,
+          payment_cycle: param.merchantData.cycles,
+          item_name: param.merchantData.item_name,
+          item_description: param.merchantData.item_description,
+          m_payment_id: param.merchantData.m_payment_id,
+          is_recurring: param.is_recurring,
+          userid: param.userid,
+          is_active: param.is_active,
+          uuid : JSON.stringify(param.merchantData)
+        },
+      }
+    );
 
     await User.findByIdAndUpdate(
       { _id: param.userid },
@@ -553,8 +563,7 @@ async function getReferralCode(param) {
  *
  * @returns Object|null
  */
-async function payFastNotify(param) {
-  console.log('param=',param);
+async function payFastNotify(param,spay) {
   const requestData = param;
 
   // Perform signature verification
@@ -571,12 +580,20 @@ async function payFastNotify(param) {
     .update(`${dataString}&${payfastSettings.passphrase}`)
     .digest('hex');
 
-  const subscriptionPayment = new Subscriptionpayment({
+  /*const subscriptionPayment = new Subscriptionpayment({
     merchantData: JSON.stringify(dataString),
     uuid : JSON.stringify(dataString)
-  });
+  });*/
   const data = await subscriptionPayment.save();
   console.log('payfast',dataString);
+  await Subscriptionpayment.findByIdAndUpdate(
+    { _id: spay.id },
+    {
+      $set: {
+        merchantData: JSON.stringify(dataString),
+      },
+    }
+  );
   /*let countReferral = await User.find({ role: "ambassador" }).count();
 
   if (countReferral) {
@@ -584,6 +601,29 @@ async function payFastNotify(param) {
   } else {
     return null;
   }*/
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * get subscription id for payment
+ *
+ * @param {param}
+ *
+ * @returns Object|null
+ */
+async function getSubscriptionId() {
+  const requestData = param;
+  const subscriptionPayment = new Subscriptionpayment({
+    merchantData: "N/A",
+    
+  });
+  const data = await subscriptionPayment.save();
+
+  if (data) {
+    return data.id;
+  } else {
+    return null;
+  }
 }
 /*****************************************************************************************/
 /*****************************************************************************************/
