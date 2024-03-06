@@ -77,13 +77,15 @@ router.post("/ambassador-subscription", ambassadorSubscription);
 router.post("/complete-registration", completeRegisteration);
 router.post("/generate-signature", generateSignature);
 router.post("/save-subscription", saveMembershipSubscription);
-router.get("/get-referral-code", getReferralCode);
+router.get("/get-referral-code", getReferralCode); 
 router.post("/fetch-ambassador-code", fetchAmbassadorCode);
 router.get("/check-referral-code/:code", checkReferralCode);
 router.get("/get-my-courses/:id", getMyCourses);
 router.get("/get-user-courses/:id", getUserCourses);
 router.post("/save-query", saveQuery);
-router.put("/remove-course/:id", removeMyCourses);
+router.put("/remove-course/:id", removeMyCourses); 
+router.get("/send-email-ambassador/:id", sendEmailToAmbassador); 
+
 
 module.exports = router;
 
@@ -227,10 +229,10 @@ function getReferralCode(req, res, next) {
 /*****************************************************************************************/
 function checkReferralCode(req, res, next) {
   commonService
-    .checkReferralCode(req.params)
-    .then((referralcode) =>
-      referralcode
-        ? res.status(200).json({ status: true, data: referralcode })
+    .checkReferralCode(req)
+    .then((data) =>
+      data
+        ? res.status(200).json({ status: true, data: data })
         : res
             .status(400)
             .json({ status: false, message: msg.common.no_data_err, data: [] })
@@ -441,3 +443,24 @@ function removeMyCourses(req, res, next) {
 }
 /*****************************************************************************************/
 /*****************************************************************************************/
+/**
+ * Function to send email to ambassador
+ *
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
+ *
+ * @return JSON|null
+ */
+function sendEmailToAmbassador(req, res, next) {
+  commonService
+    .sendEmailToAmbassador(req)
+    .then((removedCourse) =>
+      removedCourse
+        ? res.status(200).json({ status: true, data: removedCourse })
+        : res
+            .status(400)
+            .json({ status: false, message: msg.common.no_data_err, data: [] })
+    )
+    .catch((err) => next(res.json({ status: false, message: err })));
+}

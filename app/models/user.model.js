@@ -53,7 +53,8 @@ const schema = new Schema({
     //referredby: { type: String, required: false, default: '' },
     //referredby_firstname: { type: String, required: false, default: '' },
     //referredby_surname: { type: String, required: false, default: '' },
-    //referral_code: { type: String, required: false, default: '' },
+    referral_code: { type: String, required: false, default: '' },
+    qr_code: { type: String, required: false, default: '' },
     //referredby_email: { type: String, required: false,default: '' },
     //referredby_mobile_number: { type: String, required: false, default: '' },
     refer_friend: { type: String, required: false, default: '' },
@@ -95,8 +96,6 @@ const schema = new Schema({
     },
     subscription_date:{ type:Date, required:false, default:null },
     subscription_cancellation_date:{type:Date, required:false, default:null},
-    // referral_isActive:{type:Boolean, required:false, default:false}, 
-    referral_code:{ type:mongoose.Schema.Types.ObjectId, ref:'Referral', default:null},
     ambassador_date:{type:Date, required:false, default:null}
 },{
     timestamps: true

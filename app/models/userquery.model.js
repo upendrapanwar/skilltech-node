@@ -42,4 +42,4 @@ schema.set('toJSON',{ virtuals: false, versionKey: false });
 
 schema.plugin(mongoosePaginate);
 
-module.exports = mongoose.model('userQuery',schema);
+module.exports = mongoose.model('Userquery',schema);

@@ -19,15 +19,28 @@ const fs = require("fs");
 const path = require("path");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
+const QRCode = require('qrcode'); 
 const msg = require("../helpers/messages.json");
+
 const {
   User,
   Subscriptionpayment,
   Purchasedcourses,
-  userQuery,
+  Userquery,
+  Referral,
 } = require("../helpers/db");
 const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid"); 
+
+let transporter = nodemailer.createTransport({
+  host: "smtp-relay.brevo.com",
+  port: 587,
+  secure: false, // true for 465, false for other ports
+  auth: {
+    user: "highvista@skilltechsa.online", // generated ethereal user
+    pass: "FT7q5O0nYNJ6hzwg", // generated ethereal password
+  },
+});
 
 module.exports = {
   create,
@@ -44,6 +57,7 @@ module.exports = {
   getUserCourses,
   saveQuery,
   removeMyCourses,
+  sendEmailToAmbassador,
 };
 
 /*****************************************************************************************/
@@ -403,7 +417,7 @@ async function ambassador_subscription(param) {
           //referredby: param.referredby,
           //referredby_firstname: param.referredby_firstname,
           //referredby_surname: param.referredby_surname,
-          referral_code: param.referralCode,
+          referral_code: param.referral_code,
           //referredby_email: param.referredby_email,
           //referredby_mobile_number: param.referredby_mobile_number,
           refer_friend: param.refer_friend,
@@ -552,16 +566,47 @@ async function getReferralCode(param) {
  *
  * @returns Object|null
  */
-async function checkReferralCode(param) {
-  console.log("code", param.code);
-  let countReferral = await User.find({ referral_code: param.code }).count();
+async function checkReferralCode(req) {
+  try {
+    const {code} = req.params;
+    const referralCode = code;
+    const { userId } = req.query;
+    console.log("UserID", userId);
+    console.log("referralCode", referralCode);
 
-  if (countReferral) {
-    return countReferral;
-  } else {
-    return null;
+    // Check if referral code is already used
+    const existingReferral = await Referral.findOne({ referral_code: referralCode });
+    if (existingReferral) {
+      return ;
+    }
+
+     // Referral code not used, proceed with creation
+    const countReferral = await User.find({ referral_code: referralCode }).count();
+    console.log("countReferral", countReferral);
+    const qrCode = await User.findById(userId).select("qr_code");
+
+    const referralData = await Referral.create({
+      referral_code: referralCode,
+      userId: userId,
+      qr_code: qrCode.qr_code,
+    });
+
+    const newReferralData = await referralData.save();
+    console.log("newReferralData", newReferralData);
+
+    const data = {
+      countReferral: countReferral,
+      referralData: newReferralData,
+    }
+
+    return data;
+
+  } catch (error) {
+    console.error("Error:", error);
+    return { status: 500, error: "Internal Server Error" }; // Error response
   }
 }
+
 /*****************************************************************************************/
 /*****************************************************************************************/
 
@@ -701,7 +746,7 @@ async function saveQuery(param) {
       return null;
     }
 
-    const queryData = await userQuery.create({
+    const queryData = await Userquery.create({
       first_name: param.first_name,
       surname: param.surname,
       email: param.email,
@@ -771,3 +816,70 @@ console.log("Subscription UuID:", subscriptionUuId);
 
 /*****************************************************************************************/
 /*****************************************************************************************/
+/**
+ * Send email to ambassador
+ *
+ * @param {param}
+ *
+ * @returns Object|null
+ */
+async function sendEmailToAmbassador(req) {
+  try {
+    const id = req.params.id;
+    const ambassadorData = await User.findById(id).select("firstname surname email referral_code");
+    console.log(ambassadorData);
+    if (!ambassadorData) {
+      throw new Error("Ambassador not found");
+    }
+
+    const adminData = await User.find({ role: "admin" }).select("firstname surname email");
+    console.log(adminData);
+    if (!adminData || adminData.length === 0) {
+      throw new Error("Admin email not found");
+    }
+
+    const adminEmail = adminData[0].email; // Assuming there's only one admin email, you might need to adjust this based on your application logic
+    const adminName = adminData[0].firstname + ' ' + adminData[0].surname;
+
+
+    const url = `https://affiliate.skilltechsa.online/ambessador/ambassador-subscription?url=${ambassadorData.referral_code}`;
+    const qrCode = await QRCode.toDataURL(url);
+    // console.log(qrCode);
+
+    // Save QR code to the database
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: id },
+      { $set: { qr_code: qrCode } },
+      { new: true }
+    );
+
+    let info = await transporter.sendMail({
+      from: `${adminName} ${adminEmail}`, // Sender address
+      to: ambassadorData.email, // Recipient address
+      subject: `Congratulation ${adminData.firstname} as Ambassador! `, // Subject line
+      text: `
+      Hello ${ambassadorData.firstname}, 
+      
+      Congratulations! 
+
+      Begin new experience as an Ambasssador.
+      
+      Referral Code: <span style="font-weight: bold; color: blue">${ambassadorData.referral_code}</span>
+      
+      Get your QR code below:`,
+      attachments: [
+        {
+            filename: 'qrcode.png',
+            content: qrCode.split(';base64,').pop(),
+            encoding: 'base64'
+        }
+    ]
+    });
+
+    console.log("Message sent: %s", info.messageId);
+    return info;
+  } catch (err) {
+    console.log("Error:", err);
+    throw err;
+  }
+}
