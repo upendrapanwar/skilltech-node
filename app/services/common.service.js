@@ -273,7 +273,7 @@ async function saveMembershipSubscription(param) {
     //});
     //const data = await subscriptionPayment.save();
 
-    await Subscriptionpayment.findByIdAndUpdate(
+    const data = await Subscriptionpayment.updateMany(
       { _id: param.id },
       {
         $set: {
@@ -306,9 +306,9 @@ async function saveMembershipSubscription(param) {
         },
       }
     );
-    //console.log('subscriberdata=',data);
-    if (data) {
-      let res = await Subscriptionpayment.findById(data.id).select(
+    console.log('subscriberdata=',data);
+    if (param.id) {
+      let res = await Subscriptionpayment.findById(param.id).select(
         "-plan_name -payment_mode -payment_status -amount -payment_cycle -is_recurring -userid -is_active"
       );
       if (res) {
@@ -584,9 +584,9 @@ async function payFastNotify(param,spay) {
     merchantData: JSON.stringify(dataString),
     uuid : JSON.stringify(dataString)
   });*/
-  const data = await subscriptionPayment.save();
+  //const data = await subscriptionPayment.save();
   console.log('payfast',dataString);
-  await Subscriptionpayment.findByIdAndUpdate(
+  await Subscriptionpayment.updateMany(
     { _id: spay.id },
     {
       $set: {
