@@ -292,7 +292,7 @@ async function saveMembershipSubscription(param) {
           is_recurring: param.is_recurring,
           userid: param.userid,
           is_active: param.is_active,
-          uuid : JSON.stringify(param.merchantData)
+          merchantData : JSON.stringify(param.merchantData)
         },
       }
     );
@@ -590,7 +590,7 @@ async function payFastNotify(param,spay) {
     { _id: spay.id },
     {
       $set: {
-        merchantData: JSON.stringify(dataString),
+        uuid: JSON.stringify(dataString),
       },
     }
   );
