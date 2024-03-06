@@ -84,7 +84,7 @@ router.get("/get-my-courses/:id", getMyCourses);
 router.get("/get-user-courses/:id", getUserCourses);
 router.post("/save-query", saveQuery);
 router.put("/remove-course/:id", removeMyCourses);
-router.post("/notify", payFastNotify);
+router.get("/notify", payFastNotify);
 
 module.exports = router;
 
