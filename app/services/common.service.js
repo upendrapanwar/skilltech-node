@@ -555,12 +555,28 @@ async function getReferralCode(param) {
  */
 async function payFastNotify(param) {
   console.log('param=',param);
+  const requestData = param;
+
+  // Perform signature verification
+  const signature = requestData.signature;
+  delete requestData.signature; // Remove signature from data to verify
+
+  const dataString = Object.keys(requestData)
+    .sort()
+    .map((key) => `${key}=${requestData[key]}`)
+    .join('&');
+
+  const calculatedSignature = crypto
+    .createHash('md5')
+    .update(`${dataString}&${payfastSettings.passphrase}`)
+    .digest('hex');
+
   const subscriptionPayment = new Subscriptionpayment({
-    merchantData: JSON.stringify(param),
-    uuid : JSON.stringify(param)
+    merchantData: JSON.stringify(dataString),
+    uuid : JSON.stringify(dataString)
   });
   const data = await subscriptionPayment.save();
-  console.log('payfast',param);
+  console.log('payfast',dataString);
   /*let countReferral = await User.find({ role: "ambassador" }).count();
 
   if (countReferral) {
