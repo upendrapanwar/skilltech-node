@@ -85,7 +85,8 @@ router.get("/get-user-courses/:id", getUserCourses);
 router.post("/save-query", saveQuery);
 router.put("/remove-course/:id", removeMyCourses); 
 router.get("/send-email-ambassador/:id", sendEmailToAmbassador); 
-
+router.post("/notify/:id", payFastNotify);
+router.get("/getSubscriptionId",getSubscriptionId);
 
 module.exports = router;
 
@@ -445,7 +446,7 @@ function removeMyCourses(req, res, next) {
 /*****************************************************************************************/
 /**
  * Function to send email to ambassador
- *
+*
  * @param {*} req
  * @param {*} res
  * @param {*} next
@@ -463,4 +464,49 @@ function sendEmailToAmbassador(req, res, next) {
             .json({ status: false, message: msg.common.no_data_err, data: [] })
     )
     .catch((err) => next(res.json({ status: false, message: err })));
+  }
+
+/**
+ * Function to get response from payfast notify url
+ *
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
+ *
+ * @return JSON|null
+ */
+function payFastNotify(req, res, next) {
+  commonService
+    .payFastNotify(req.body,req.params)
+    .then((payFastResponse) =>
+      payFastResponse
+        ? res.status(200).json({ status: true, data: payFastResponse })
+        : res
+            .status(400)
+            .json({ status: false, message: msg.common.no_data_err, data: [] })
+    )
+    .catch((err) => next(res.json({ status: false, message: err })));
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function to get subscription Id
+ *
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
+ *
+ * @return JSON|null
+ */
+function getSubscriptionId(req, res, next) {
+  commonService
+    .getSubscriptionId()
+    .then((response) =>
+      response
+        ? res.status(200).json({ status: true, data: response })
+        : res
+            .status(400)
+            .json({ status: false, message: msg.common.no_data_err, data: [] })
+    )
+    .catch((err) => next(res.json({ status: false, message: err })));  
 }
