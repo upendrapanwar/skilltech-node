@@ -262,60 +262,83 @@ async function getAllActiveSubscriptionSubscriber(param) {
  * @return null|Object
  * 
  */
-
-// TEST 3rd Defaulted Subscriptions Payments of Ambassador
 async function getDefaultedSubscriptionPaymentOfAmbassador(param) {
     console.log("param", param)
-    console.log("getAllDefaultedSubscriptionPaymentOfAmbassador")
     if (!param) {
         return null;
     }
 
-    // let defaultAmbassador = await User.find({
-    //     role: "ambassador",
-    //     subscription_date: { $gte: new Date(param.start_date), $lte: new Date(param.end_date) }
-    // },
-    //     {
-    //         firstname: 1,
-    //         surname: 1,
-    //         subscription_date: 1,
-    //         referral_code: 1,
-    //         payment_failure_reason: 1
-    //     }
-    // ).sort({ subscription_date: -1 })
-    // // .exec()
-
-    // // .populate({
-    // //     path: '_id',
-    // //     model: Subscriptionpayment,
-    // //     select: ('payment_status is_active')
-    // // })
-
-    let defaultAmbassador = await Subscriptionpayment.find({
-        payment_status: 'cancel payment',
-        createdAt: { $gte: new Date(param.start_date), $lte: new Date(param.end_date) }
-    }, {
-        is_active: 1,
-        payment_status: 1,
-        userid: 1
-    }
-    ).sort({ createdAt: -1 })
-        // .exec()
-        .populate({
-            path: 'userid',
-            model: User,
-            match: { role: 'ambassador' },
-            select: 'role firstname surname'
-        });
+    let defaultAmbassador = await Subscriptionpayment.aggregate([
+        {
+            $match: {
+                payment_status: 'cancel payment',
+                createdAt: { $gte: new Date(param.start_date), $lte: new Date(param.end_date) }
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userid",
+                foreignField: "_id",
+                as: "user"
+            }
+        },
+        {
+            $match: { "user.role": "ambassador" }
+        },
+        {
+            $project: {
+                _id: 0,
+                ambassador_firstname: "$user.firstname",
+                ambassador_lastname: "$user.surname",
+                ambassador_referral_code: "$user.referral_code",
+                payment_failure_reason: "$payment_status"
+            }
+        },
+        { $sort: { createdAt: -1 } },
+    ]);
 
     console.log("Defaulted Subscriptions Payments of Ambassador TEST 3rd", defaultAmbassador)
 
-    if (defaultAmbassador) {
+    if (defaultAmbassador.length > 0) {
         return defaultAmbassador;
     } else {
         return null;
     }
 }
+
+
+// async function getDefaultedSubscriptionPaymentOfAmbassador(param) {
+//     console.log("param", param)
+//     console.log("getAllDefaultedSubscriptionPaymentOfAmbassador")
+//     if (!param) {
+//         return null;
+//     }
+
+//     let defaultAmbassador = await Subscriptionpayment.find({
+//         payment_status: 'cancel payment',
+//         createdAt: { $gte: new Date(param.start_date), $lte: new Date(param.end_date) }
+//     }, {
+//         is_active: 1,
+//         payment_status: 1,
+//         userid: 1
+//     }
+//     ).sort({ createdAt: -1 })
+//         .populate({
+//             path: 'userid',
+//             model: User,
+//             match: { role: 'ambassador' },
+//             select: 'role firstname surname'
+//         });
+
+//     console.log("Defaulted Subscriptions Payments of Ambassador TEST 3rd", defaultAmbassador)
+
+//     if (defaultAmbassador) {
+//         return defaultAmbassador;
+//     } else {
+//         return null;
+//     }
+// }
 
 // TEST 4th Defaulted Subscriptions Payments of Subscribers
 async function getDefaultedSubscriptionPaymentOfSubscribers(param) {

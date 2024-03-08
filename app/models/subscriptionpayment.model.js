@@ -14,7 +14,7 @@ const schema = new Schema({
     item_description: { type: String, required: false, default: '' },
     m_payment_id: { type: String, required: false, default: '' },
     is_recurring: { type: String, required: false, default: '' },
-    userid: { type: String, required: false, default: '' },
+    userid: { type: Schema.Types.ObjectId, ref: "User", required: false, default: '' },
     merchantData: { type: String, required: false, default: '' },
     uuid : { type: String, required: false, default: '' },
     is_active: { type: Boolean, required: false, default: true }
