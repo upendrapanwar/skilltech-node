@@ -6,7 +6,7 @@
  * Author: Skill Tech
  */
 
-const config = require('../config/index');
+const config = require('../config/index'); 
 const mongoose = require('mongoose');
 mongoose.connect(process.env.MONGODB_URI || config.connectionString, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.Promise = global.Promise;
@@ -17,7 +17,7 @@ const path = require('path');
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const msg = require("../helpers/messages.json");
-const { User, Subscriptionpayment, Purchasedcourses } = require('../helpers/db');
+const { User, Subscriptionpayment, Purchasedcourses, Referral } = require('../helpers/db');
 const crypto = require("crypto");
 
 module.exports = {
@@ -26,40 +26,25 @@ module.exports = {
     getAgentById,
     deleteAgentById,
     getOneAgentById,
-
+    
     reportActiveSubcribedAmbassadors,
-
-    // TEST 1st Active Subcripton of Ambassador
-    getAllActiveSubcribedAmbassadors,
-
-    // TEST 2nd Active Subscription of Subscriber
-    getAllActiveSubscriptionSubscriber,
-
-
-
-
-    reportAllActiveSubcribedAmbassadors,
-
     reportActiveSubcribedSubscribers,
+    getAllActiveSubcribedAmbassadors,
+    getAllActiveSubscriptionSubscriber,
+    
+    
 
-
-    // TEST 3rd Defaulted Subscriptions Payments of Ambassador
-    getAllDefaultedSubscriptionPaymentOfAmbassador,
-
-    // TEST 4th Defaulted Subscriptions Payments of Subscribers
-    getAllDefaultedSubscriptionPaymentOfSubscriber,
-
-    // TEST 5th
+    getDefaultedSubscriptionPaymentOfAmbassador,
+    getDefaultedSubscriptionPaymentOfSubscribers,
     getSubscriptionCancelledByAmbassador,
-
-
-
-    defaultedSubscriptionPaymentOfSubscriber,
-
     getSubscriptionCancelledBySubscriber,
-    activeAndInactiveReferralPerAmbassador,
-    activeReferralPerAmbassador,
-    inactiveReferralPerAmbassador,
+
+    getAllActiveAndInactiveReferralPerAmbassador,
+    getAllActiveReferralAmbassador,
+    getAllInactiveReferralAmbassador,
+    getActiveAndInactiveReferralPerAmbassador,
+    getActiveReferralAmbassador,
+    getInactiveReferralAmbassador,
 };
 
 /*****************************************************************************************/
@@ -279,7 +264,7 @@ async function getAllActiveSubscriptionSubscriber(param) {
  */
 
 // TEST 3rd Defaulted Subscriptions Payments of Ambassador
-async function getAllDefaultedSubscriptionPaymentOfAmbassador(param) {
+async function getDefaultedSubscriptionPaymentOfAmbassador(param) {
     console.log("param", param)
     console.log("getAllDefaultedSubscriptionPaymentOfAmbassador")
     if (!param) {
@@ -333,10 +318,10 @@ async function getAllDefaultedSubscriptionPaymentOfAmbassador(param) {
 }
 
 // TEST 4th Defaulted Subscriptions Payments of Subscribers
-async function getAllDefaultedSubscriptionPaymentOfSubscriber(param) {
+async function getDefaultedSubscriptionPaymentOfSubscribers(param) {
 
     console.log("param", param)
-    console.log("getAllDefaultedSubscriptionPaymentOfSubscriber")
+    console.log("getDefaultedSubscriptionPaymentOfSubscribers")
     if (!param) {
         return null;
     }
@@ -532,32 +517,32 @@ async function reportActiveSubcribedAmbassadors(param) {
  * 
  * @return null|Object
  */
-async function reportAllActiveSubcribedAmbassadors(param) {
+// async function reportAllActiveSubcribedAmbassadors(param) {
 
-    if (!param) {
-        return null;
-    }
+//     if (!param) {
+//         return null;
+//     }
 
-    const activeSubscribedAmbassadors = await User.find({
-        role: "ambassador",
-        //subscription_date: { $gte: new Date(param.start_date), $lte: new Date(param.end_date) }
-    }, {
-        firstname: 1,
-        surname: 1,
-        subscription_date: 1,
-        referral_code: 1,
-        ambassador_date: 1,
-    })
-        .sort({ subscription_date: -1 }).exec();
+//     const activeSubscribedAmbassadors = await User.find({
+//         role: "ambassador",
+//         //subscription_date: { $gte: new Date(param.start_date), $lte: new Date(param.end_date) }
+//     }, {
+//         firstname: 1,
+//         surname: 1,
+//         subscription_date: 1,
+//         referral_code: 1,
+//         ambassador_date: 1,
+//     })
+//         .sort({ subscription_date: -1 }).exec();
 
-    console.log(activeSubscribedAmbassadors);
-    if (activeSubscribedAmbassadors) {
-        return activeSubscribedAmbassadors;
-    } else {
-        return null;
-    }
+//     console.log(activeSubscribedAmbassadors);
+//     if (activeSubscribedAmbassadors) {
+//         return activeSubscribedAmbassadors;
+//     } else {
+//         return null;
+//     }
 
-}
+// }
 
 
 /**
@@ -603,247 +588,396 @@ async function reportActiveSubcribedSubscribers(param) {
  * @return null|Object 
  * 
  */
-async function defaultedSubscriptionPaymentOfSubscriber(param) {
-    if (!param) {
-        return null;
-    }
+// async function defaultedSubscriptionPaymentOfSubscriber(param) {
+//     if (!param) {
+//         return null;
+//     }
 
-    const subscribers = await User.find({
-        role: 'subscriptioin',
-        subscription: true,
-        cardPayment: "failed",
-        subscription_cencellation_date: { $gte: new Date(param.start_date), $lte: new Date(param.end_date) }
-    })
-        .sort({ createdAt: 1 })
-        .select('fristname, surname,payment_failure_reason')
-        .exec();
+//     const subscribers = await User.find({
+//         role: 'subscriptioin',
+//         subscription: true,
+//         cardPayment: "failed",
+//         subscription_cencellation_date: { $gte: new Date(param.start_date), $lte: new Date(param.end_date) }
+//     })
+//         .sort({ createdAt: 1 })
+//         .select('fristname, surname,payment_failure_reason')
+//         .exec();
 
-    if (subscribers) {
-        return scrollToubscribers;
-    } else {
-        return null;
-    }
-}
-
-
+//     if (subscribers) {
+//         return scrollToubscribers;
+//     } else {
+//         return null;
+//     }
+// }
 
 
 
 
 
 
-/**
- * Function get data about Active and inactive referralsPer Ambassador – Year To Date (YTD)
- *   
- * @param {param} 
- * @result null|Object
- * 
- */
-async function activeAndInactiveReferralPerAmbassador(param) {
-    if (!param) {
-        return null;
-    }
-
-    let startDate = param.startDate
-    let endDate = param.endDate
-
-    let activeReferralAmbassador = await User.aggregate([
-        {
-            $match: {
-                subscription: true,
-                role: "ambassador",
-                subscription_date: { $get: new Date(param.start_date), $lte: new Date(param.end_date) }
-            }
-        },
-        {
-            $lookup: {
-                from: "referrals",
-                localField: "referral_code",
-                foreignField: "code",
-                as: "referral"
-            }
-        },
-        { $unwind: '$referral' },
-        {
-            $lookup: {
-                from: "users",
-                localField: "referral.usedby",
-                foreignField: "_id",
-                as: "usedByUser"
-            }
-        },
-        {
-            $project: {
-                _id: 0,
-                firstName: 1,
-                lastName: 1,
-                referralCode: "$referral.code",
-                usedByFirstName: "$usedByUser.firstName",
-                usedByLastName: "$usedByUser.lastName"
-            }
-        },
-        { $sort: { "subscription_date": 1 } }]).exec();
-
-
-    if (activeReferralAmbassador) {
-        return activeReferralAmbassador;
-    } else {
-        return null;
-    }
-}
 
 /**
- * Function get all data of Active Referrals per Ambassador 
+ * Function get Active and inactive referralsPer Ambassador – Year To Date (YTD)
+ *  `
  * @param {param}
+ *
+ * @return null|Object
  * 
- * @result null|Object
  */
-async function activeReferralPerAmbassador(param) {
+async function getAllActiveAndInactiveReferralPerAmbassador(param) {
     if (!param) {
         return null;
     }
 
-    let activeRefAmbassador = await User.aggregate([
-        {
-            $match: {
-                subscription: true,
-                role: "ambassador",
-                //  referral_code.isActive:true,
-                subscription_cencellation_date: { $get: new Date(param.start_date), $lte: new Date(param.end_date) }
-            }
-        },
-        {
-            $lookup: {
-                from: "referrals",
-                localField: "referral_code",
-                foreignField: "code",
-                as: "referral"
-            }
-        },
-        {
-            $unwind: "$referral"
-        },
+    let referralData = await Referral.aggregate([
         {
             $lookup: {
                 from: "users",
-                localField: "referral.usedby",
+                localField: "userId",
                 foreignField: "_id",
                 as: "subscriber"
             }
         },
         {
-            $unwind: "$subscriber"
+            $lookup: {
+                from: "users",
+                localField: "referral_code",
+                foreignField: "referral_code",
+                as: "ambassador"
+            }
         },
         {
             $project: {
                 _id: 0,
-                firstName: 1,
-                lastName: 1,
-                referralCode: "$referral.code",
-                usedByFirstName: "$subscriber.firstName",
-                usedByLastName: "$subscriber.lastName"
+                Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
+                Subscriber_lastname: { $arrayElemAt: ["$subscriber.surname", 0] },
+                Ambassador_referralcode: "$referral_code",
+                Ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
+                Ambassador_lastname: { $arrayElemAt: ["$ambassador.surname", 0] },
+                Date_of_use_of_referral_code: "$createdAt",
+                HVG_Subscription_status: {
+                    $cond: {
+                        if: { $ne: ["$purchagedcourseId", null] },
+                        then: "Active",
+                        else: "Inactive"
+                    }
+                }
             }
-        }
+        },
+        { $sort: { "createdAt": 1 } }
     ]).exec();
 
-    if (activeRefAmbassador) {
-        return activeRefAmbassador;
-    } else {
-        return null;
-    }
+    return referralData;
 }
-
 /**
- * Function get all data of inactive Referrals per  Ambassador
- * @param {param}
- * 
+ * Function get Active and inactive referralsPer Ambassador – Year To Date (YTD) by date selection
+ *   
+ * @param {param} 
  * @result null|Object
+ * 
  */
-async function inactiveReferralPerAmbassador(param) {
+async function getActiveAndInactiveReferralPerAmbassador(param) {
     if (!param) {
         return null;
     }
 
-    let startDate = param.startDate
-    let endDate = param.endDate
-
-    let inActiveRefAmbassadors = await User.aggregate([
-        { $match: { referral_is_active: false } },
+    let referralData = await Referral.aggregate([
         {
-            $lookup:
-            {
-                from: "User",
-                localField: "refer_friend",
-                foreignField: "firstname",
-                as: "referredby"
+            $match: {
+                createdAt: { $gte: new Date(param.start_date), $lte: new Date(param.end_date) }
             }
         },
-
-        { $unwind: "$referredby" },
-
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                as: "subscriber"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "referral_code",
+                foreignField: "referral_code",
+                as: "ambassador"
+            }
+        },
         {
             $project: {
-                firstname: 1,
-                surname: 1,
-                subscriptoin_date: 1,
-                referredby: { firstname: 'referedby.firstname', surname: 'referedby.surname', referral_code: 'referedby.referral_code' }
+                _id: 0,
+                Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
+                Subscriber_lastname: { $arrayElemAt: ["$subscriber.surname", 0] },
+                Ambassador_referralcode: "$referral_code",
+                Ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
+                Ambassador_lastname: { $arrayElemAt: ["$ambassador.surname", 0] },
+                Date_of_use_of_referral_code: "$createdAt",
+                HVG_Subscription_status: {
+                    $cond: {
+                        if: { $ne: ["$purchagedcourseId", null] },
+                        then: "Active",
+                        else: "Inactive"
+                    }
+                }
             }
         },
+        { $sort: { "createdAt": 1 } }
+    ]).exec();
 
-        { "$match": { "subscription_date": { $gte: startDate, $lte: endDate } } }]).exec();
-
-    if (inActiveRefAmbassadors) {
-        return inActiveRefAmbassadors;
-    } else {
-        return null;
-    }
-
+    return referralData;
 }
 
+
 /**
- * Function for get all data about Payment due to Ambassador – Current Month
+ * Function get All Active Referrals per Ambassador
+ *  `
  * @param {param}
- * @result null|Object
+ *
+ * @return null|Object
+ * 
  */
-async function ambassadorPaymentsCurrentMonth(param) {
+async function getAllActiveReferralAmbassador(param) {
     if (!param) {
         return null;
     }
 
-    let startDate = param.startDate;
-    let endDate = param.endDate;
+    let referralData = await Referral.aggregate([
+        {
+            $match: {
+                purchagedcourseId: { $ne: null }, 
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                as: "subscriber"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "referral_code",
+                foreignField: "referral_code",
+                as: "ambassador"
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
+                Subscriber_lastname: { $arrayElemAt: ["$subscriber.surname", 0] },
+                Ambassador_referralcode: "$referral_code",
+                Ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
+                Ambassador_lastname: { $arrayElemAt: ["$ambassador.surname", 0] },
+                Date_of_use_of_referral_code: "$createdAt",
+            }
+        },
+        { $sort: { "createdAt": 1 } }
+    ]).exec();
 
-    let ambassador = await User.find({
-        where: {
-            role: 'ambassador',
-            subscription: true,
-            updateAt: { $gte: startDate, $lte: endDate }
-        }
-    }).select('firstname, lastname, referral_code, ')
+    return referralData;
 }
-
-
 /**
- * Function for  getting Defaulted Subscriptions Payments of Subscribers who used referral_code
+ * Function get Active Referrals per Ambassador by date selection
  * @param {param}
  * 
- * @result null | Object
+ * @result null|Object
  */
-async function getAllDefaultedPaymentOfSubscribersWhoUsedReferralCode(param) {
+async function getActiveReferralAmbassador(param) {
     if (!param) {
         return null;
     }
 
-    let subscriber = await User.find({
-        where: {
-            subscription: true,
-            role: subscription,
-        }
-    }).select('firstname, lastname, payment_failure_reason').sort({ updateAt: 'asc' }).exec;
+    let referralData = await Referral.aggregate([
+        {
+            $match: {
+                purchagedcourseId: { $ne: null }, 
+                createdAt: { $gte: new Date(param.start_date), $lte: new Date(param.end_date) }
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                as: "subscriber"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "referral_code",
+                foreignField: "referral_code",
+                as: "ambassador"
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
+                Subscriber_lastname: { $arrayElemAt: ["$subscriber.surname", 0] },
+                Ambassador_referralcode: "$referral_code",
+                Ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
+                Ambassador_lastname: { $arrayElemAt: ["$ambassador.surname", 0] },
+                Date_of_use_of_referral_code: "$createdAt",
+            }
+        },
+        { $sort: { "createdAt": 1 } }
+    ]).exec();
 
-    if (subscriber) {
-        return subscriber;
-    } else {
+    return referralData;
+}
+
+/**
+ * Function get All Inactive Referrals per Ambassador
+ *  `
+ * @param {param}
+ *
+ * @return null|Object
+ * 
+ */
+async function getAllInactiveReferralAmbassador(param) {
+    if (!param) {
         return null;
     }
+
+    let referralData = await Referral.aggregate([
+        {
+            $match: {
+                purchagedcourseId: null, 
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                as: "subscriber"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "referral_code",
+                foreignField: "referral_code",
+                as: "ambassador"
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
+                Subscriber_lastname: { $arrayElemAt: ["$subscriber.surname", 0] },
+                Ambassador_referralcode: "$referral_code",
+                Ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
+                Ambassador_lastname: { $arrayElemAt: ["$ambassador.surname", 0] },
+                Date_of_use_of_referral_code: "$createdAt",
+            }
+        },
+        { $sort: { "createdAt": 1 } }
+    ]).exec();
+
+    return referralData;
+
 }
+/**
+ * Function get Inactive Referrals per Ambassador by date selection
+ * @param {param}
+ * 
+ * @result null|Object
+ */
+async function getInactiveReferralAmbassador(param) {
+    if (!param) {
+        return null;
+    }
+
+    let referralData = await Referral.aggregate([
+        {
+            $match: {
+                purchagedcourseId: null, 
+                createdAt: { $gte: new Date(param.start_date), $lte: new Date(param.end_date) }
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                as: "subscriber"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "referral_code",
+                foreignField: "referral_code",
+                as: "ambassador"
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
+                Subscriber_lastname: { $arrayElemAt: ["$subscriber.surname", 0] },
+                Ambassador_referralcode: "$referral_code",
+                Ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
+                Ambassador_lastname: { $arrayElemAt: ["$ambassador.surname", 0] },
+                Date_of_use_of_referral_code: "$createdAt",
+            }
+        },
+        { $sort: { "createdAt": 1 } }
+    ]).exec();
+
+    return referralData;
+
+}
+
+// /**
+//  * Function for get all data about Payment due to Ambassador – Current Month
+//  * @param {param}
+//  * @result null|Object
+//  */
+// async function ambassadorPaymentsCurrentMonth(param) {
+//     if (!param) {
+//         return null;
+//     }
+
+//     let startDate = param.startDate;
+//     let endDate = param.endDate;
+
+//     let ambassador = await User.find({
+//         where: {
+//             role: 'ambassador',
+//             subscription: true,
+//             updateAt: { $gte: startDate, $lte: endDate }
+//         }
+//     }).select('firstname, lastname, referral_code, ')
+// }
+
+
+// /**
+//  * Function for  getting Defaulted Subscriptions Payments of Subscribers who used referral_code
+//  * @param {param}
+//  * 
+//  * @result null | Object
+//  */
+// async function getAllDefaultedPaymentOfSubscribersWhoUsedReferralCode(param) {
+//     if (!param) {
+//         return null;
+//     }
+
+//     let subscriber = await User.find({
+//         where: {
+//             subscription: true,
+//             role: subscription,
+//         }
+//     }).select('firstname, lastname, payment_failure_reason').sort({ updateAt: 'asc' }).exec;
+
+//     if (subscriber) {
+//         return subscriber;
+//     } else {
+//         return null;
+//     }
+// }

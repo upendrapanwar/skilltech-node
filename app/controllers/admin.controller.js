@@ -4,7 +4,7 @@ const router = express.Router();
 const adminService = require('../services/admin.service');
 const { array } = require('joi');
 const { registerValidation } = require('../validations/user.validation');
-const msg = require('../helpers/messages.json');
+const msg = require('../helpers/messages.json'); 
 
 const multer = require('multer');
 
@@ -15,39 +15,23 @@ router.get('/get-agents-byid/:id', getAgentById);
 router.delete('/delete-agent/:id', deleteAgentById);
 
 router.get('/active-subscribed-ambassador', reportActiveSubcribedAmbassadors);
-
-// TEST 1st
-router.get('/active-subscribed-ambassador/:start_date/:end_date', getAllActiveSubcribedAmbassadors);
-
-// router.get('/all-active-subscribed-ambassador', reportAllActiveSubcribedAmbassadors);
-
-
 router.get('/active-subscribed-subscriber', reportActiveSubcribedSubscribers);
-
-
-// TEST 2nd Active Subscription of Subscriber
+router.get('/active-subscribed-ambassador/:start_date/:end_date', getAllActiveSubcribedAmbassadors);
 router.get('/active-subscribed-subscriber/:start_date/:end_date', getAllActiveSubscriptionSubscriber);
-// router.get('/all-active-subscribed-subscriber', reportAllActiveSubcribedSubscribers);
 
-/***********START */
 
-// TEST 3rd Defaulted Subscriptions Payments of Ambassador
-router.get('/defaulted-subscription-paymentofambassador/:start_date/:end_date', getAllDefaultedSubscriptionPaymentOfAmbassador);
-
-// TEST 4th Defaulted Subscriptions Payments of Subscriber
-router.get('/defaulted-subscription-paymentofsubscriber/:start_date/:end_date', getAllDefaultedSubscriptionPaymentOfSubscribers);
-
-//TEST 5th Subscription-cancelledby-ambassador
+router.get('/defaulted-subscription-paymentof-ambassador/:start_date/:end_date', getDefaultedSubscriptionPaymentOfAmbassador);
+router.get('/defaulted-subscription-paymentof-subscriber/:start_date/:end_date', getDefaultedSubscriptionPaymentOfSubscribers);
 router.get('/subscription-cancelledby-ambassador/:start_date/:end_date', getSubscriptionCancelledByAmbassador);
-
-
-//TEST 6th Subscription-cancelledby-subscriber
 router.get('/subscription-cancelledby-subscriber/:start_date/:end_date', getSubscriptionCancelledBySubscriber);
 
 
-router.get('/active-inactive-referral-per-ambassador/:start_date/:end_date', getAllActiveAndInactiveReferralPerAmbassador);
-router.get('/active-referral-per-ambassador/:start_date/:end_date', getAllactiveReferralAmbassador);
-router.get('/inactive-referral-per-ambassador/:start_date/:end_date', getAllInactiveReferralAmbassador);
+router.get('/active-inactive-referral-per-ambassador', getAllActiveAndInactiveReferralPerAmbassador);
+router.get('/active-referral-per-ambassador', getAllActiveReferralAmbassador);
+router.get('/inactive-referral-per-ambassador', getAllInactiveReferralAmbassador);
+router.get('/active-inactive-referral-per-ambassador/:start_date/:end_date', getActiveAndInactiveReferralPerAmbassador);
+router.get('/active-referral-per-ambassador/:start_date/:end_date', getActiveReferralAmbassador);
+router.get('/inactive-referral-per-ambassador/:start_date/:end_date', getInactiveReferralAmbassador);
 
 module.exports = router;
 
@@ -250,15 +234,14 @@ function getAllActiveSubscriptionSubscriber(req, res, next) {
 /*****************************************************************************************/
 /*****************************************************************************************/
 /**
- * Function for get all data of defauled payment of ambassador 
+ * Function for get data of defauled payment of ambassador by date
  * @param {*} req 
  * @param {*} res 
  * @param {*} next
  *                  
  */
-// TEST 3rd Defaulted Subscriptions Payments of Ambassador
-function getAllDefaultedSubscriptionPaymentOfAmbassador(req, res, next) {
-    adminService.getAllDefaultedSubscriptionPaymentOfAmbassador(req.params)
+function getDefaultedSubscriptionPaymentOfAmbassador(req, res, next) {
+    adminService.getDefaultedSubscriptionPaymentOfAmbassador(req.params)
         .then(activeAmbassador => activeAmbassador ? res.status(200).json({ status: true, data: activeAmbassador }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
         .catch(err => next(res.json({ status: false, message: err })))
 }
@@ -272,10 +255,9 @@ function getAllDefaultedSubscriptionPaymentOfAmbassador(req, res, next) {
  * 
  * 
  */
-// TEST 4th Defaulted Subscriptions Payments of Subscriber
-function getAllDefaultedSubscriptionPaymentOfSubscribers(req, res, next) {
+function getDefaultedSubscriptionPaymentOfSubscribers(req, res, next) {
     console.log("getAllDefaultedSubscriptionPaymentOfSubscribers")
-    adminService.getAllDefaultedSubscriptionPaymentOfSubscriber(req.params)
+    adminService.getDefaultedSubscriptionPaymentOfSubscribers(req.params)
         .then(activeSubscriber => activeSubscriber ? res.status(200).json({ status: true, data: activeSubscriber }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
         .catch(err => next(res.json({ status: false, message: err })));
 }
@@ -313,29 +295,39 @@ function getSubscriptionCancelledBySubscriber(req, res, next) {
 }
 
 
-
 /**
- * Function for get all data active and inactive Referral per ambassador
+ * Function for get all active and inactive Referral per ambassador 
  * @param {*} req 
  * @param {*} res
  * @param {*} next
  * 
  */
 function getAllActiveAndInactiveReferralPerAmbassador(req, res, next) {
-    adminService.activeAndInactiveReferralPerAmbassador(req.params)
+    adminService.getAllActiveAndInactiveReferralPerAmbassador(req.params)
         .then(user => user ? res.status(200).json({ status: true, data: user }) : res.status(400).json({ status: false, message: msg.common.no_data_err.data.err, data: null }))
         .catch(err => next(res.json({ status: false, message: err })));
 }
-
 /**
- * Function for get all data active Referral per ambassador
+ * Function for active and inactive Referral per ambassador by date
  * @param {*} req 
  * @param {*} res
  * @param {*} next
  * 
  */
-function getAllactiveReferralAmbassador(req, res, next) {
-    adminService.activeReferralPerAmbassador(req.params)
+function getActiveAndInactiveReferralPerAmbassador(req, res, next) {
+    adminService.getActiveAndInactiveReferralPerAmbassador(req.params)
+        .then(user => user ? res.status(200).json({ status: true, data: user }) : res.status(400).json({ status: false, message: msg.common.no_data_err.data.err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })));
+}
+/**
+ * Function for all active Referral per ambassador
+ * @param {*} req 
+ * @param {*} res
+ * @param {*} next
+ * 
+ */
+function getAllActiveReferralAmbassador(req, res, next) {
+    adminService.getAllActiveReferralAmbassador(req.params)
         .then(activeReferral => activeReferral ? res.status(200).json({ status: true, data: activeReferral }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
         .catch(err => next(res.json({ status: false, message: err })));
 
@@ -343,14 +335,42 @@ function getAllactiveReferralAmbassador(req, res, next) {
 }
 
 /**
- * Function for get all data inactive Referral per ambassador
+ * Function for active Referral per ambassador by date
+ * @param {*} req 
+ * @param {*} res
+ * @param {*} next
+ * 
+ */
+function getActiveReferralAmbassador(req, res, next) {
+    adminService.getActiveReferralAmbassador(req.params)
+        .then(activeReferral => activeReferral ? res.status(200).json({ status: true, data: activeReferral }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })));
+
+
+}
+/**
+ * Function for all Inactive Referral per ambassador
  * @param {*} req 
  * @param {*} res
  * @param {*} next
  * 
  */
 function getAllInactiveReferralAmbassador(req, res, next) {
-    adminService.inactiveReferralPerAmbassador(req.params)
+    adminService.getAllInactiveReferralAmbassador(req.params)
+        .then(inactiveReferral => inactiveReferral ? res.status(200).json({ status: true, data: inactiveReferral }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })));
+
+}
+
+/**
+ * Function for Inactive Referral per ambassador by date
+ * @param {*} req 
+ * @param {*} res
+ * @param {*} next
+ * 
+ */
+function getInactiveReferralAmbassador(req, res, next) {
+    adminService.getInactiveReferralAmbassador(req.params)
         .then(inactiveReferral => inactiveReferral ? res.status(200).json({ status: true, data: inactiveReferral }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
         .catch(err => next(res.json({ status: false, message: err })));
 
