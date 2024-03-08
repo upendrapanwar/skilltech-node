@@ -281,6 +281,8 @@ async function subscription(param) {
  */
 async function saveMembershipSubscription(param) {
   try {
+    console.log("Param data: ", param)
+    const referralCode = param.referralCode;
     //console.log('params=',param.merchantData);
     //const subscriptionPayment = new Subscriptionpayment({
       
@@ -315,11 +317,11 @@ async function saveMembershipSubscription(param) {
       { _id: param.userid },
       {
         $set: {
-          // role: "subscriber",
           subscription_date: new Date(),
         },
       }
     );
+
     console.log('subscriberdata=',data);
     if (param.id) {
       let res = await Subscriptionpayment.findById(param.id).select(
@@ -342,14 +344,21 @@ async function saveMembershipSubscription(param) {
               paymentType: courseDatas[i].paymentType,
               image: courseDatas[i].image,
               course_category: "",
-              is_active : param.is_active
+              is_active : param.is_active,
             });
             await purchasedcourses.save();
+            console.log("purchasedcourses", purchasedcourses)
+
+            //Set purchagedcourseId in Referral document in database
+            const updateReferral = await Referral.findOneAndUpdate(
+              { referral_code: referralCode },
+              { $set: { purchagedcourseId: purchasedcourses._id } },
+              { new: true }
+            );
           }
         }else{
           console.log(" Payment is Cancle.....")
         }
-        //sendMail(mailOptions);
         return res;
       } else {
         return false;
@@ -664,12 +673,17 @@ async function checkReferralCode(req) {
      // Referral code not used, proceed with creation
     const countReferral = await User.find({ referral_code: referralCode }).count();
     console.log("countReferral", countReferral);
-    const qrCode = await User.findById(userId).select("qr_code");
+
+    const qrCode = await User.find({ referral_code: referralCode }).select("qr_code");
+    console.log("qrCode", qrCode);
+    if (!qrCode || !qrCode[1].qr_code) {
+      throw new Error("QR code not found for the user");
+    }
 
     const referralData = await Referral.create({
       referral_code: referralCode,
       userId: userId,
-      qr_code: qrCode.qr_code,
+      qr_code: qrCode[1].qr_code,
     });
 
     const newReferralData = await referralData.save();
@@ -925,7 +939,7 @@ async function sendEmailToAmbassador(req) {
 
     const url = `https://affiliate.skilltechsa.online/ambessador/ambassador-subscription?url=${ambassadorData.referral_code}`;
     const qrCode = await QRCode.toDataURL(url);
-    // console.log(qrCode);
+    console.log(qrCode);
 
     // Save QR code to the database
     const updatedUser = await User.findOneAndUpdate(

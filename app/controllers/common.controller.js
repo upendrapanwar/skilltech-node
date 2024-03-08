@@ -73,7 +73,7 @@ var uploadCertificate = multer({
 router.post("/signup", registerValidation, register);
 router.post("/signin", authenticate);
 router.post("/subscription", subscription);
-router.post("/ambassador-subscription", ambassadorSubscription);
+router.post("/ambassador-subscription", ambassadorSubscription); 
 router.post("/complete-registration", completeRegisteration);
 router.post("/generate-signature", generateSignature);
 router.post("/save-subscription", saveMembershipSubscription);
