@@ -14,12 +14,16 @@ router.get('/get-active-agents', getActiveAgents);
 router.get('/get-agents-byid/:id', getAgentById);
 router.delete('/delete-agent/:id', deleteAgentById);
 
-router.get('/active-subscribed-ambassador', reportActiveSubcribedAmbassadors);
-router.get('/active-subscribed-subscriber', reportActiveSubcribedSubscribers);
+router.get('/active-subscribed-ambassador', getActiveSubcribedAmbassadors);
+router.get('/active-subscribed-subscriber', getActiveSubcribedSubscribers);
 router.get('/active-subscribed-ambassador/:start_date/:end_date', getAllActiveSubcribedAmbassadors);
 router.get('/active-subscribed-subscriber/:start_date/:end_date', getAllActiveSubscriptionSubscriber);
 
 
+router.get('/defaulted-subscription-paymentof-ambassador', getAllDefaultedSubscriptionPaymentOfAmbassador);
+router.get('/defaulted-subscription-paymentof-subscriber', getAllDefaultedSubscriptionPaymentOfSubscribers);
+router.get('/subscription-cancelledby-ambassador', getAllSubscriptionCancelledByAmbassador);
+router.get('/subscription-cancelledby-subscriber', getAllSubscriptionCancelledBySubscriber);
 router.get('/defaulted-subscription-paymentof-ambassador/:start_date/:end_date', getDefaultedSubscriptionPaymentOfAmbassador);
 router.get('/defaulted-subscription-paymentof-subscriber/:start_date/:end_date', getDefaultedSubscriptionPaymentOfSubscribers);
 router.get('/subscription-cancelledby-ambassador/:start_date/:end_date', getSubscriptionCancelledByAmbassador);
@@ -156,8 +160,8 @@ function getAgentById(req, res, next) {
  * @param {*} next
  */
 
-function reportActiveSubcribedAmbassadors(req, res, next) {
-    adminService.reportActiveSubcribedAmbassadors(req.params)
+function getActiveSubcribedAmbassadors(req, res, next) {
+    adminService.getActiveSubcribedAmbassadors(req.params)
         .then(activeAmbassador => activeAmbassador ? res.status(200).json({ status: true, data: activeAmbassador }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
         .catch(err => next(res.json({ status: false, message: err.message })));
 }
@@ -186,8 +190,8 @@ function getAllActiveSubcribedAmbassadors(req, res, next) {
  * @param {*} next
  */
 
-function reportActiveSubcribedSubscribers(req, res, next) {
-    adminService.reportActiveSubcribedSubscribers(req.params)
+function getActiveSubcribedSubscribers(req, res, next) {
+    adminService.getActiveSubcribedSubscribers(req.params)
         .then(activeSubscriber => {
             activeSubscriber.length > 0 ?
                 res.status(200).json({ status: true, data: activeSubscriber }) :
@@ -240,12 +244,25 @@ function getAllActiveSubscriptionSubscriber(req, res, next) {
  * @param {*} next
  *                  
  */
+function getAllDefaultedSubscriptionPaymentOfAmbassador(req, res, next) {
+    adminService.getDefaultedSubscriptionPaymentOfAmbassador(req.params)
+        .then(activeAmbassador => activeAmbassador ? res.status(200).json({ status: true, data: activeAmbassador }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })))
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function for get data of defauled payment of ambassador by date
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next
+ *                  
+ */
 function getDefaultedSubscriptionPaymentOfAmbassador(req, res, next) {
     adminService.getDefaultedSubscriptionPaymentOfAmbassador(req.params)
         .then(activeAmbassador => activeAmbassador ? res.status(200).json({ status: true, data: activeAmbassador }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
         .catch(err => next(res.json({ status: false, message: err })))
 }
-
 
 /***
  * Functinn get All Defaulted Subcription Payment of Subscriber
@@ -253,6 +270,19 @@ function getDefaultedSubscriptionPaymentOfAmbassador(req, res, next) {
  * @param {*} res 
  * @param {*} next
  * 
+ * 
+ */
+function getAllDefaultedSubscriptionPaymentOfSubscribers(req, res, next) {
+    adminService.getDefaultedSubscriptionPaymentOfSubscribers(req.params)
+        .then(activeSubscriber => activeSubscriber ? res.status(200).json({ status: true, data: activeSubscriber }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })));
+}
+/***
+ * Functinn get All Defaulted Subcription Payment of Subscriber
+ * @param {*} req
+ * @param {*} res 
+ * @param {*} next
+ *  
  * 
  */
 function getDefaultedSubscriptionPaymentOfSubscribers(req, res, next) {
@@ -263,22 +293,29 @@ function getDefaultedSubscriptionPaymentOfSubscribers(req, res, next) {
 }
 
 
-
 /**
  * Function for get all data Cancellation of Subscriptions – Cancelled by Ambassador
  * @param {*} req
  * @param {*} res
  * @param {*} next
  */
-// TEST 5th
+function getAllSubscriptionCancelledByAmbassador(req, res, next) {
+    adminService.getSubscriptionCancelledByAmbassador(req.params)
+        .then(cancelledSubscriber => cancelledSubscriber ? res.status(200).json({ status: true, data: cancelledSubscriber }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err.message })));
+}
+/**
+ * Function for get all data Cancellation of Subscriptions – Cancelled by Ambassador
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
+ */
 function getSubscriptionCancelledByAmbassador(req, res, next) {
     console.log("getSubscriptionCancelledByAmbassador")
     adminService.getSubscriptionCancelledByAmbassador(req.params)
         .then(cancelledSubscriber => cancelledSubscriber ? res.status(200).json({ status: true, data: cancelledSubscriber }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
         .catch(err => next(res.json({ status: false, message: err.message })));
-
 }
-
 /**
  * Function for get all data Cencellation of Subcription -Cancelld by Subscriber
  * @param {*} req 
@@ -286,7 +323,19 @@ function getSubscriptionCancelledByAmbassador(req, res, next) {
  * @param {*} next
  * 
  */
-// TEST 6th
+function getAllSubscriptionCancelledBySubscriber(req, res, next) {
+    adminService.getSubscriptionCancelledBySubscriber(req.params)
+        .then(cancelledSubscriber => cancelledSubscriber ? res.status(200).json({ status: true, data: cancelledSubscriber }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err.message })));
+
+}
+/**
+ * Function for get all data Cencellation of Subcription -Cancelld by Subscriber
+ * @param {*} req 
+ * @param {*} res
+ * @param {*} next
+ * 
+ */
 function getSubscriptionCancelledBySubscriber(req, res, next) {
     adminService.getSubscriptionCancelledBySubscriber(req.params)
         .then(cancelledSubscriber => cancelledSubscriber ? res.status(200).json({ status: true, data: cancelledSubscriber }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))

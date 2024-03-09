@@ -289,7 +289,7 @@ async function saveMembershipSubscription(param) {
     //});
     //const data = await subscriptionPayment.save();
 
-    const data = await Subscriptionpayment.updateMany(
+    const data = await Subscriptionpayment.findOneAndUpdate(
       { _id: param.id },
       {
         $set: {
@@ -310,6 +310,9 @@ async function saveMembershipSubscription(param) {
           is_active: param.is_active,
           merchantData : JSON.stringify(param.merchantData)
         },
+      },
+      {
+        new: true
       }
     );
 
@@ -336,7 +339,7 @@ async function saveMembershipSubscription(param) {
           for (var i = 0; i < Object.keys(courseDatas).length; i++) {
             const purchasedcourses = new Purchasedcourses({
               courseid: courseDatas[i].id,
-              orderid: data.id,
+              orderid: data._id,
               quantity: courseDatas[i].quantity,
               userId: param.userid,
               course_title: courseDatas[i].title,
@@ -658,14 +661,14 @@ async function getSubscriptionId() {
  */
 async function checkReferralCode(req) {
   try {
-    const {code} = req.params;
+    const {code} = req.params; 
     const referralCode = code;
     const { userId } = req.query;
     console.log("UserID", userId);
     console.log("referralCode", referralCode);
 
     // Check if referral code is already used
-    const existingReferral = await Referral.findOne({ referral_code: referralCode });
+    const existingReferral = await Referral.findOne({ referral_code: referralCode, userId: userId });
     if (existingReferral) {
       return ;
     }
