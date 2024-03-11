@@ -586,9 +586,9 @@ async function getReferralCode(param) {
  *
  * @returns Object|null
  */
-async function payFastNotify(param,spayId) {
+async function payFastNotify(param, spayId) {
   console.log("Notify URL is running in service.");
-  console.log("spayId", spayId);
+  console.log("spayId", spayId.id);
   const requestData = param;
 
   // Check if requestData exists and is not empty
@@ -600,7 +600,7 @@ async function payFastNotify(param,spayId) {
     console.log("ITN Data:", itnData);
 
     const updatedPaymentData = await Subscriptionpayment.updateMany(
-          { _id: spay.id },
+          { _id: spayId.id },
           {
             $set: {
               merchantData: JSON.stringify(itnData),
