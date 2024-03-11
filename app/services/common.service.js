@@ -598,12 +598,12 @@ async function payFastNotify(param,spay) {
     }
     console.log("ITN Data:", itnData);
 
-    const updatedSubscriptionData = await Subscriptionpayment.updateMany(
+    const updatedPaymentData = await Subscriptionpayment.updateMany(
           { _id: spay.id },
           {
             $set: {
-              merchantData: JSON.stringify(dataString),
-              uuid: JSON.stringify(dataString),
+              merchantData: JSON.stringify(itnData),
+              // uuid: JSON.stringify(dataString),
             },
           }
         );
