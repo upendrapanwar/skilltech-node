@@ -311,17 +311,6 @@ async function saveMembershipSubscription(param) {
       }
     );
 
-    const updatedPaymentData = await Subscriptionpayment.updateMany(
-      { _id: spay.id },
-      {
-        $set: {
-          merchantData: JSON.stringify(itnData),
-          // uuid: JSON.stringify(dataString),
-        },
-      }
-    );
-    console.log("updatedPaymentData", updatedPaymentData);
-
     // await User.findByIdAndUpdate(
     //   { _id: param.userid },
     //   {
@@ -597,30 +586,30 @@ async function getReferralCode(param) {
  *
  * @returns Object|null
  */
-const itnData = "";
-async function payFastNotify(param,spay) {
-  console.log("Notify URL is running in service.")
+async function payFastNotify(param,spayId) {
+  console.log("Notify URL is running in service.");
+  console.log("spayId", spayId);
   const requestData = param;
 
   // Check if requestData exists and is not empty
   if (requestData && Object.keys(requestData).length > 0) {
-    itnData = {};
+    const itnData = {};
     for (const key of Object.keys(requestData)) {
       itnData[key] = requestData[key];
     }
     console.log("ITN Data:", itnData);
 
-    // const updatedPaymentData = await Subscriptionpayment.updateMany(
-    //       { _id: spay.id },
-    //       {
-    //         $set: {
-    //           merchantData: JSON.stringify(itnData),
-    //           // uuid: JSON.stringify(dataString),
-    //         },
-    //       }
-    //     );
+    const updatedPaymentData = await Subscriptionpayment.updateMany(
+          { _id: spay.id },
+          {
+            $set: {
+              merchantData: JSON.stringify(itnData),
+              // uuid: JSON.stringify(dataString),
+            },
+          }
+        );
     
-        // console.log("updatedSubscriptionData", updatedSubscriptionData);
+        console.log("updatedSubscriptionData", updatedSubscriptionData);
     return itnData;
   } else {
     return null;
