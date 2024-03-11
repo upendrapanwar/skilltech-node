@@ -594,7 +594,7 @@ async function payFastNotify(req) {
     for (const key of Object.keys(requestData)) {
       itnData[key] = requestData[key];
     }
-    
+    console.log("ITN Data: ", itnData);
     return itnData;
   } else {
     return "No data received.";
