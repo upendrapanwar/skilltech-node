@@ -587,17 +587,19 @@ async function getReferralCode(param) {
  * @returns Object|null
  */
 async function payFastNotify(req) {
+  console.log("Notify URL is running in service.")
   const requestData = req.body;
 
-  if (Object.keys(requestData).length > 0) {
+  // Check if requestData exists and is not empty
+  if (requestData && Object.keys(requestData).length > 0) {
     const itnData = {};
     for (const key of Object.keys(requestData)) {
       itnData[key] = requestData[key];
     }
-    console.log("ITN Data: ", itnData);
+    console.log("ITN Data:", itnData);
     return itnData;
   } else {
-    return "No data received.";
+    throw new Error("No data received in ITN payload.");
   }
 }
 // async function payFastNotify(param,spay) {

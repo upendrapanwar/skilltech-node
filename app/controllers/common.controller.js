@@ -476,6 +476,7 @@ function sendEmailToAmbassador(req, res, next) {
  * @return JSON|null
  */
 function payFastNotify(req, res, next) {
+  console.log("Notify URL is running in controller.");
   commonService
     .payFastNotify(req)
     .then((payFastResponse) =>
