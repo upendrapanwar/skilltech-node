@@ -598,7 +598,7 @@ async function payFastNotify(param,spay) {
     }
     console.log("ITN Data:", itnData);
 
-    await Subscriptionpayment.updateMany(
+    const updatedSubscriptionData = await Subscriptionpayment.updateMany(
           { _id: spay.id },
           {
             $set: {
@@ -607,10 +607,11 @@ async function payFastNotify(param,spay) {
             },
           }
         );
-
+    
+        console.log("updatedSubscriptionData", updatedSubscriptionData);
     return itnData;
   } else {
-    throw new Error("No data received in ITN payload.");
+    return null;
   }
 }
 // async function payFastNotify(param,spay) {
