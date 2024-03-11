@@ -586,9 +586,9 @@ async function getReferralCode(param) {
  *
  * @returns Object|null
  */
-async function payFastNotify(req) {
+async function payFastNotify(param,spay) {
   console.log("Notify URL is running in service.")
-  const requestData = req.body;
+  const requestData = param;
 
   // Check if requestData exists and is not empty
   if (requestData && Object.keys(requestData).length > 0) {
@@ -597,6 +597,17 @@ async function payFastNotify(req) {
       itnData[key] = requestData[key];
     }
     console.log("ITN Data:", itnData);
+
+    await Subscriptionpayment.updateMany(
+          { _id: spay.id },
+          {
+            $set: {
+              merchantData: JSON.stringify(dataString),
+              uuid: JSON.stringify(dataString),
+            },
+          }
+        );
+
     return itnData;
   } else {
     throw new Error("No data received in ITN payload.");

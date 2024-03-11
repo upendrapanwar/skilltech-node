@@ -85,7 +85,7 @@ router.get("/get-user-courses/:id", getUserCourses);
 router.post("/save-query", saveQuery);
 router.put("/cancel-course/:id", cancelCourseByUser);  
 router.get("/send-email-ambassador/:id", sendEmailToAmbassador); 
-router.post("/notify", payFastNotify);
+router.post("/notify/:id", payFastNotify);
 router.get("/getSubscriptionId",getSubscriptionId);
 
 module.exports = router;
@@ -478,7 +478,7 @@ function sendEmailToAmbassador(req, res, next) {
 function payFastNotify(req, res, next) {
   console.log("Notify URL is running in controller.");
   commonService
-    .payFastNotify(req)
+    .payFastNotify(req.body, req.param)
     .then((payFastResponse) =>
       payFastResponse
         ? res.status(200).json({ status: true, data: payFastResponse })
