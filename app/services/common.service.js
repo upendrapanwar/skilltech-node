@@ -56,7 +56,7 @@ module.exports = {
   getMyCourses,
   getUserCourses,
   saveQuery,
-  removeMyCourses,
+  cancelCourseByUser,
   sendEmailToAmbassador,
   payFastNotify,
   getSubscriptionId
@@ -283,11 +283,6 @@ async function saveMembershipSubscription(param) {
   try {
     console.log("Param data: ", param)
     const referralCode = param.referralCode;
-    //console.log('params=',param.merchantData);
-    //const subscriptionPayment = new Subscriptionpayment({
-      
-    //});
-    //const data = await subscriptionPayment.save();
 
     const data = await Subscriptionpayment.findOneAndUpdate(
       { _id: param.id },
@@ -316,14 +311,14 @@ async function saveMembershipSubscription(param) {
       }
     );
 
-    await User.findByIdAndUpdate(
-      { _id: param.userid },
-      {
-        $set: {
-          subscription_date: new Date(),
-        },
-      }
-    );
+    // await User.findByIdAndUpdate(
+    //   { _id: param.userid },
+    //   {
+    //     $set: {
+    //       subscription_date: new Date(),
+    //     },
+    //   }
+    // );
 
     console.log('subscriberdata=',data);
     if (param.id) {
@@ -353,14 +348,16 @@ async function saveMembershipSubscription(param) {
             console.log("purchasedcourses", purchasedcourses)
 
             //Set purchagedcourseId in Referral document in database
+            if(referralCode){
             const updateReferral = await Referral.findOneAndUpdate(
               { referral_code: referralCode },
               { $set: { purchagedcourseId: purchasedcourses._id } },
               { new: true }
             );
+            }
           }
         }else{
-          console.log(" Payment is Cancle.....")
+          console.log(" Payment is Cancled")
         }
         return res;
       } else {
@@ -589,45 +586,59 @@ async function getReferralCode(param) {
  *
  * @returns Object|null
  */
-async function payFastNotify(param,spay) {
-  const requestData = param;
+async function payFastNotify(req) {
+  const requestData = req.body;
 
-  // Perform signature verification
-  const signature = requestData.signature;
-  delete requestData.signature; // Remove signature from data to verify
-
-  const dataString = Object.keys(requestData)
-    .sort()
-    .map((key) => `${key}=${requestData[key]}`)
-    .join('&');
-
-  const calculatedSignature = crypto
-    .createHash('md5')
-    .update(`${dataString}&${payfastSettings.passphrase}`)
-    .digest('hex');
-
-  /*const subscriptionPayment = new Subscriptionpayment({
-    merchantData: JSON.stringify(dataString),
-    uuid : JSON.stringify(dataString)
-  });*/
-  //const data = await subscriptionPayment.save();
-  console.log('payfast',dataString);
-  await Subscriptionpayment.updateMany(
-    { _id: spay.id },
-    {
-      $set: {
-        uuid: JSON.stringify(dataString),
-      },
+  if (Object.keys(requestData).length > 0) {
+    const itnData = {};
+    for (const key of Object.keys(requestData)) {
+      itnData[key] = requestData[key];
     }
-  );
-  /*let countReferral = await User.find({ role: "ambassador" }).count();
-
-  if (countReferral) {
-    return countReferral;
+    
+    return itnData;
   } else {
-    return null;
-  }*/
+    return "No data received.";
+  }
 }
+// async function payFastNotify(param,spay) {
+//   const requestData = param;
+
+//   // Perform signature verification
+//   const signature = requestData.signature;
+//   delete requestData.signature; // Remove signature from data to verify
+
+//   const dataString = Object.keys(requestData)
+//     .sort()
+//     .map((key) => `${key}=${requestData[key]}`)
+//     .join('&');
+
+//   const calculatedSignature = crypto
+//     .createHash('md5')
+//     .update(`${dataString}&${payfastSettings.passphrase}`)
+//     .digest('hex');
+
+//   /*const subscriptionPayment = new Subscriptionpayment({
+//     merchantData: JSON.stringify(dataString),
+//     uuid : JSON.stringify(dataString)
+//   });*/
+//   //const data = await subscriptionPayment.save();
+//   console.log('payfast',dataString);
+//   await Subscriptionpayment.updateMany(
+//     { _id: spay.id },
+//     {
+//       $set: {
+//         uuid: JSON.stringify(dataString),
+//       },
+//     }
+//   );
+//   /*let countReferral = await User.find({ role: "ambassador" }).count();
+
+//   if (countReferral) {
+//     return countReferral;
+//   } else {
+//     return null;
+//   }*/
+// }
 /*****************************************************************************************/
 /*****************************************************************************************/
 /**
@@ -637,7 +648,7 @@ async function payFastNotify(param,spay) {
  *
  * @returns Object|null
  */
-async function getSubscriptionId() {
+async function getSubscriptionId() { 
   const subscriptionPayment = new Subscriptionpayment({
     uuid: "1",
   });
@@ -870,8 +881,8 @@ async function saveQuery(param) {
  *
  * @returns Object|null
  */
-async function removeMyCourses(req) {
-  console.log("id", req.params.id);
+async function cancelCourseByUser(req) {
+  console.log("id", req.params.id); 
   try {
     const id = req.params.id;
     const { isActive } = req.body;

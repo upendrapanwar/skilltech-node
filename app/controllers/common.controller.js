@@ -83,9 +83,9 @@ router.get("/check-referral-code/:code", checkReferralCode);
 router.get("/get-my-courses/:id", getMyCourses);
 router.get("/get-user-courses/:id", getUserCourses);
 router.post("/save-query", saveQuery);
-router.put("/remove-course/:id", removeMyCourses); 
+router.put("/cancel-course/:id", cancelCourseByUser);  
 router.get("/send-email-ambassador/:id", sendEmailToAmbassador); 
-router.post("/notify/:id", payFastNotify);
+router.post("/notify", payFastNotify);
 router.get("/getSubscriptionId",getSubscriptionId);
 
 module.exports = router;
@@ -430,9 +430,9 @@ function saveQuery(req, res, next) {
  *
  * @return JSON|null
  */
-function removeMyCourses(req, res, next) {
+function cancelCourseByUser(req, res, next) {
   commonService
-    .removeMyCourses(req)
+    .cancelCourseByUser(req)
     .then((removedCourse) =>
       removedCourse
         ? res.status(200).json({ status: true, data: removedCourse })
@@ -477,7 +477,7 @@ function sendEmailToAmbassador(req, res, next) {
  */
 function payFastNotify(req, res, next) {
   commonService
-    .payFastNotify(req.body,req.params)
+    .payFastNotify(req)
     .then((payFastResponse) =>
       payFastResponse
         ? res.status(200).json({ status: true, data: payFastResponse })
