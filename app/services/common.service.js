@@ -746,7 +746,7 @@ async function getMyCourses(param) {
   console.log("code", param.id);
   let courseDetails = await Subscriptionpayment.find({ userid: param.id })
     .select(
-      "plan_name subscription_type frequency billing_date payment_mode payment_status amount payment_cycle item_name item_description m_payment_id is_recurring userid is_active createdAt updatedAt uuid"
+      "plan_name subscription_type frequency billing_date payment_mode payment_status amount payment_cycle item_name item_description m_payment_id is_recurring userid is_active createdAt updatedAt uuid merchantData"
     )
     .sort({ createdAt: "desc" });
 
@@ -754,7 +754,7 @@ async function getMyCourses(param) {
     userId: param.id,
     is_active: true,
   })
-    .select("_id course_title image")
+    .select("course_title image")
     .sort({ createdAt: "desc" });
 
   if (courseDetails && coursePurchageDetails) {
