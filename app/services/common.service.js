@@ -754,7 +754,7 @@ async function getMyCourses(param) {
     userId: param.id,
     is_active: true,
   })
-    .select("course_title image")
+    .select("_id course_title image")
     .sort({ createdAt: "desc" });
 
   if (courseDetails && coursePurchageDetails) {
