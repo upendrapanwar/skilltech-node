@@ -605,7 +605,6 @@ async function payFastNotify(param, spayId) {
           {
             $set: {
               merchantData: JSON.stringify(itnData),
-              // uuid: JSON.stringify(dataString),
             },
           }
         );
