@@ -8,7 +8,7 @@ const msg = require('../helpers/messages.json');
 
 const multer = require('multer');
 
-router.get('/agent-subscription', agentSubscription);
+router.get('/agent-subscription', agentSubscription); 
 router.get('/agent-subscription-by-id/:id', agentSubscriptionById);
 router.get('/get-active-agents', getActiveAgents);
 router.get('/get-agents-byid/:id', getAgentById);

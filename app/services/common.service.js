@@ -743,6 +743,37 @@ async function checkReferralCode(req) {
  * @returns Object|null
  */
 async function getMyCourses(param) {
+  try {
+    console.log("code", param.id);
+
+    const subscriptionPayments = await Subscriptionpayment.find({ userid: param.id, payment_status: "success" });
+
+    const orderIds = subscriptionPayments.map(payment => payment.orderId);
+
+    const coursePurchageDetails = await Purchasedcourses.find({
+      userId: param.id,
+      is_active: true,
+      orderId: { $in: orderIds }
+    }).sort({ createdAt: "desc" });
+
+    return coursePurchageDetails;
+  } catch (error) {
+    console.error("Error:", error);
+    return null;
+  }
+}
+
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * get user courses
+ *
+ * @param {param}
+ *
+ * @returns Object|null
+ */
+async function getUserCourses(param) {
   console.log("code", param.id);
   let courseDetails = await Subscriptionpayment.find({ userid: param.id })
     .select(
@@ -752,7 +783,7 @@ async function getMyCourses(param) {
 
   let coursePurchageDetails = await Purchasedcourses.find({
     userId: param.id,
-    is_active: true,
+    // is_active: true,
   })
     .select("course_title image")
     .sort({ createdAt: "desc" });
@@ -774,29 +805,20 @@ async function getMyCourses(param) {
     return null;
   }
 }
-/*****************************************************************************************/
-/*****************************************************************************************/
-/**
- * get user courses
- *
- * @param {param}
- *
- * @returns Object|null
- */
-async function getUserCourses(param) {
-  console.log("code", param.id);
-  let courseData = await Purchasedcourses.find({ userId: param.id })
-    .select(
-      "courseid quantity orderid userId course_title course_price image paymentType is_active createdAt updatedAt"
-    )
-    .sort({ createdAt: "desc" });
-  if (courseData) {
-    console.log(courseData);
-    return courseData;
-  } else {
-    return null;
-  }
-}
+// async function getUserCourses(param) {
+//   console.log("code", param.id);
+//   let courseData = await Purchasedcourses.find({ userId: param.id })
+//     .select(
+//       "courseid quantity orderid userId course_title course_price image paymentType is_active createdAt updatedAt"
+//     )
+//     .sort({ createdAt: "desc" });
+//   if (courseData) {
+//     console.log(courseData);
+//     return courseData;
+//   } else {
+//     return null;
+//   }
+// }
 /*****************************************************************************************/
 /*****************************************************************************************/
 
