@@ -900,9 +900,9 @@ async function cancelCourseByUser(req) {
   console.log("id", req.params.id); 
   try {
     const id = req.params.id;
-    const { isActive } = req.body;
+
     const statusData = {
-      is_active: isActive,
+      is_active: false,
       cancellation_date: new Date(),
     };
     console.log("statusData====>", statusData);
