@@ -303,7 +303,8 @@ async function saveMembershipSubscription(param) {
           is_recurring: param.is_recurring,
           userid: param.userid,
           is_active: param.is_active,
-          merchantData : JSON.stringify(param.merchantData)
+          // merchantData : JSON.stringify(param.merchantData),
+          uuid: param.uuid,
         },
       },
       {
@@ -357,7 +358,7 @@ async function saveMembershipSubscription(param) {
             }
           }
         }else{
-          console.log(" Payment is Cancled")
+          console.log(" Payment is Cancelled")
         }
         return res;
       } else {
@@ -609,7 +610,7 @@ async function payFastNotify(param, spayId) {
           }
         );
     
-        console.log("updatedSubscriptionData", updatedSubscriptionData);
+        console.log("updatedSubscriptionData", updatedPaymentData);
     return itnData;
   } else {
     return null;
