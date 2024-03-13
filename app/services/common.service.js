@@ -59,7 +59,11 @@ module.exports = {
   cancelCourseByUser,
   sendEmailToAmbassador,
   payFastNotify,
-  getSubscriptionId
+  getSubscriptionId,
+  getDefaultedSubscriptionPaymentOfSubscribers,
+  getActiveReferral,
+  getInactiveReferral,
+  getPaymentDueThisMonth,
 };
 
 /*****************************************************************************************/
@@ -1028,4 +1032,209 @@ async function sendEmailToAmbassador(req) {
     console.log("Error:", err);
     throw err;
   }
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * get defaulted subscription payment of subscribers
+ *
+ * @param {param}
+ *
+ * @returns Object|null
+ */
+async function getDefaultedSubscriptionPaymentOfSubscribers(param) {
+  try {
+    let query = {};
+
+    if (param && param.start_date && param.end_date) {
+        query.createdAt = {
+            $gte: new Date(param.start_date),
+            $lte: new Date(param.end_date)
+        };
+    }
+
+    const defaultedSubscriptionOfSubscriber = await Referral.find(query)
+    .populate({
+      path: 'userId',
+      select: 'firstname surname'
+    })
+    .populate({
+      path: 'purchagedcourseId',
+      populate: {
+        path: 'orderid',
+        select: 'payment_status'
+      }
+    })
+    .exec();
+
+    console.log("defaultedSubscriptionOfSubscriber", defaultedSubscriptionOfSubscriber);
+    
+    if (defaultedSubscriptionOfSubscriber.length > 0) {
+        const result = defaultedSubscriptionOfSubscriber.map(data => {
+            return {
+              firstname: data.userId.firstname,
+              surname: data.userId.surname,
+              payment_status: data.purchagedcourseId ? data.purchagedcourseId.orderid.payment_status : null
+            };
+        }).filter(entry => entry !== null);
+        console.log(result);
+        return result;
+    } else {
+        return [];
+    }
+} catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+}
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * get data of active referrals
+ *
+ * @param {param}
+ *
+ * @returns Object|null
+ */
+async function getActiveReferral(param) {
+  try {
+    let query = {
+      is_active: true,
+    };
+
+    if (param && param.start_date && param.end_date) {
+        query.createdAt = {
+            $gte: new Date(param.start_date),
+            $lte: new Date(param.end_date)
+        };
+    }
+
+    const activeReferral = await Referral.find(query)
+    .populate({
+      path: 'userId',
+      select: 'firstname surname'
+    })
+    .exec();
+
+    console.log("activeReferral", activeReferral);
+    
+    if (activeReferral.length > 0) {
+        const result = activeReferral.map(data => {
+            return {
+              firstname: data.userId.firstname,
+              surname: data.userId.surname,
+              referral_used_date: data.createdAt,
+              referral_status: 'Active'
+            };
+        }).filter(entry => entry !== null);
+        console.log(result);
+        return result;
+    } else {
+        return [];
+    }
+} catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+}
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * get data of inactive referrals
+ *
+ * @param {param}
+ *
+ * @returns Object|null
+ */
+async function getInactiveReferral(param) {
+  try {
+    let query = {
+      is_active: false,
+    };
+
+    if (param && param.start_date && param.end_date) {
+        query.createdAt = {
+            $gte: new Date(param.start_date),
+            $lte: new Date(param.end_date)
+        };
+    }
+
+    const inactiveReferral = await Referral.find(query)
+    .populate({
+      path: 'userId',
+      select: 'firstname surname'
+    })
+    .exec();
+
+    console.log("activeReferral", inactiveReferral);
+    
+    if (inactiveReferral.length > 0) {
+        const result = inactiveReferral.map(data => {
+            return {
+              firstname: data.userId.firstname,
+              surname: data.userId.surname,
+              referral_used_date: data.createdAt,
+              referral_status: 'Inactive'
+            };
+        }).filter(entry => entry !== null);
+        console.log(result);
+        return result;
+    } else {
+        return [];
+    }
+} catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+}
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * get data of payment due to this month of ambassador
+ *
+ * @param {param}
+ *
+ * @returns Object|null
+ */
+async function getPaymentDueThisMonth(param) {
+  try {
+    let query = {
+      is_active: false,
+    };
+
+    if (param && param.start_date && param.end_date) {
+        query.createdAt = {
+            $gte: new Date(param.start_date),
+            $lte: new Date(param.end_date)
+        };
+    }
+
+    const inactiveReferral = await Referral.find(query)
+    .populate({
+      path: 'userId',
+      select: 'firstname surname'
+    })
+    .exec();
+
+    console.log("activeReferral", inactiveReferral);
+    
+    if (inactiveReferral.length > 0) {
+        const result = inactiveReferral.map(data => {
+            return {
+              firstname: data.userId.firstname,
+              surname: data.userId.surname,
+              referral_code: data.createdAt,
+              referral_status: 'Inactive',
+              due_amount: 'Inactive'
+            };
+        }).filter(entry => entry !== null);
+        console.log(result);
+        return result;
+    } else {
+        return [];
+    }
+} catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+}
 }

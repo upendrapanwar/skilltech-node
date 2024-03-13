@@ -68,7 +68,7 @@ var uploadCertificate = multer({
 }).fields([
   { name: "certificate", maxCount: 1 },
   { name: "bank_proof", maxCount: 1 },
-]);
+]); 
 
 router.post("/signup", registerValidation, register);
 router.post("/signin", authenticate);
@@ -87,6 +87,15 @@ router.put("/cancel-course/:id", cancelCourseByUser);
 router.get("/send-email-ambassador/:id", sendEmailToAmbassador); 
 router.post("/notify/:id", payFastNotify);
 router.get("/getSubscriptionId",getSubscriptionId);
+
+router.get('/defaulted-subscription-paymentof-subscriber', getAllDefaultedSubscriptionPaymentOfSubscribers);
+router.get('/my-active-referral', getAllActiveReferral);
+router.get('/my-inactive-referral', getAllInactiveReferral);
+router.get('/payment-due-this-month', getAllPaymentDueThisMonth);
+router.get('/defaulted-subscription-paymentof-subscriber/:start_date/:end_date', getDefaultedSubscriptionPaymentOfSubscribers);
+router.get('/my-active-referral/:start_date/:end_date', getActiveReferral);
+router.get('/my-inactive-referral/:start_date/:end_date', getInactiveReferral);
+router.get('/payment-due-this-month/:start_date/:end_date', getPaymentDueThisMonth);
 
 module.exports = router;
 
@@ -510,4 +519,117 @@ function getSubscriptionId(req, res, next) {
             .json({ status: false, message: msg.common.no_data_err, data: [] })
     )
     .catch((err) => next(res.json({ status: false, message: err })));  
+}
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function for get all data of defauled payment of subscriber
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next
+ *                  
+ */
+function getAllDefaultedSubscriptionPaymentOfSubscribers(req, res, next) {
+  commonService.getDefaultedSubscriptionPaymentOfSubscribers(req.params)
+      .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+      .catch(err => next(res.json({ status: false, message: err })))
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function for get data of defauled payment of subscriber by date
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next
+ *                  
+ */
+function getDefaultedSubscriptionPaymentOfSubscribers(req, res, next) {
+  commonService.getDefaultedSubscriptionPaymentOfSubscribers(req.params)
+      .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+      .catch(err => next(res.json({ status: false, message: err })))
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function for get all active referral of ambassador
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next
+ *                  
+ */
+function getAllActiveReferral(req, res, next) {
+  commonService.getActiveReferral(req.params)
+      .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+      .catch(err => next(res.json({ status: false, message: err })))
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function for get active referral of ambassador by date
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next
+ *                  
+ */
+function getActiveReferral(req, res, next) {
+  commonService.getActiveReferral(req.params)
+      .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+      .catch(err => next(res.json({ status: false, message: err })))
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function for get all inactive referral of ambassador
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next
+ *                  
+ */
+function getAllInactiveReferral(req, res, next) {
+  commonService.getInactiveReferral(req.params)
+      .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+      .catch(err => next(res.json({ status: false, message: err })))
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function for get inactive referral of ambassador by date
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next
+ *                  
+ */
+function getInactiveReferral(req, res, next) {
+  commonService.getInactiveReferral(req.params)
+      .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+      .catch(err => next(res.json({ status: false, message: err })))
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function for get all payment due to ambassador
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next
+ *                  
+ */
+function getAllPaymentDueThisMonth(req, res, next) {
+  commonService.getPaymentDueThisMonth(req.params)
+      .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+      .catch(err => next(res.json({ status: false, message: err })))
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function for get payment due to ambassador by date
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next
+ *                  
+ */
+function getPaymentDueThisMonth(req, res, next) {
+  commonService.getPaymentDueThisMonth(req.params)
+      .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+      .catch(err => next(res.json({ status: false, message: err })))
 }

@@ -29,8 +29,6 @@ module.exports = {
     
     getAllActiveSubcribedAmbassadors,
     getAllActiveSubscriptionSubscriber,
-    getActiveSubcribedAmbassadors,
-    getActiveSubcribedSubscribers,
     
     getDefaultedSubscriptionPaymentOfAmbassador,
     getDefaultedSubscriptionPaymentOfSubscribers,
@@ -174,110 +172,63 @@ async function getOneAgentById(param) {
         return null;
     }
 }
-
-/**
- * get Active subscriptions of Ambassadors for report 
- * @param {param}
- * 
- * @return null|Object
- */
-async function getActiveSubcribedAmbassadors(param) {
-    if (!param) {
-        return null;
-    }
-
-    const activeSubscribedAmbassadors = await User.find({
-        role: "ambassador",
-        //subscription_date: { $gte: new Date(param.start_date), $lte: new Date(param.end_date) }
-    }, {
-        firstname: 1,
-        surname: 1,
-        subscription_date: 1,
-        referral_code: 1,
-        ambassador_date: 1,
-    })
-        .sort({ subscription_date: -1 }).exec();
-    // .sort({ subscription_date: -1 }).limit(10).exec();
-
-    console.log(activeSubscribedAmbassadors);
-    if (activeSubscribedAmbassadors) {
-        return activeSubscribedAmbassadors;
-    } else {
-        return null;
-    }
-
-}
 /*****************************************************************************************/
 /*****************************************************************************************/
 /**
- * get all Active subscriptions of Subscribers reports
- *  `
- * @param {param}
- *
- * @return null|Object
- * 
- */
-async function getActiveSubcribedSubscribers(param) {
-    if (!param) {
-        return null;
-    }
-
-    let subscriber = await User.find({
-        role: 'subscriber',
-        //subscription_date: { $gte: new Date(param.start_date), $lte: new Date(param.end_date) } 
-    },
-        {
-            firstname: 1,
-            surname: 1,
-            subscription_date: 1
-        }
-    ).sort({ subscription_date: -1 }).exec();
-
-    console.log("reportActiveSubcribedSubscribers", subscriber)
-
-    if (subscriber) {
-        return subscriber;
-    } else {
-        return null;
-    }
-
-}
-/*****************************************************************************************/
-/*****************************************************************************************/
-/**
- * get all Active subscriptions of Ambassadors 
+ * get Active subscriptions of Ambassadors 
  * @param {param}
  * 
  * @return null|Object
  */
 async function getAllActiveSubcribedAmbassadors(param) {
-    if (!param) {
-        return null;
+    try {
+        let query = {};
+
+        if (param && param.start_date && param.end_date) {
+            query.createdAt = {
+                $gte: new Date(param.start_date),
+                $lte: new Date(param.end_date)
+            };
+        }
+
+        const activeSubscribedAmbassadors = await Purchasedcourses.find(query)
+            .populate({
+                path: 'userId',
+                match: { role: 'ambassador' },
+                select: 'firstname surname referral_code ambassador_date',
+                options: {
+                    sort: { createdAt: 1 } // Adjust the sorting options as needed
+                }
+            })
+            .exec();
+
+        console.log("activeSubscribedAmbassadors TEST 1st", activeSubscribedAmbassadors);
+        
+        if (activeSubscribedAmbassadors.length > 0) {
+            // Extract required fields and map them to a new array of objects
+            const result = activeSubscribedAmbassadors.map(data => {
+                const user = data.userId;
+                if (!user) {
+                    return null; // Skip this entry if userId is null
+                }
+                return {
+                    firstname: user.firstname,
+                    surname: user.surname,
+                    referral_code: user.referral_code,
+                    ambassador_date: user.ambassador_date,
+                    subscription_status: data.is_active ? 'Active' : 'Inactive',
+                    subscription_date: data.createdAt
+                };
+            }).filter(entry => entry !== null);
+            return result;
+        } else {
+            return [];
+        }
+    } catch (error) {
+        console.error('An error occurred:', error);
+        throw error;
     }
-
-    const activeSubscribedAmbassadors = await User.find({
-        role: "ambassador",
-        subscription_date: { $gte: new Date(param.start_date), $lte: new Date(param.end_date) }
-    }, 
-    {
-        firstname: 1,
-        surname: 1,
-        subscription_date: 1,
-        referral_code: 1,
-        ambassador_date: 1,
-    })
-    .sort({ subscription_date: -1 }).exec();
-
-    console.log("activeSubscribedAmbassadors TEST 1st", activeSubscribedAmbassadors);
-    if (activeSubscribedAmbassadors) {
-        return activeSubscribedAmbassadors;
-    } else {
-        return null;
-    }
-
 }
-
-
 /**
  * get all Active subscriptions of Subscribers 
  *  `
@@ -287,30 +238,50 @@ async function getAllActiveSubcribedAmbassadors(param) {
  * 
  */
 async function getAllActiveSubscriptionSubscriber(param) {
+    try {
+        let query = {};
 
-    if (!param) {
-        return null;
-    } 
-
-    let subscriber = await User.find({
-        role: 'subscriber',
-        subscription_date: { $gte: new Date(param.start_date), $lte: new Date(param.end_date) }
-    },
-        {
-            firstname: 1,
-            surname: 1,
-            subscription_date: 1
+        if (param && param.start_date && param.end_date) {
+            query.createdAt = {
+                $gte: new Date(param.start_date),
+                $lte: new Date(param.end_date)
+            };
         }
-    ).sort({ subscription_date: -1 }).exec();
 
-    console.log("getAllActiveSubscriptionSubscriber TEST 2nd ", subscriber)
+        const activeSubscribedAmbassadors = await Purchasedcourses.find(query)
+            .populate({
+                path: 'userId',
+                match: { role: 'subscriber' },
+                select: 'firstname surname',
+                options: {
+                    sort: { createdAt: 1 } // Adjust the sorting options as needed
+                }
+            })
+            .exec();
 
-    if (subscriber) {
-        return subscriber;
-    } else {
-        return null;
+        console.log("activeSubscribedAmbassadors TEST 1st", activeSubscribedAmbassadors);
+        
+        if (activeSubscribedAmbassadors.length > 0) {
+            const result = activeSubscribedAmbassadors.map(data => {
+                const user = data.userId;
+                if (!user) {
+                    return null;
+                }
+                return {
+                    firstname: user.firstname,
+                    surname: user.surname,
+                    subscription_status: data.is_active ? 'Active' : 'Inactive',
+                    subscription_date: data.createdAt
+                };
+            }).filter(entry => entry !== null);
+            return result;
+        } else {
+            return [];
+        }
+    } catch (error) {
+        console.error('An error occurred:', error);
+        throw error;
     }
-
 }
 
 /**
@@ -321,58 +292,12 @@ async function getAllActiveSubscriptionSubscriber(param) {
  * @return null|Object
  * 
  */
-// async function getDefaultedSubscriptionPaymentOfAmbassador(param) {
-//     console.log("param", param)
-//     if (!param) {
-//         return null;
-//     }
-
-//     let defaultAmbassador = await Subscriptionpayment.aggregate([
-//         {
-//             $match: {
-//                 payment_status: 'cancel payment',
-//                 createdAt: { $gte: new Date(param.start_date), $lte: new Date(param.end_date) }
-//             }
-//         },
-//         {
-//             $lookup: {
-//                 from: "users",
-//                 localField: "userid",
-//                 foreignField: "_id",
-//                 as: "user"
-//             }
-//         },
-//         {
-//             $match: { "user.role": "ambassador" }
-//         },
-//         {
-//             $project: {
-//                 _id: 0,
-//                 ambassador_firstname: "$user.firstname",
-//                 ambassador_lastname: "$user.surname",
-//                 ambassador_referral_code: "$user.referral_code",
-//                 payment_failure_reason: "$payment_status"
-//             }
-//         },
-//         { $sort: { createdAt: -1 } },
-//     ]);
-
-//     console.log("Defaulted Subscriptions Payments of Ambassador TEST 3rd", defaultAmbassador)
-
-//     if (defaultAmbassador.length > 0) {
-//         return defaultAmbassador;
-//     } else {
-//         return null;
-//     }
-// }
-
-
 async function getDefaultedSubscriptionPaymentOfAmbassador(param) {
     console.log("param", param)
     console.log("getAllDefaultedSubscriptionPaymentOfAmbassador")
     
     let query = {
-        payment_status: 'cancel payment'
+        payment_status: 'cancel'
     };
 
     if (param && param.start_date && param.end_date) {
@@ -409,7 +334,7 @@ async function getDefaultedSubscriptionPaymentOfSubscribers(param) {
     console.log("param", param)
     console.log("getDefaultedSubscriptionPaymentOfSubscribers")
     let query = {
-        payment_status: 'cancel payment'
+        payment_status: 'cancel'
     };
 
     if (param && param.start_date && param.end_date) {

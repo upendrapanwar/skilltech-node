@@ -11,7 +11,7 @@ const multer = require('multer');
 router.get('/agent-subscription', agentSubscription); 
 router.get('/agent-subscription-by-id/:id', agentSubscriptionById);
 router.get('/get-active-agents', getActiveAgents);
-router.get('/get-agents-byid/:id', getAgentById);
+router.get('/get-agents-byid/:id', getAgentById); 
 router.delete('/delete-agent/:id', deleteAgentById);
 
 router.get('/active-subscribed-ambassador', getActiveSubcribedAmbassadors);
@@ -159,9 +159,8 @@ function getAgentById(req, res, next) {
  * @param {*} res
  * @param {*} next
  */
-
 function getActiveSubcribedAmbassadors(req, res, next) {
-    adminService.getActiveSubcribedAmbassadors(req.params)
+    adminService.getAllActiveSubcribedAmbassadors(req.params)
         .then(activeAmbassador => activeAmbassador ? res.status(200).json({ status: true, data: activeAmbassador }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
         .catch(err => next(res.json({ status: false, message: err.message })));
 }
@@ -173,8 +172,6 @@ function getActiveSubcribedAmbassadors(req, res, next) {
  * @param {*} res
  * @param {*} next
  */
-
-// TEST 1st Active Subcripton of Ambassador
 function getAllActiveSubcribedAmbassadors(req, res, next) {
     adminService.getAllActiveSubcribedAmbassadors(req.params)
         .then(activeAmbassador => activeAmbassador ? res.status(200).json({ status: true, data: activeAmbassador }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
@@ -189,27 +186,8 @@ function getAllActiveSubcribedAmbassadors(req, res, next) {
  * @param {*} res
  * @param {*} next
  */
-
 function getActiveSubcribedSubscribers(req, res, next) {
-    adminService.getActiveSubcribedSubscribers(req.params)
-        .then(activeSubscriber => {
-            activeSubscriber.length > 0 ?
-                res.status(200).json({ status: true, data: activeSubscriber }) :
-                res.status(400).json({ status: false, message: msg.common.no_data_err, data: null })
-        })
-        .catch(err => next(res.json({ status: false, message: err })));
-}
-/*****************************************************************************************/
-/*****************************************************************************************/
-/**
- * Function to get all active subcribed ambassador for reports
- * @param {*} req
- * @param {*} res
- * @param {*} next
- */
-
-function reportAllActiveSubcribedAmbassadors(req, res, next) {
-    adminService.reportAllActiveSubcribedAmbassadors(req.params)
+    adminService.getAllActiveSubscriptionSubscriber(req.params)
         .then(activeSubscriber => {
             activeSubscriber.length > 0 ?
                 res.status(200).json({ status: true, data: activeSubscriber }) :
@@ -225,7 +203,6 @@ function reportAllActiveSubcribedAmbassadors(req, res, next) {
  * @param {*} res
  * @param {*} next
  */
-// TEST 2nd Active Subscription of Subscriber
 function getAllActiveSubscriptionSubscriber(req, res, next) {
     adminService.getAllActiveSubscriptionSubscriber(req.params)
         .then(activeSubscriber => {
