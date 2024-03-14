@@ -772,15 +772,16 @@ async function getMyCourses(param) {
     const coursePurchageDetails = await Purchasedcourses.find({
       userId: param.id,
       is_active: true,
-      orderId: { $in: orderIds }
+      orderid: { $in: orderIds } // Corrected field name to match schema
     }).sort({ createdAt: "desc" });
     console.log("coursePurchageDetails", coursePurchageDetails);
 
     if (coursePurchageDetails.length > 0) {
       const result = coursePurchageDetails.map(data => {
+          const matchingPayment = subscriptionPayments.find(payment => payment._id.toString() === data.orderid.toString());
           return {
             courseDetails: data,
-            merchantData: subscriptionPayments.merchantData,
+            merchantData: matchingPayment ? matchingPayment.merchantData : null, // Corrected merchantData extraction
           };
       }).filter(entry => entry !== null);
       console.log("result", result);
@@ -795,6 +796,7 @@ async function getMyCourses(param) {
     return null;
   }
 }
+
 
 /*****************************************************************************************/
 /*****************************************************************************************/
