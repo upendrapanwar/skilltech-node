@@ -745,7 +745,9 @@ async function getMyCourses(param) {
 
     const subscriptionPayments = await Subscriptionpayment.find({ userid: param.id, payment_status: "success" }).select('merchantData');
     console.log("subscriptionPayments", subscriptionPayments);
-    const orderIds = subscriptionPayments.map(payment => payment._id);
+    
+    const subscriptionPayments_Ids = subscriptionPayments.map(ids => ids.tostring())
+    const orderIds = subscriptionPayments_Ids.map(payment => payment._id);
 
     const coursePurchageDetails = await Purchasedcourses.find({
       userId: param.id,
