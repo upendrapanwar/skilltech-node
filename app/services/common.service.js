@@ -743,17 +743,30 @@ async function getMyCourses(param) {
   try {
     console.log("code", param.id);
 
-    const subscriptionPayments = await Subscriptionpayment.find({ userid: param.id, payment_status: "success" });
-
-    const orderIds = subscriptionPayments.map(payment => payment.orderId);
+    const subscriptionPayments = await Subscriptionpayment.find({ userid: param.id, payment_status: "success" }).select('merchantData');
+    console.log("subscriptionPayments", subscriptionPayments);
+    const orderIds = subscriptionPayments.map(payment => payment._id);
 
     const coursePurchageDetails = await Purchasedcourses.find({
       userId: param.id,
       is_active: true,
       orderId: { $in: orderIds }
     }).sort({ createdAt: "desc" });
+
     console.log("coursePurchageDetails", coursePurchageDetails);
-    return coursePurchageDetails;
+    if (coursePurchageDetails.length > 0) {
+      const result = coursePurchageDetails.map(data => {
+          return {
+            courseDetails: coursePurchageDetails,
+            merchantData: subscriptionPayments.merchantData,
+          };
+      }).filter(entry => entry !== null);
+      console.log("result", result);
+      return result;
+    } else {
+        return [];
+    }
+    
   } catch (error) {
     console.error("Error:", error);
     return null;
