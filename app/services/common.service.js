@@ -743,11 +743,9 @@ async function checkReferralCode(req) {
 //   try {
 //     console.log("code", param.id);
 
-//     const subscriptionPayments = await Subscriptionpayment.find({ userid: param.id, payment_status: "success" }).select('merchantData');
-//     console.log("subscriptionPayments", subscriptionPayments);
+//     const subscriptionPayments = await Subscriptionpayment.find({ userid: param.id, payment_status: "success" });
 
-//     const subscriptionPayments_Ids = subscriptionPayments.map(ids => ids.tostring())
-//     const orderIds = subscriptionPayments_Ids.map(payment => payment._id);
+//     const orderIds = subscriptionPayments.map(payment => payment.orderId);
 
 //     const coursePurchageDetails = await Purchasedcourses.find({
 //       userId: param.id,
@@ -755,20 +753,7 @@ async function checkReferralCode(req) {
 //       orderId: { $in: orderIds }
 //     }).sort({ createdAt: "desc" });
 
-//     console.log("coursePurchageDetails", coursePurchageDetails);
-//     if (coursePurchageDetails.length > 0) {
-//       const result = coursePurchageDetails.map(data => {
-//           return {
-//             courseDetails: coursePurchageDetails,
-//             merchantData: subscriptionPayments.merchantData,
-//           };
-//       }).filter(entry => entry !== null);
-//       console.log("result", result);
-//       return result;
-//     } else {
-//         return [];
-//     }
-    
+//     return coursePurchageDetails;
 //   } catch (error) {
 //     console.error("Error:", error);
 //     return null;
@@ -782,22 +767,24 @@ async function getMyCourses(param) {
     console.log("subscriptionPayments", subscriptionPayments);
     
     const orderIds = subscriptionPayments.map(payment => payment._id.toString());
+    console.log("orderIds", orderIds);
 
     const coursePurchageDetails = await Purchasedcourses.find({
       userId: param.id,
       is_active: true,
       orderId: { $in: orderIds }
     }).sort({ createdAt: "desc" });
-
     console.log("coursePurchageDetails", coursePurchageDetails);
+
     if (coursePurchageDetails.length > 0) {
       const result = coursePurchageDetails.map(data => {
           return {
             courseDetails: data,
-            merchantData: subscriptionPayments[0].merchantData, // Assuming there's only one subscription payment
+            merchantData: subscriptionPayments.merchantData,
           };
       }).filter(entry => entry !== null);
       console.log("result", result);
+      
       return result;
     } else {
         return [];
@@ -808,7 +795,6 @@ async function getMyCourses(param) {
     return null;
   }
 }
-
 
 /*****************************************************************************************/
 /*****************************************************************************************/
