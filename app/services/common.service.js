@@ -752,7 +752,7 @@ async function getMyCourses(param) {
       is_active: true,
       orderId: { $in: orderIds }
     }).sort({ createdAt: "desc" });
-
+    console.log("coursePurchageDetails", coursePurchageDetails);
     return coursePurchageDetails;
   } catch (error) {
     console.error("Error:", error);
