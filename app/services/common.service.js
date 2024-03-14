@@ -709,14 +709,15 @@ async function checkReferralCode(req) {
 
     const qrCode = await User.find({ referral_code: referralCode }).select("qr_code");
     console.log("qrCode", qrCode);
-    if (!qrCode || !qrCode[1].qr_code) {
+
+    if (!qrCode || !qrCode[0].qr_code) {
       throw new Error("QR code not found for the user");
     }
 
     const referralData = await Referral.create({
       referral_code: referralCode,
       userId: userId,
-      qr_code: qrCode[1].qr_code,
+      qr_code: qrCode[0].qr_code,
     });
 
     const newReferralData = await referralData.save();
@@ -1042,8 +1043,10 @@ async function sendEmailToAmbassador(req) {
  *
  * @returns Object|null
  */
-async function getDefaultedSubscriptionPaymentOfSubscribers(param) {
+async function getDefaultedSubscriptionPaymentOfSubscribers(req) {
   try {
+    let param = req.params;
+    let userId = req.body.userId;
     let query = {};
 
     if (param && param.start_date && param.end_date) {
@@ -1052,6 +1055,9 @@ async function getDefaultedSubscriptionPaymentOfSubscribers(param) {
             $lte: new Date(param.end_date)
         };
     }
+    
+    const ambassador = await User.findById(userId);
+    query.referral_code = ambassador.referral_code;
 
     const defaultedSubscriptionOfSubscriber = await Referral.find(query)
     .populate({
@@ -1096,8 +1102,10 @@ async function getDefaultedSubscriptionPaymentOfSubscribers(param) {
  *
  * @returns Object|null
  */
-async function getActiveReferral(param) {
+async function getActiveReferral(req) {
   try {
+    let param = req.params;
+    let userId = req.body.userId;
     let query = {
       is_active: true,
     };
@@ -1108,6 +1116,9 @@ async function getActiveReferral(param) {
             $lte: new Date(param.end_date)
         };
     }
+
+    const ambassador = await User.findById(userId);
+    query.referral_code = ambassador.referral_code;
 
     const activeReferral = await Referral.find(query)
     .populate({
@@ -1146,8 +1157,10 @@ async function getActiveReferral(param) {
  *
  * @returns Object|null
  */
-async function getInactiveReferral(param) {
+async function getInactiveReferral(req) {
   try {
+    let param = req.params;
+    let userId = req.body.userId;
     let query = {
       is_active: false,
     };
@@ -1158,6 +1171,9 @@ async function getInactiveReferral(param) {
             $lte: new Date(param.end_date)
         };
     }
+
+    const ambassador = await User.findById(userId);
+    query.referral_code = ambassador.referral_code;
 
     const inactiveReferral = await Referral.find(query)
     .populate({
@@ -1196,10 +1212,12 @@ async function getInactiveReferral(param) {
  *
  * @returns Object|null
  */
-async function getPaymentDueThisMonth(param) {
+async function getPaymentDueThisMonth(req) {
   try {
+    let param = req.params;
+    let userId = req.body.userId;
     let query = {
-      is_active: false,
+      is_active: true,
     };
 
     if (param && param.start_date && param.end_date) {
@@ -1209,13 +1227,17 @@ async function getPaymentDueThisMonth(param) {
         };
     }
 
+    const ambassador = await User.findById(userId);
+    query.referral_code = ambassador.referral_code;
+
     const inactiveReferral = await Referral.find(query)
     .populate({
       path: 'userId',
       select: 'firstname surname'
     })
     .exec();
-
+    const activeReferralCount = inactiveReferral.length;
+    const amountDue = activeReferralCount * 5000;
     console.log("activeReferral", inactiveReferral);
     
     if (inactiveReferral.length > 0) {
@@ -1224,8 +1246,8 @@ async function getPaymentDueThisMonth(param) {
               firstname: data.userId.firstname,
               surname: data.userId.surname,
               referral_code: data.createdAt,
-              referral_status: 'Inactive',
-              due_amount: 'Inactive'
+              referral_count: activeReferralCount,
+              due_amount: amountDue,
             };
         }).filter(entry => entry !== null);
         console.log(result);

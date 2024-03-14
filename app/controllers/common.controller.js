@@ -531,7 +531,7 @@ function getSubscriptionId(req, res, next) {
  *                  
  */
 function getAllDefaultedSubscriptionPaymentOfSubscribers(req, res, next) {
-  commonService.getDefaultedSubscriptionPaymentOfSubscribers(req.params)
+  commonService.getDefaultedSubscriptionPaymentOfSubscribers(req)
       .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
       .catch(err => next(res.json({ status: false, message: err })))
 }
@@ -545,7 +545,7 @@ function getAllDefaultedSubscriptionPaymentOfSubscribers(req, res, next) {
  *                  
  */
 function getDefaultedSubscriptionPaymentOfSubscribers(req, res, next) {
-  commonService.getDefaultedSubscriptionPaymentOfSubscribers(req.params)
+  commonService.getDefaultedSubscriptionPaymentOfSubscribers(req)
       .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
       .catch(err => next(res.json({ status: false, message: err })))
 }
@@ -559,7 +559,7 @@ function getDefaultedSubscriptionPaymentOfSubscribers(req, res, next) {
  *                  
  */
 function getAllActiveReferral(req, res, next) {
-  commonService.getActiveReferral(req.params)
+  commonService.getActiveReferral(req)
       .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
       .catch(err => next(res.json({ status: false, message: err })))
 }
@@ -573,7 +573,7 @@ function getAllActiveReferral(req, res, next) {
  *                  
  */
 function getActiveReferral(req, res, next) {
-  commonService.getActiveReferral(req.params)
+  commonService.getActiveReferral(req)
       .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
       .catch(err => next(res.json({ status: false, message: err })))
 }
@@ -587,7 +587,7 @@ function getActiveReferral(req, res, next) {
  *                  
  */
 function getAllInactiveReferral(req, res, next) {
-  commonService.getInactiveReferral(req.params)
+  commonService.getInactiveReferral(req)
       .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
       .catch(err => next(res.json({ status: false, message: err })))
 }
@@ -601,7 +601,7 @@ function getAllInactiveReferral(req, res, next) {
  *                  
  */
 function getInactiveReferral(req, res, next) {
-  commonService.getInactiveReferral(req.params)
+  commonService.getInactiveReferral(req)
       .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
       .catch(err => next(res.json({ status: false, message: err })))
 }
@@ -615,7 +615,7 @@ function getInactiveReferral(req, res, next) {
  *                  
  */
 function getAllPaymentDueThisMonth(req, res, next) {
-  commonService.getPaymentDueThisMonth(req.params)
+  commonService.getPaymentDueThisMonth(req)
       .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
       .catch(err => next(res.json({ status: false, message: err })))
 }
@@ -629,7 +629,7 @@ function getAllPaymentDueThisMonth(req, res, next) {
  *                  
  */
 function getPaymentDueThisMonth(req, res, next) {
-  commonService.getPaymentDueThisMonth(req.params)
+  commonService.getPaymentDueThisMonth(req)
       .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
       .catch(err => next(res.json({ status: false, message: err })))
 }
