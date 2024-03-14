@@ -33,9 +33,11 @@ router.get('/subscription-cancelledby-subscriber/:start_date/:end_date', getSubs
 router.get('/active-inactive-referral-per-ambassador', getAllActiveAndInactiveReferralPerAmbassador);
 router.get('/active-referral-per-ambassador', getAllActiveReferralAmbassador);
 router.get('/inactive-referral-per-ambassador', getAllInactiveReferralAmbassador);
+router.get('/payment-due-to-ambassador', getAllPaymentDueToAmbassador);
 router.get('/active-inactive-referral-per-ambassador/:start_date/:end_date', getActiveAndInactiveReferralPerAmbassador);
 router.get('/active-referral-per-ambassador/:start_date/:end_date', getActiveReferralAmbassador);
 router.get('/inactive-referral-per-ambassador/:start_date/:end_date', getInactiveReferralAmbassador);
+router.get('/payment-due-to-ambassador/:start_date/:end_date', getPaymentDueToAmbassador);
 
 module.exports = router;
 
@@ -397,6 +399,32 @@ function getAllInactiveReferralAmbassador(req, res, next) {
  */
 function getInactiveReferralAmbassador(req, res, next) {
     adminService.getInactiveReferralAmbassador(req.params)
+        .then(inactiveReferral => inactiveReferral ? res.status(200).json({ status: true, data: inactiveReferral }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })));
+
+}
+/**
+ * Function for all data of payment due to ambassador
+ * @param {*} req 
+ * @param {*} res
+ * @param {*} next
+ * 
+ */
+function getAllPaymentDueToAmbassador(req, res, next) {
+    adminService.getPaymentDueToAmbassador(req.params)
+        .then(inactiveReferral => inactiveReferral ? res.status(200).json({ status: true, data: inactiveReferral }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })));
+
+}
+/**
+ * Function for payment due to ambassador by date
+ * @param {*} req 
+ * @param {*} res
+ * @param {*} next
+ * 
+ */
+function getPaymentDueToAmbassador(req, res, next) {
+    adminService.getPaymentDueToAmbassador(req.params)
         .then(inactiveReferral => inactiveReferral ? res.status(200).json({ status: true, data: inactiveReferral }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
         .catch(err => next(res.json({ status: false, message: err })));
 

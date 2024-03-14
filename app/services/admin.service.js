@@ -41,6 +41,7 @@ module.exports = {
     getActiveAndInactiveReferralPerAmbassador,
     getActiveReferralAmbassador,
     getInactiveReferralAmbassador,
+    getPaymentDueToAmbassador,
 };
 
 /*****************************************************************************************/
@@ -759,4 +760,96 @@ async function getInactiveReferralAmbassador(param) {
 
     return referralData;
 
+}
+/**
+ * Function get Inactive Referrals per Ambassador by date selection
+ * @param {param}
+ * 
+ * @result null|Object
+ */
+// async function getPaymentDueToAmbassador(param) {
+//     try {
+//         let query = {};
+    
+//         if (param && param.start_date && param.end_date) {
+//             query.createdAt = {
+//                 $gte: new Date(param.start_date),
+//                 $lte: new Date(param.end_date)
+//             };
+//         }
+//         const ambassadors = await Referral.find(query);
+//         console.log("ambassadors", ambassadors);
+//         const referrals = ambassadors.map(referral => referral.referral_code);
+//         console.log("referrals", referrals);
+//         const ambassadorData = await User.find({
+//             referral_code: { $in: referrals },
+//           })
+//           .select('firstname surname referral_code')
+//           .exec();
+
+//         const activeReferralCount = ambassadorData.length;
+//         const amountDue = activeReferralCount * 5000;
+//         console.log("activeReferral", ambassadorData);
+        
+//         if (ambassadorData.length > 0) {
+//             const result = ambassadorData.map(data => {
+//                 return {
+//                     Ambassador_firstname: data.firstname,
+//                     Ambassador_lastname: data.surname,
+//                     Ambassador_referralcode: data.referral_code,
+//                     referral_count: activeReferralCount,
+//                     due_amount: amountDue,
+//                 };
+//             }).filter(entry => entry !== null);
+//             console.log(result);
+//             return result;
+//         } else {
+//             return [];
+//         }
+//     } catch (error) {
+//         console.error('An error occurred:', error);
+//         throw error;
+//     }
+
+// }
+async function getPaymentDueToAmbassador(param) {
+    try {
+        let query = {};
+    
+        if (param && param.start_date && param.end_date) {
+            query.createdAt = {
+                $gte: new Date(param.start_date),
+                $lte: new Date(param.end_date)
+            };
+        }
+        const ambassadors = await Referral.find(query);
+        console.log("ambassadors", ambassadors);
+        const referralsSet = new Set(ambassadors.map(referral => referral.referral_code));
+        const referrals = Array.from(referralsSet);
+        console.log("referrals", referrals);
+        const ambassadorData = await User.find({
+            referral_code: { $in: referrals },
+          })
+          .select('firstname surname referral_code')
+          .exec();
+
+        const result = ambassadorData.reduce((acc, data) => {
+            const referralCount = ambassadors.filter(referral => referral.referral_code === data.referral_code).length;
+            const amountDue = referralCount * 5000;
+            acc.push({
+                Ambassador_firstname: data.firstname,
+                Ambassador_lastname: data.surname,
+                Ambassador_referralcode: data.referral_code,
+                referral_count: referralCount,
+                due_amount: amountDue,
+            });
+            return acc;
+        }, []);
+
+        console.log(result);
+        return result;
+    } catch (error) {
+        console.error('An error occurred:', error);
+        throw error;
+    }
 }

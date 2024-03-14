@@ -316,15 +316,6 @@ async function saveMembershipSubscription(param) {
       }
     );
 
-    // await User.findByIdAndUpdate(
-    //   { _id: param.userid },
-    //   {
-    //     $set: {
-    //       subscription_date: new Date(),
-    //     },
-    //   }
-    // );
-
     console.log('subscriberdata=',data);
     if (param.id) {
       let res = await Subscriptionpayment.findById(param.id).select(
@@ -332,8 +323,6 @@ async function saveMembershipSubscription(param) {
       );
       if (res) {
         let courseDatas = param.coursesData;
-
-        // console.log("courseDatas", courseDatas)
 
         if (courseDatas && param.payment_status === 'success') {
           for (var i = 0; i < Object.keys(courseDatas).length; i++) {
@@ -1048,53 +1037,46 @@ async function sendEmailToAmbassador(req) {
  */
 async function getDefaultedSubscriptionPaymentOfSubscribers(req) {
   try {
-    let param = req.params;
-    let userId = req.body.userId;
-    let query = {};
+       let param = req.params;
+        let id = req.body.userId;
+        let query = {};
 
-    if (param && param.start_date && param.end_date) {
-        query.createdAt = {
-            $gte: new Date(param.start_date),
-            $lte: new Date(param.end_date)
-        };
-    }
-    
-    const ambassador = await User.findById(userId);
-    query.referral_code = ambassador.referral_code;
-
-    const defaultedSubscriptionOfSubscriber = await Referral.find(query)
-    .populate({
-      path: 'userId',
-      select: 'firstname surname'
-    })
-    .populate({
-      path: 'purchagedcourseId',
-      populate: {
-        path: 'orderid',
-        select: 'payment_status'
-      }
-    })
-    .exec();
-
-    console.log("defaultedSubscriptionOfSubscriber", defaultedSubscriptionOfSubscriber);
-    
-    if (defaultedSubscriptionOfSubscriber.length > 0) {
-        const result = defaultedSubscriptionOfSubscriber.map(data => {
-            return {
-              firstname: data.userId.firstname,
-              surname: data.userId.surname,
-              payment_status: data.purchagedcourseId ? data.purchagedcourseId.orderid.payment_status : null
+        if (param && param.start_date && param.end_date) {
+            query.createdAt = {
+                $gte: new Date(param.start_date),
+                $lte: new Date(param.end_date)
             };
-        }).filter(entry => entry !== null);
-        console.log(result);
-        return result;
-    } else {
-        return [];
-    }
-} catch (error) {
-    console.error('An error occurred:', error);
-    throw error;
-}
+        }
+        
+      const ambassador = await User.findById(id);
+      query.referral_code = ambassador.referral_code;
+
+      const referrals = await Referral.find(query)
+
+      const userIds = referrals.map(referral => referral.userId);
+
+      const subscriptions = await Subscriptionpayment.find({
+        userid: { $in: userIds },
+        payment_status: 'cancel'
+      }).populate({
+          path: 'userid',
+          model: User,
+          select: 'firstname surname'
+      }).exec();
+
+      console.log("subscriptions", subscriptions);
+      const result = subscriptions.map(subscription => ({
+          firstname: subscription.userid.firstname,
+          surname: subscription.userid.surname,
+          payment_status: subscription.payment_status
+      }));
+
+      console.log(result);
+      return result;
+  } catch (error) {
+      console.error('An error occurred:', error);
+      throw error;
+  }
 }
 /*****************************************************************************************/
 /*****************************************************************************************/
@@ -1108,9 +1090,9 @@ async function getDefaultedSubscriptionPaymentOfSubscribers(req) {
 async function getActiveReferral(req) {
   try {
     let param = req.params;
-    let userId = req.body.userId;
+    let id = req.body.userId;
     let query = {
-      is_active: true,
+      purchagedcourseId: { $ne: null }
     };
 
     if (param && param.start_date && param.end_date) {
@@ -1120,12 +1102,13 @@ async function getActiveReferral(req) {
         };
     }
 
-    const ambassador = await User.findById(userId);
+    const ambassador = await User.findById(id);
     query.referral_code = ambassador.referral_code;
 
     const activeReferral = await Referral.find(query)
     .populate({
       path: 'userId',
+      model: User,
       select: 'firstname surname'
     })
     .exec();
@@ -1163,9 +1146,9 @@ async function getActiveReferral(req) {
 async function getInactiveReferral(req) {
   try {
     let param = req.params;
-    let userId = req.body.userId;
+    let id = req.body.userId;
     let query = {
-      is_active: false,
+      purchagedcourseId: null
     };
 
     if (param && param.start_date && param.end_date) {
@@ -1175,12 +1158,13 @@ async function getInactiveReferral(req) {
         };
     }
 
-    const ambassador = await User.findById(userId);
+    const ambassador = await User.findById(id);
     query.referral_code = ambassador.referral_code;
 
     const inactiveReferral = await Referral.find(query)
     .populate({
       path: 'userId',
+      model: User,
       select: 'firstname surname'
     })
     .exec();
@@ -1218,9 +1202,9 @@ async function getInactiveReferral(req) {
 async function getPaymentDueThisMonth(req) {
   try {
     let param = req.params;
-    let userId = req.body.userId;
+    let id = req.body.userId;
     let query = {
-      is_active: true,
+      purchagedcourseId: { $ne: null }
     };
 
     if (param && param.start_date && param.end_date) {
@@ -1230,25 +1214,27 @@ async function getPaymentDueThisMonth(req) {
         };
     }
 
-    const ambassador = await User.findById(userId);
+    const ambassador = await User.findById(id);
+    
     query.referral_code = ambassador.referral_code;
 
-    const inactiveReferral = await Referral.find(query)
+    const dueReferralData = await Referral.find(query)
     .populate({
       path: 'userId',
+      model: User,
       select: 'firstname surname'
     })
     .exec();
-    const activeReferralCount = inactiveReferral.length;
+    const activeReferralCount = dueReferralData.length;
     const amountDue = activeReferralCount * 5000;
-    console.log("activeReferral", inactiveReferral);
+    console.log("activeReferral", dueReferralData);
     
-    if (inactiveReferral.length > 0) {
-        const result = inactiveReferral.map(data => {
+    if (dueReferralData.length > 0) {
+        const result = dueReferralData.map(data => {
             return {
               firstname: data.userId.firstname,
               surname: data.userId.surname,
-              referral_code: data.createdAt,
+              referral_code: data.referral_code,
               referral_count: activeReferralCount,
               due_amount: amountDue,
             };

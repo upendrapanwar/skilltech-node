@@ -88,14 +88,14 @@ router.get("/send-email-ambassador/:id", sendEmailToAmbassador);
 router.post("/notify/:id", payFastNotify);
 router.get("/getSubscriptionId",getSubscriptionId);
 
-router.get('/defaulted-subscription-paymentof-subscriber', getAllDefaultedSubscriptionPaymentOfSubscribers);
-router.get('/my-active-referral', getAllActiveReferral);
-router.get('/my-inactive-referral', getAllInactiveReferral);
-router.get('/payment-due-this-month', getAllPaymentDueThisMonth);
-router.get('/defaulted-subscription-paymentof-subscriber/:start_date/:end_date', getDefaultedSubscriptionPaymentOfSubscribers);
-router.get('/my-active-referral/:start_date/:end_date', getActiveReferral);
-router.get('/my-inactive-referral/:start_date/:end_date', getInactiveReferral);
-router.get('/payment-due-this-month/:start_date/:end_date', getPaymentDueThisMonth);
+router.post('/defaulted-subscription-paymentof-subscriber', getAllDefaultedSubscriptionPaymentOfSubscribers);
+router.post('/my-active-referral', getAllActiveReferral);
+router.post('/my-inactive-referral', getAllInactiveReferral);
+router.post('/payment-due-this-month', getAllPaymentDueThisMonth);
+router.post('/defaulted-subscription-paymentof-subscriber/:start_date/:end_date', getDefaultedSubscriptionPaymentOfSubscribers);
+router.post('/my-active-referral/:start_date/:end_date', getActiveReferral);
+router.post('/my-inactive-referral/:start_date/:end_date', getInactiveReferral);
+router.post('/payment-due-this-month/:start_date/:end_date', getPaymentDueThisMonth);
 
 module.exports = router;
 
