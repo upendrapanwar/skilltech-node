@@ -350,15 +350,18 @@ async function saveMembershipSubscription(param) {
               is_active : param.is_active,
             });
             await purchasedcourses.save();
-            console.log("purchasedcourses", purchasedcourses)
+            console.log("purchasedcourses", purchasedcourses);
+
+            const purchagedcourseId = purchasedcourses._id;
 
             //Set purchagedcourseId in Referral document in database
             if(referralCode){
             const updateReferral = await Referral.findOneAndUpdate(
               { referral_code: referralCode },
-              { $set: { purchagedcourseId: purchasedcourses._id } },
+              { $set: { purchagedcourseId:  purchagedcourseId} },
               { new: true }
-            );
+              );
+              console.log("updateReferral", updateReferral)
             }
           }
         }else{
