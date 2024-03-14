@@ -772,7 +772,7 @@ async function getMyCourses(param) {
     const coursePurchageDetails = await Purchasedcourses.find({
       userId: param.id,
       is_active: true,
-      orderid: { $in: orderIds } // Corrected field name to match schema
+      orderid: { $in: orderIds }
     }).sort({ createdAt: "desc" });
     console.log("coursePurchageDetails", coursePurchageDetails);
 
@@ -780,8 +780,8 @@ async function getMyCourses(param) {
       const result = coursePurchageDetails.map(data => {
           const matchingPayment = subscriptionPayments.find(payment => payment._id.toString() === data.orderid.toString());
           return {
-            courseDetails: data,
-            merchantData: matchingPayment ? matchingPayment.merchantData : null, // Corrected merchantData extraction
+            ...data,
+            merchantData: matchingPayment ? matchingPayment.merchantData : null,
           };
       }).filter(entry => entry !== null);
       console.log("result", result);
