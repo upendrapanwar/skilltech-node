@@ -780,7 +780,7 @@ async function getMyCourses(param) {
       const result = coursePurchageDetails.map(data => {
           const matchingPayment = subscriptionPayments.find(payment => payment._id.toString() === data.orderid.toString());
           return {
-            ...data,
+            ...data.toObject(), // Convert Mongoose document to plain JavaScript object
             merchantData: matchingPayment ? matchingPayment.merchantData : null,
           };
       }).filter(entry => entry !== null);
