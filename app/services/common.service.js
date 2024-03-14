@@ -357,7 +357,7 @@ async function saveMembershipSubscription(param) {
             //Set purchagedcourseId in Referral document in database
             if(referralCode){
             const updateReferral = await Referral.findOneAndUpdate(
-              { referral_code: referralCode },
+              { referral_code: referralCode, userId: param.userid},
               { $set: { purchagedcourseId:  purchagedcourseId} },
               { new: true }
               );
