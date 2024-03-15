@@ -84,6 +84,7 @@ router.get("/get-my-courses/:id", getMyCourses);
 router.get("/get-user-courses/:id", getUserCourses);
 router.post("/save-query", saveQuery);
 router.put("/cancel-course/:id", cancelCourseByUser);  
+router.put("/cancel-payfast-payment", cancelPayfastPayment);  
 router.get("/send-email-ambassador/:id", sendEmailToAmbassador); 
 router.post("/notify/:id", payFastNotify);
 router.get("/getSubscriptionId",getSubscriptionId);
@@ -97,7 +98,7 @@ router.post('/my-active-referral/:start_date/:end_date', getActiveReferral);
 router.post('/my-inactive-referral/:start_date/:end_date', getInactiveReferral);
 router.post('/payment-due-this-month/:start_date/:end_date', getPaymentDueThisMonth);
 
-module.exports = router;
+module.exports = router; 
 
 /**
  * Function registers the user
@@ -445,6 +446,29 @@ function cancelCourseByUser(req, res, next) {
     .then((removedCourse) =>
       removedCourse
         ? res.status(200).json({ status: true, data: removedCourse })
+        : res
+            .status(400)
+            .json({ status: false, message: msg.common.no_data_err, data: [] })
+    )
+    .catch((err) => next(res.json({ status: false, message: err })));
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function to cancel payfast payment
+ *
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
+ *
+ * @return JSON|null
+ */
+function cancelPayfastPayment(req, res, next) {
+  commonService
+    .cancelPayfastPayment(req)
+    .then((data) =>
+    data
+        ? res.status(200).json({ status: true, data: data })
         : res
             .status(400)
             .json({ status: false, message: msg.common.no_data_err, data: [] })
