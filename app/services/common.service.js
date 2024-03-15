@@ -963,7 +963,6 @@ async function cancelPayfastPayment(req) {
     const signature = merchantData.signature;
     const timestamp = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
 
-    console.log("merchant_data", merchant_data);
     console.log("token", token);
     console.log("merchantId", merchantId);
     console.log("timestamp", timestamp);
