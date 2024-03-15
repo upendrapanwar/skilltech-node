@@ -958,11 +958,6 @@ async function cancelPayfastPayment(req) {
   const merchantData = req.body;
   console.log("merchantData", merchantData)
   try {
-    const token = merchantData.token;
-    const merchantId = merchantData.merchantId;
-    const signature = merchantData.signature;
-    const timestamp = generateTimestamp();
-
     const generateTimestamp = () => {
       const now = new Date();
       const offset = '+02:00';
@@ -974,6 +969,12 @@ async function cancelPayfastPayment(req) {
       const formattedTimestamp = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}${timezoneString}`;
       return formattedTimestamp;
     }
+    
+    const token = merchantData.token;
+    const merchantId = merchantData.merchantId;
+    const signature = merchantData.signature;
+    const timestamp = generateTimestamp();
+
 
     console.log("token", token);
     console.log("merchantId", merchantId);
