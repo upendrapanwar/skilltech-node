@@ -958,10 +958,9 @@ async function cancelPayfastPayment(req) {
   const merchantData = req.body;
   console.log("merchantData", merchantData)
   try {
-    const merchant_data = JSON.parse(merchantData);
-    const token = merchant_data.token;
-    const merchantId = merchant_data.merchant_id;
-    const signature = merchant_data.signature;
+    const token = merchantData.token;
+    const merchantId = merchantData.merchantId;
+    const signature = merchantData.signature;
     const timestamp = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
 
     console.log("merchant_data", merchant_data);
