@@ -7,7 +7,7 @@
  */
 
 const config = require("../config/index");
-const fetch = require('node-fetch');
+const axios = require('axios');
 const mongoose = require("mongoose");
 mongoose.connect(process.env.MONGODB_URI || config.connectionString, {
   useNewUrlParser: true,
@@ -957,65 +957,45 @@ async function saveQuery(param) {
 async function cancelPayfastPayment(req) {
   const merchantData = req.body;
   try {
-        const merchant_data = JSON.parse(merchantData);
-        const token = merchant_data.token;
-        const merchantId = merchant_data.merchant_id;
-        const signature = merchant_data.signature;
-        const timestamp = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
+    const merchant_data = JSON.parse(merchantData);
+    const token = merchant_data.token;
+    const merchantId = merchant_data.merchant_id;
+    const signature = merchant_data.signature;
+    const timestamp = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
 
-        console.log("merchant_data", merchant_data);
-        console.log("token", token);
-        console.log("merchantId", merchantId);
-        console.log("timestamp", timestamp);
-        console.log("signature", signature);
+    console.log("merchant_data", merchant_data);
+    console.log("token", token);
+    console.log("merchantId", merchantId);
+    console.log("timestamp", timestamp);
+    console.log("signature", signature);
 
-        const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
-        const version = 'v1';
+    const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+    const version = 'v1';
 
-        // var myHeaders = new Headers();
-        // myHeaders.append("merchant-id", merchantId);
-        // myHeaders.append("version", version);
-        // myHeaders.append("timestamp", timestamp);
-        // myHeaders.append("signature", signature);
+    const headers = {
+      'Content-Type': 'application/json',
+      'merchant-id': merchantId,
+      'version': version,
+      'timestamp' : timestamp,
+      'signature': signature
+    };
 
-        // var urlencoded = new URLSearchParams();
-        // var requestOptions = {
-        //   method: 'PUT',
-        //   headers: myHeaders,
-        //   body: urlencoded,
-        //   redirect: 'follow'
+    const response = await axios.put(url, null, { headers });
 
-        // };
+    console.log("PayFast cancel response:", response.data);
 
-        const headers = {
-            'Content-Type': 'application/json',
-            'merchant-id': merchantId,
-            'version': version,
-            'timestamp' : timestamp,
-            'signature': signature
-        };
-
-        const requestOptions = {
-            method: 'PUT',
-            headers: headers
-        };
-
-        const response = await fetch(url, requestOptions);
-        const result = await response.json();
-
-        console.log("PayFast cancel response:", result);
-
-        if (response.status === 200) {
-            console.log("Cancellation successful.");
-            cancelCourseByUser(orderId);
-        } else {
-            console.error("Cancellation failed:", result);
-        }
+    if (response.status === 200) {
+      console.log("Cancellation successful.");
+      cancelCourseByUser(orderId);
+    } else {
+      console.error("Cancellation failed:", response.data);
+    }
   } catch (err) {
     console.log("Error:", err);
     throw err;
   }
 }
+
 /*****************************************************************************************/
 /*****************************************************************************************/
 /**
