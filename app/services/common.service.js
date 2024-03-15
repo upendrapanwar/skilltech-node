@@ -966,9 +966,10 @@ async function cancelPayfastPayment(req) {
     const hours = Math.floor(absTimezoneOffset / 60);
     const minutes = absTimezoneOffset % 60;
     const timezoneString = `${offset.startsWith('-') ? '+' : '-'}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    const formattedTimestamp = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}${timezoneString}`;
+    const formattedTimestamp = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}${timezoneString}`;
     return formattedTimestamp;
-  }
+}
+
 
   try {
     const token = merchantData.token;
