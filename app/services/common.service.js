@@ -968,8 +968,7 @@ async function cancelPayfastPayment(req) {
     const timezoneString = `${offset.startsWith('-') ? '+' : '-'}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     const formattedTimestamp = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}${timezoneString}`;
     return formattedTimestamp;
-}
-
+  }
 
   try {
     const token = merchantData.token;
@@ -987,7 +986,7 @@ async function cancelPayfastPayment(req) {
     const version = 'v1';
 
     const headers = {
-      'Content-Type': 'application/json',
+      // 'Content-Type': 'application/json',
       'merchant-id': merchantId,
       'version': version,
       'timestamp': timestamp,
