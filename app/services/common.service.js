@@ -999,7 +999,7 @@ async function cancelPayfastPayment(req) {
 
     if (response.status === 200) {
       console.log("Cancellation successful.");
-      cancelCourseByUser(orderId);
+      return response;
     } else {
       console.error("Cancellation failed:", response.data);
     }
