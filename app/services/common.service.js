@@ -956,6 +956,7 @@ async function saveQuery(param) {
  */
 async function cancelPayfastPayment(req) {
   const merchantData = req.body;
+  console.log("merchantData", merchantData)
   try {
     const merchant_data = JSON.parse(merchantData);
     const token = merchant_data.token;
