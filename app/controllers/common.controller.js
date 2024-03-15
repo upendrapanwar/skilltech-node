@@ -84,7 +84,7 @@ router.get("/get-my-courses/:id", getMyCourses);
 router.get("/get-user-courses/:id", getUserCourses);
 router.post("/save-query", saveQuery);
 router.put("/cancel-course/:id", cancelCourseByUser);  
-router.put("/cancel-payfast-payment", cancelPayfastPayment);  
+router.post("/cancel-payfast-payment", cancelPayfastPayment);  
 router.get("/send-email-ambassador/:id", sendEmailToAmbassador); 
 router.post("/notify/:id", payFastNotify);
 router.get("/getSubscriptionId",getSubscriptionId);
