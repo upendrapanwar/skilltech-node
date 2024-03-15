@@ -1031,7 +1031,7 @@ async function cancelCourseByUser(req) {
     console.log("statusData====>", statusData);
 
     const removedCourse = await Purchasedcourses.findOneAndUpdate(
-      { orderid: id },
+      { _id: id },
       statusData,
       { new: true }
     );
