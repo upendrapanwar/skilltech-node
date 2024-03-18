@@ -667,6 +667,7 @@ async function getSubscriptionId(req) {
     userid: reqData.userid,
     payment_status: reqData.payment_status,
     uuid: "1",
+    is_active: false,
   });
   const data = await subscriptionPayment.save();
 
