@@ -87,7 +87,7 @@ router.put("/cancel-course/:id", cancelCourseByUser);
 router.post("/cancel-payfast-payment", cancelPayfastPayment);  
 router.get("/send-email-ambassador/:id", sendEmailToAmbassador); 
 router.post("/notify/:id", payFastNotify);
-router.get("/getSubscriptionId",getSubscriptionId);
+router.post("/getSubscriptionId",getSubscriptionId);
 
 router.post('/defaulted-subscription-paymentof-subscriber', getAllDefaultedSubscriptionPaymentOfSubscribers);
 router.post('/my-active-referral', getAllActiveReferral);
@@ -98,7 +98,7 @@ router.post('/my-active-referral/:start_date/:end_date', getActiveReferral);
 router.post('/my-inactive-referral/:start_date/:end_date', getInactiveReferral);
 router.post('/payment-due-this-month/:start_date/:end_date', getPaymentDueThisMonth);
 
-module.exports = router; 
+module.exports = router;  
 
 /**
  * Function registers the user

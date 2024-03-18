@@ -661,8 +661,11 @@ async function payFastNotify(param, spayId) {
  *
  * @returns Object|null
  */
-async function getSubscriptionId() { 
+async function getSubscriptionId(req) { 
+  const reqData = req.body;
   const subscriptionPayment = new Subscriptionpayment({
+    userid: reqData.userid,
+    payment_status: reqData.payment_status,
     uuid: "1",
   });
   const data = await subscriptionPayment.save();
@@ -1020,7 +1023,7 @@ async function cancelPayfastPayment(req) {
  * @returns Object|null
  */
 async function cancelCourseByUser(req) {
-  console.log("id", req.params.id); 
+  console.log("id", req.params.id);  
   try {
     const id = req.params.id;
 
