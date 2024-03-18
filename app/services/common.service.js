@@ -663,12 +663,15 @@ async function payFastNotify(param, spayId) {
  */
 async function getSubscriptionId(req) { 
   const reqData = req.body;
+  console.log("reqData", reqData)
   const subscriptionPayment = new Subscriptionpayment({
     userid: reqData.userid,
     payment_status: reqData.payment_status,
     uuid: "1",
     is_active: false,
   });
+
+  console.log("subscriptionPayment", subscriptionPayment)
   const data = await subscriptionPayment.save();
 
   if (data) {
