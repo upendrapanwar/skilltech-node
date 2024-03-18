@@ -534,7 +534,7 @@ function payFastNotify(req, res, next) {
  */
 function getSubscriptionId(req, res, next) {
   commonService
-    .getSubscriptionId()
+    .getSubscriptionId(req)
     .then((response) =>
       response
         ? res.status(200).json({ status: true, data: response })
