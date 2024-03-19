@@ -1001,14 +1001,14 @@ async function cancelPayfastPayment(req) {
           "+"
         )}`;
       }
-      //console.log('getstring=',getString);
-      return crypto.createHash("md5").update(getString).digest("hex");
+      const signature = crypto.createHash("md5").update(getString).digest("hex");
+      console.log("signature", signature)
+      return signature;
       }
 
   try {
     const token = merchantData.token;
-    const merchantId = "10030936";
-    // const merchantId = merchantData.merchantId;
+    const merchantId = merchantData.merchantId;
     const signature = generateSignature();
     const timestamp = generateTimestamp();
 
@@ -1057,6 +1057,7 @@ async function cancelPayfastPayment(req) {
       return response;
     } else {
       console.error("Cancellation failed:", response.data);
+      return response;
     }
   } catch (err) {
     console.log("Error:", err);
