@@ -978,35 +978,57 @@ async function cancelPayfastPayment(req) {
     return formattedTimestamp;
   }
 
-function generateSignature() {
-    let data = merchantData.merchantData;
-    data = JSON.parse(data);
-    data.version = 'v1';
-    data.timestamp = generateTimestamp();
-    data = JSON.stringify(data);
-    console.log("data", data);
-
-    const passPhrase = 'quorum87ax36Revving';
+  function generateSignature() {
+        let pfOutput = "";
+      var data = merchantData.merchantData;
+      var passPhrase = 'quorum87ax36Revving';
+      for (let key in data) {
+        if (data.hasOwnProperty(key)) {
+          if (data[key] !== "") {
+            pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
+              /%20/g,
+              "+"
+            )}&`;
+          }
+        }
+      }
+      // Remove last ampersand
+      let getString = pfOutput.slice(0, -1);
+      if (passPhrase !== null) {
+        getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
+          /%20/g,
+          "+"
+        )}`;
+      }
+      const signature = crypto.createHash("md5").update(getString).digest("hex");
+      console.log("signature", signature);
+      return signature;
+      }
     
-    let orderedData = {};
-    Object.keys(data).sort().forEach(key => {
-        orderedData[key] = data[key];
-    });
-    data = orderedData;
 
-    let getString = '';
-    for (let key in data) {
-        getString += `${key}=${encodeURIComponent(data[key]).replace(/%20/g, '+')}&`;
-    }
-    getString = getString.substring(0, getString.length - 1);
+// function generateSignature() {
+//     let data = merchantData.merchantData;
+//     const passPhrase = 'quorum87ax36Revving';
 
-    if (passPhrase !== null) {
-        getString += `&passphrase=${encodeURIComponent(passPhrase.trim()).replace(/%20/g, '+')}`;
-    }
-    const signature = crypto.createHash("md5").update(getString).digest("hex");
-    console.log("signature", signature);
-    return signature;
-  }
+//     let orderedData = {};
+//     Object.keys(data).sort().forEach(key => {
+//         orderedData[key] = data[key];
+//     });
+//     data = orderedData;
+
+//     let getString = '';
+//     for (let key in data) {
+//         getString += `${key}=${encodeURIComponent(data[key]).replace(/%20/g, '+')}&`;
+//     }
+//     getString = getString.substring(0, getString.length - 1);
+
+//     if (passPhrase !== null) {
+//         getString += `&passphrase=${encodeURIComponent(passPhrase.trim()).replace(/%20/g, '+')}`;
+//     }
+//     const signature = crypto.createHash("md5").update(getString).digest("hex");
+//     console.log("signature", signature);
+//     return signature;
+//   }
 
 
   try {
@@ -1062,9 +1084,6 @@ function generateSignature() {
     throw err;
   }
 }
-
-
-
 
 // async function cancelPayfastPayment(req) {
 //   const merchantData = req.body;
