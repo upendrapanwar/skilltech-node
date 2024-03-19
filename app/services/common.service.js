@@ -1007,7 +1007,8 @@ async function cancelPayfastPayment(req) {
 
   try {
     const token = merchantData.token;
-    const merchantId = merchantData.merchantId;
+    const merchantId = "10030936";
+    // const merchantId = merchantData.merchantId;
     const signature = generateSignature();
     const timestamp = generateTimestamp();
 
@@ -1050,8 +1051,6 @@ async function cancelPayfastPayment(req) {
       req.write(postData);
       req.end();
     });
-
-    console.log("PayFast cancel response:", response.data);
 
     if (response.status === 200) {
       console.log("Cancellation successful.");
