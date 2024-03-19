@@ -961,73 +961,94 @@ async function saveQuery(param) {
  *
  * @returns Object|null
  */
+const querystring = require('querystring');
+
 async function cancelPayfastPayment(req) {
   const merchantData = req.body;
-  console.log("merchantData", merchantData);
 
   function generateTimestamp() {
-    const now = new Date();
-    const offset = '+02:00';
-    const timezoneOffset = now.getTimezoneOffset();
-    const absTimezoneOffset = Math.abs(timezoneOffset);
-    const hours = Math.floor(absTimezoneOffset / 60);
-    const minutes = absTimezoneOffset % 60;
-    const timezoneString = `${offset.startsWith('-') ? '+' : '-'}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    const formattedTimestamp = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}${timezoneString}`;
-    return formattedTimestamp;
-  }
-
-  function generateSignature() {
-    let pfOutput = "";
-  var data = merchantData.merchantData;
-  var passPhrase = 'quorum87ax36Revving';
-  for (let key in data) {
-    if (data.hasOwnProperty(key)) {
-      if (data[key] !== "") {
-        pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
+        const now = new Date();
+        const offset = '+02:00';
+        const timezoneOffset = now.getTimezoneOffset();
+        const absTimezoneOffset = Math.abs(timezoneOffset);
+        const hours = Math.floor(absTimezoneOffset / 60);
+        const minutes = absTimezoneOffset % 60;
+        const timezoneString = `${offset.startsWith('-') ? '+' : '-'}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        const formattedTimestamp = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}${timezoneString}`;
+        return formattedTimestamp;
+      }
+    
+      function generateSignature() {
+        let pfOutput = "";
+      var data = merchantData.merchantData;
+      var passPhrase = 'quorum87ax36Revving';
+      for (let key in data) {
+        if (data.hasOwnProperty(key)) {
+          if (data[key] !== "") {
+            pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
+              /%20/g,
+              "+"
+            )}&`;
+          }
+        }
+      }
+      // Remove last ampersand
+      let getString = pfOutput.slice(0, -1);
+      if (passPhrase !== null) {
+        getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
           /%20/g,
           "+"
-        )}&`;
+        )}`;
       }
-    }
-  }
-  // Remove last ampersand
-  let getString = pfOutput.slice(0, -1);
-  if (passPhrase !== null) {
-    getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
-      /%20/g,
-      "+"
-    )}`;
-  }
-  //console.log('getstring=',getString);
-  return crypto.createHash("md5").update(getString).digest("hex");
-  }
+      //console.log('getstring=',getString);
+      return crypto.createHash("md5").update(getString).digest("hex");
+      }
 
   try {
     const token = merchantData.token;
     const merchantId = merchantData.merchantId;
-    // const signature = merchantData.signature;
     const signature = generateSignature();
     const timestamp = generateTimestamp();
 
-    console.log("token", token);
-    console.log("merchantId", merchantId);
-    console.log("timestamp", timestamp);
-    console.log("signature", signature);
-
-    // const url = `https://sandbox.payfast.co.za/subscriptions/${token}/cancel`;
     const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
     const version = 'v1';
 
-    const headers = {
-      'Content-Type': 'application/json',
+    const postData = querystring.stringify({
       'merchant-id': merchantId,
       'version': version,
       'timestamp': timestamp,
       'signature': signature
+    });
+
+    const options = {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': postData.length
+      }
     };
 
-    const response = await axios.put(url, null, { headers });
+    const response = await new Promise((resolve, reject) => {
+      const req = https.request(url, options, res => {
+        let data = '';
+        res.on('data', chunk => {
+          data += chunk;
+        });
+        res.on('end', () => {
+          resolve({
+            status: res.statusCode,
+            data: JSON.parse(data)
+          });
+        });
+      });
+
+      req.on('error', error => {
+        reject(error);
+      });
+
+      req.write(postData);
+      req.end();
+    });
 
     console.log("PayFast cancel response:", response.data);
 
@@ -1042,6 +1063,89 @@ async function cancelPayfastPayment(req) {
     throw err;
   }
 }
+
+
+
+// async function cancelPayfastPayment(req) {
+//   const merchantData = req.body;
+//   console.log("merchantData", merchantData);
+
+//   function generateTimestamp() {
+//     const now = new Date();
+//     const offset = '+02:00';
+//     const timezoneOffset = now.getTimezoneOffset();
+//     const absTimezoneOffset = Math.abs(timezoneOffset);
+//     const hours = Math.floor(absTimezoneOffset / 60);
+//     const minutes = absTimezoneOffset % 60;
+//     const timezoneString = `${offset.startsWith('-') ? '+' : '-'}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+//     const formattedTimestamp = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}${timezoneString}`;
+//     return formattedTimestamp;
+//   }
+
+//   function generateSignature() {
+//     let pfOutput = "";
+//   var data = merchantData.merchantData;
+//   var passPhrase = 'quorum87ax36Revving';
+//   for (let key in data) {
+//     if (data.hasOwnProperty(key)) {
+//       if (data[key] !== "") {
+//         pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
+//           /%20/g,
+//           "+"
+//         )}&`;
+//       }
+//     }
+//   }
+//   // Remove last ampersand
+//   let getString = pfOutput.slice(0, -1);
+//   if (passPhrase !== null) {
+//     getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
+//       /%20/g,
+//       "+"
+//     )}`;
+//   }
+//   //console.log('getstring=',getString);
+//   return crypto.createHash("md5").update(getString).digest("hex");
+//   }
+
+//   try {
+//     const token = merchantData.token;
+//     const merchantId = merchantData.merchantId;
+//     // const signature = merchantData.signature;
+//     const signature = generateSignature();
+//     const timestamp = generateTimestamp();
+
+//     console.log("token", token);
+//     console.log("merchantId", merchantId);
+//     console.log("timestamp", timestamp);
+//     console.log("signature", signature);
+
+//     // const url = `https://sandbox.payfast.co.za/subscriptions/${token}/cancel`;
+//     const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+//     const version = 'v1';
+
+//     const headers = {
+//       'merchant-id': merchantId,
+//       'version': version,
+//       'timestamp': timestamp,
+//       'signature': signature
+//     };
+
+//     const response = await axios.put(url, null, { headers });
+
+//     console.log("PayFast cancel response:", response.data);
+
+//     if (response.status === 200) {
+//       console.log("Cancellation successful.");
+//       return response;
+//     } else {
+//       console.error("Cancellation failed:", response.data);
+//     }
+//   } catch (err) {
+//     console.log("Error:", err);
+//     throw err;
+//   }
+// }
 
 
 /*****************************************************************************************/
