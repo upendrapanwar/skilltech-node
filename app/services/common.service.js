@@ -1057,7 +1057,7 @@ async function cancelPayfastPayment(req) {
       return response;
     } else {
       console.error("Cancellation failed:", response.data);
-      return response;
+      return response.data;
     }
   } catch (err) {
     console.log("Error:", err);
