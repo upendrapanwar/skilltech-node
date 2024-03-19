@@ -1015,17 +1015,21 @@ async function cancelPayfastPayment(req) {
     const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
     const version = 'v1';
 
-    const postData = {
-      'merchant-id': merchantId,
-      'version': version,
-      'timestamp': timestamp,
-      'signature': signature
-    };
+    // const postData = {
+    //   'merchant-id': merchantId,
+    //   'version': version,
+    //   'timestamp': timestamp,
+    //   'signature': signature
+    // };
 
     const options = {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'merchant-id': merchantId,
+        'version': version,
+        'timestamp': timestamp,
+        'signature': signature
       }
     };
 
@@ -1047,7 +1051,7 @@ async function cancelPayfastPayment(req) {
         reject(error);
       });
 
-      req.write(querystring.stringify(postData));
+      // req.write(querystring.stringify(postData));
       req.end();
     });
 
