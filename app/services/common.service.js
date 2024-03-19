@@ -1004,32 +1004,6 @@ async function cancelPayfastPayment(req) {
       console.log("signature", signature);
       return signature;
       }
-    
-
-// function generateSignature() {
-//     let data = merchantData.merchantData;
-//     const passPhrase = 'quorum87ax36Revving';
-
-//     let orderedData = {};
-//     Object.keys(data).sort().forEach(key => {
-//         orderedData[key] = data[key];
-//     });
-//     data = orderedData;
-
-//     let getString = '';
-//     for (let key in data) {
-//         getString += `${key}=${encodeURIComponent(data[key]).replace(/%20/g, '+')}&`;
-//     }
-//     getString = getString.substring(0, getString.length - 1);
-
-//     if (passPhrase !== null) {
-//         getString += `&passphrase=${encodeURIComponent(passPhrase.trim()).replace(/%20/g, '+')}`;
-//     }
-//     const signature = crypto.createHash("md5").update(getString).digest("hex");
-//     console.log("signature", signature);
-//     return signature;
-//   }
-
 
   try {
     const token = merchantData.token;
