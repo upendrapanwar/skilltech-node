@@ -9,6 +9,7 @@
 const config = require("../config/index");
 const axios = require('axios');
 const querystring = require('querystring');
+const crypto = require("crypto");
 const https = require('https');
 const mongoose = require("mongoose");
 mongoose.connect(process.env.MONGODB_URI || config.connectionString, {
@@ -979,32 +980,37 @@ async function cancelPayfastPayment(req) {
     return formattedTimestamp;
   }
 
-  function generateSignature() {
-    let pfOutput = "";
-    var data = merchantData.merchantData;
-    var passPhrase = 'quorum87ax36Revving';
+function generateSignature(merchantData) {
+    let data = merchantData.merchantData;
+    const passPhrase = 'quorum87ax36Revving';
+
+    // Arrange the array by key alphabetically
+    let orderedData = {};
+    Object.keys(data).sort().forEach(key => {
+        orderedData[key] = data[key];
+    });
+    data = orderedData;
+
+    // Create the get string
+    let getString = '';
     for (let key in data) {
-      if (data.hasOwnProperty(key)) {
-        if (data[key] !== "") {
-          pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
-            /%20/g,
-            "+"
-          )}&`;
-        }
-      }
+        getString += `${key}=${encodeURIComponent(data[key]).replace(/%20/g, '+')}&`;
     }
-    // Remove last ampersand
-    let getString = pfOutput.slice(0, -1);
+
+    // Remove the last '&'
+    getString = getString.substring(0, getString.length - 1);
+
+    // Append passphrase if provided
     if (passPhrase !== null) {
-      getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
-        /%20/g,
-        "+"
-      )}`;
+        getString += `&passphrase=${encodeURIComponent(passPhrase.trim()).replace(/%20/g, '+')}`;
     }
+
+    // Hash the data and create the signature
     const signature = crypto.createHash("md5").update(getString).digest("hex");
-    console.log("signature", signature)
+    console.log("signature", signature);
     return signature;
   }
+
 
   try {
     const token = merchantData.token;
