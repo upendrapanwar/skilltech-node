@@ -968,43 +968,43 @@ async function cancelPayfastPayment(req) {
   const merchantData = req.body;
 
   function generateTimestamp() {
-        const now = new Date();
-        const offset = '+02:00';
-        const timezoneOffset = now.getTimezoneOffset();
-        const absTimezoneOffset = Math.abs(timezoneOffset);
-        const hours = Math.floor(absTimezoneOffset / 60);
-        const minutes = absTimezoneOffset % 60;
-        const timezoneString = `${offset.startsWith('-') ? '+' : '-'}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-        const formattedTimestamp = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}${timezoneString}`;
-        return formattedTimestamp;
-      }
-    
-      function generateSignature() {
-        let pfOutput = "";
-      var data = merchantData.merchantData;
-      var passPhrase = 'quorum87ax36Revving';
-      for (let key in data) {
-        if (data.hasOwnProperty(key)) {
-          if (data[key] !== "") {
-            pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
-              /%20/g,
-              "+"
-            )}&`;
-          }
+    const now = new Date();
+    const offset = '+02:00';
+    const timezoneOffset = now.getTimezoneOffset();
+    const absTimezoneOffset = Math.abs(timezoneOffset);
+    const hours = Math.floor(absTimezoneOffset / 60);
+    const minutes = absTimezoneOffset % 60;
+    const timezoneString = `${offset.startsWith('-') ? '+' : '-'}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    const formattedTimestamp = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}${timezoneString}`;
+    return formattedTimestamp;
+  }
+
+  function generateSignature() {
+    let pfOutput = "";
+    var data = merchantData.merchantData;
+    var passPhrase = 'quorum87ax36Revving';
+    for (let key in data) {
+      if (data.hasOwnProperty(key)) {
+        if (data[key] !== "") {
+          pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
+            /%20/g,
+            "+"
+          )}&`;
         }
       }
-      // Remove last ampersand
-      let getString = pfOutput.slice(0, -1);
-      if (passPhrase !== null) {
-        getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
-          /%20/g,
-          "+"
-        )}`;
-      }
-      const signature = crypto.createHash("md5").update(getString).digest("hex");
-      console.log("signature", signature)
-      return signature;
-      }
+    }
+    // Remove last ampersand
+    let getString = pfOutput.slice(0, -1);
+    if (passPhrase !== null) {
+      getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
+        /%20/g,
+        "+"
+      )}`;
+    }
+    const signature = crypto.createHash("md5").update(getString).digest("hex");
+    console.log("signature", signature)
+    return signature;
+  }
 
   try {
     const token = merchantData.token;
@@ -1015,21 +1015,17 @@ async function cancelPayfastPayment(req) {
     const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
     const version = 'v1';
 
-    const postData = querystring.stringify({
+    const postData = {
       'merchant-id': merchantId,
       'version': version,
       'timestamp': timestamp,
       'signature': signature
-    });
-
-    console.log("postData", postData);
-    console.log("postData.length", postData.length);
+    };
 
     const options = {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Content-Length': postData.length
       }
     };
 
@@ -1051,7 +1047,7 @@ async function cancelPayfastPayment(req) {
         reject(error);
       });
 
-      req.write(postData);
+      req.write(querystring.stringify(postData));
       req.end();
     });
 
@@ -1067,6 +1063,7 @@ async function cancelPayfastPayment(req) {
     throw err;
   }
 }
+
 
 
 
