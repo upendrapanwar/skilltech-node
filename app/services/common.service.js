@@ -8,7 +8,6 @@
 
 const config = require("../config/index");
 const axios = require('axios');
-const querystring = require('querystring');
 const crypto = require("crypto");
 const https = require('https');
 const mongoose = require("mongoose");
@@ -981,31 +980,26 @@ async function cancelPayfastPayment(req) {
   }
 
 function generateSignature(merchantData) {
+    merchantData.merchantData.version = 'v1';
     let data = merchantData.merchantData;
+    console.log("data", data);
     const passPhrase = 'quorum87ax36Revving';
-
-    // Arrange the array by key alphabetically
     let orderedData = {};
+
     Object.keys(data).sort().forEach(key => {
         orderedData[key] = data[key];
     });
     data = orderedData;
 
-    // Create the get string
     let getString = '';
     for (let key in data) {
         getString += `${key}=${encodeURIComponent(data[key]).replace(/%20/g, '+')}&`;
     }
-
-    // Remove the last '&'
     getString = getString.substring(0, getString.length - 1);
 
-    // Append passphrase if provided
     if (passPhrase !== null) {
         getString += `&passphrase=${encodeURIComponent(passPhrase.trim()).replace(/%20/g, '+')}`;
     }
-
-    // Hash the data and create the signature
     const signature = crypto.createHash("md5").update(getString).digest("hex");
     console.log("signature", signature);
     return signature;
@@ -1020,13 +1014,6 @@ function generateSignature(merchantData) {
 
     const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
     const version = 'v1';
-
-    // const postData = {
-    //   'merchant-id': merchantId,
-    //   'version': version,
-    //   'timestamp': timestamp,
-    //   'signature': signature
-    // };
 
     const options = {
       method: 'PUT',
@@ -1056,7 +1043,6 @@ function generateSignature(merchantData) {
       req.on('error', error => {
         reject(error);
       });
-
       // req.write(querystring.stringify(postData));
       req.end();
     });
