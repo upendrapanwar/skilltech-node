@@ -1022,6 +1022,9 @@ async function cancelPayfastPayment(req) {
       'signature': signature
     });
 
+    console.log("postData", postData);
+    console.log("postData.length", postData.length);
+
     const options = {
       method: 'PUT',
       headers: {
