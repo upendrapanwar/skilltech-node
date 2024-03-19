@@ -8,6 +8,8 @@
 
 const config = require("../config/index");
 const axios = require('axios');
+const querystring = require('querystring');
+const https = require('https');
 const mongoose = require("mongoose");
 mongoose.connect(process.env.MONGODB_URI || config.connectionString, {
   useNewUrlParser: true,
@@ -961,7 +963,6 @@ async function saveQuery(param) {
  *
  * @returns Object|null
  */
-const querystring = require('querystring');
 
 async function cancelPayfastPayment(req) {
   const merchantData = req.body;
