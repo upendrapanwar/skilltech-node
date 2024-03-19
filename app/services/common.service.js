@@ -977,10 +977,37 @@ async function cancelPayfastPayment(req) {
     return formattedTimestamp;
   }
 
+  function generateSignature() {
+    let pfOutput = "";
+  var data = merchantData.merchantData;
+  var passPhrase = 'quorum87ax36Revving';
+  for (let key in data) {
+    if (data.hasOwnProperty(key)) {
+      if (data[key] !== "") {
+        pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
+          /%20/g,
+          "+"
+        )}&`;
+      }
+    }
+  }
+  // Remove last ampersand
+  let getString = pfOutput.slice(0, -1);
+  if (passPhrase !== null) {
+    getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
+      /%20/g,
+      "+"
+    )}`;
+  }
+  //console.log('getstring=',getString);
+  return crypto.createHash("md5").update(getString).digest("hex");
+  }
+
   try {
     const token = merchantData.token;
     const merchantId = merchantData.merchantId;
-    const signature = merchantData.signature;
+    // const signature = merchantData.signature;
+    const signature = generateSignature();
     const timestamp = generateTimestamp();
 
     console.log("token", token);
