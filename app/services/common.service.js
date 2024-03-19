@@ -980,7 +980,10 @@ async function cancelPayfastPayment(req) {
 
 function generateSignature() {
     let data = merchantData.merchantData;
-    console.log("data", data);
+    data = JSON.parse(data);
+    data.version = 'v1';
+    data.timestamp = generateTimestamp();
+    data = JSON.stringify(data);
     const passPhrase = 'quorum87ax36Revving';
     let orderedData = {};
 
