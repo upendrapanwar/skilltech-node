@@ -979,7 +979,6 @@ async function cancelPayfastPayment(req) {
   }
 
 function generateSignature(merchantData) {
-    merchantData.merchantData.version = 'v1';
     let data = merchantData.merchantData;
     console.log("data", data);
     const passPhrase = 'quorum87ax36Revving';
