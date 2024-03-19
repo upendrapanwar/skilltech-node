@@ -8,7 +8,6 @@
 
 const config = require("../config/index");
 const axios = require('axios');
-const crypto = require("crypto");
 const https = require('https');
 const mongoose = require("mongoose");
 mongoose.connect(process.env.MONGODB_URI || config.connectionString, {
@@ -24,6 +23,8 @@ const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const QRCode = require('qrcode'); 
 const msg = require("../helpers/messages.json");
+const crypto = require("crypto");
+const { v4: uuidv4 } = require("uuid"); 
 
 const {
   User,
@@ -32,8 +33,6 @@ const {
   Userquery,
   Referral,
 } = require("../helpers/db");
-const crypto = require("crypto");
-const { v4: uuidv4 } = require("uuid"); 
 
 let transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
