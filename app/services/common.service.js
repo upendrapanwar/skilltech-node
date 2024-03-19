@@ -984,9 +984,11 @@ function generateSignature() {
     data.version = 'v1';
     data.timestamp = generateTimestamp();
     data = JSON.stringify(data);
-    const passPhrase = 'quorum87ax36Revving';
-    let orderedData = {};
+    console.log("data", data);
 
+    const passPhrase = 'quorum87ax36Revving';
+    
+    let orderedData = {};
     Object.keys(data).sort().forEach(key => {
         orderedData[key] = data[key];
     });
