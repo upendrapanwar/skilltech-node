@@ -600,7 +600,7 @@ async function getReferralCode() {
     if (result.length > 0) {
       return result[0].countReferral;
     } else {
-      return null;
+      return "0";
     }
   } catch (error) {
     console.error("Error:", error);
