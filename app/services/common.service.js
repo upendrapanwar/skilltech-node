@@ -579,7 +579,7 @@ async function generateSignature(param) {
 // }
 
 async function getReferralCode() {
-  const currentYear = new Date("2025-01-01").getFullYear();
+  const currentYear = new Date().getFullYear();
   
   const pipeline = [
     {
