@@ -1097,6 +1097,7 @@ async function cancelPayfastPayment(req) {
   function generateSignature() {
     let pfOutput = "";
     var data = merchantData.merchantData;
+    console.log("data", data);
     var passPhrase = 'quorum87ax36Revving';
     for (let key in data) {
       if (data.hasOwnProperty(key)) {
