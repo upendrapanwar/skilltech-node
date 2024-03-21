@@ -568,15 +568,46 @@ async function generateSignature(param) {
  *
  * @returns Object|null
  */
-async function getReferralCode(param) {
-  let countReferral = await User.find({ role: "ambassador" }).count();
+// async function getReferralCode(param) {
+//   let countReferral = await User.find({ role: "ambassador" }).count();
 
-  if (countReferral) {
-    return countReferral;
-  } else {
-    return null;
+//   if (countReferral) {
+//     return countReferral;
+//   } else {
+//     return null;
+//   }
+// }
+
+async function getReferralCode() {
+  const currentYear = new Date().getFullYear();
+  
+  const pipeline = [
+    {
+      $match: {
+        role: "ambassador",
+        $expr: {
+          $eq: [{ $year: "$ambassador_date" }, currentYear]
+        }
+      }
+    },
+    {
+      $count: "countReferral"
+    }
+  ];
+
+  try {
+    const result = await User.aggregate(pipeline);
+    if (result.length > 0) {
+      return result[0].countReferral;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    throw error;
   }
 }
+
 /*****************************************************************************************/
 /*****************************************************************************************/
 /**
@@ -992,7 +1023,6 @@ async function cancelPayfastPayment(req) {
           }
         }
       }
-      // Remove last ampersand
       let getString = pfOutput.slice(0, -1);
       if (passPhrase !== null) {
         getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
@@ -1023,7 +1053,7 @@ async function cancelPayfastPayment(req) {
         'timestamp': timestamp,
         'signature': signature
       }
-    };
+    }; 
 
     const response = await new Promise((resolve, reject) => {
       const req = https.request(url, options, res => {
@@ -1042,7 +1072,6 @@ async function cancelPayfastPayment(req) {
       req.on('error', error => {
         reject(error);
       });
-      // req.write(querystring.stringify(postData));
       req.end();
     });
 
