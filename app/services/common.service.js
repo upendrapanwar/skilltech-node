@@ -1109,6 +1109,7 @@ async function cancelPayfastPayment(req) {
         }
       }
     }
+    console.log("pfOutput", pfOutput);
     // Remove last ampersand
     let getString = pfOutput.slice(0, -1);
     if (passPhrase !== null) {
