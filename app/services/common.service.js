@@ -1031,19 +1031,21 @@ async function cancelPayfastPayment(req) {
     const signature = generateSignature();
     const timestamp = generateTimestamp();
 
-    const url = `https://sandbox.payfast.co.za/subscriptions/${token}/cancel`;
+    const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
     const version = 'v1';
 
     const options = {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        // 'Content-Type': 'application/x-www-form-urlencoded',
         'merchant-id': merchantId,
         'version': version,
         'timestamp': timestamp,
         'signature': signature
       }
     }; 
+
+    console.log("options", options)
 
     const response = await new Promise((resolve, reject) => {
       const req = https.request(url, options, res => {
