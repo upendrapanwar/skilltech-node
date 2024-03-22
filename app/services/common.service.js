@@ -1133,7 +1133,7 @@ async function cancelPayfastPayment(req) {
     console.log("signature", signature);
 
     // const url = `https://sandbox.payfast.co.za/subscriptions/${token}/cancel`;
-    const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+    const url = `https://sandbox.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
     const version = 'v1';
 
     const headers = {
