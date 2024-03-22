@@ -987,29 +987,16 @@ async function saveQuery(param) {
 async function cancelPayfastPayment(req) {
   const merchantData = req.body;
 
-  // function generateTimestamp() {
-  //   const now = new Date();
-  //   const offset = '+05:30';
-  //   const timezoneOffset = now.getTimezoneOffset();
-  //   const absTimezoneOffset = Math.abs(timezoneOffset);
-  //   const hours = Math.floor(absTimezoneOffset / 60);
-  //   const minutes = absTimezoneOffset % 60;
-  //   const timezoneString = `${offset.startsWith('-') ? '+' : '-'}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-  //   const formattedTimestamp = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}${timezoneString}`;
-  //   return formattedTimestamp;
-  // }
-  const generateTimestamp = () => {
-    // Get current date and time in UTC format
-    const now = new Date().toISOString().slice(0, -1);
-    // Get the timezone offset in hours and minutes
-    const offset = (new Date().getTimezoneOffset() / 60)
-      .toString()
-      .padStart(2, "0");
-    // Construct the timestamp string
-    const timestamp = `${now}${offset > 0 ? "-" : "+"}${Math.abs(offset)
-      .toString()
-      .padStart(2, "0")}:00`;
-    return timestamp;
+  function generateTimestamp() {
+    const now = new Date();
+    const offset = '+02:00';
+    const timezoneOffset = now.getTimezoneOffset();
+    const absTimezoneOffset = Math.abs(timezoneOffset);
+    const hours = Math.floor(absTimezoneOffset / 60);
+    const minutes = absTimezoneOffset % 60;
+    const timezoneString = `${offset.startsWith('-') ? '+' : '-'}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    const formattedTimestamp = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}${timezoneString}`;
+    return formattedTimestamp;
   }
 
   function generateSignature() {
