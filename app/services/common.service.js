@@ -989,7 +989,7 @@ async function cancelPayfastPayment(req) {
 
   function generateTimestamp() {
     const now = new Date();
-    const offset = '+02:00';
+    const offset = '+05:30';
     const timezoneOffset = now.getTimezoneOffset();
     const absTimezoneOffset = Math.abs(timezoneOffset);
     const hours = Math.floor(absTimezoneOffset / 60);
