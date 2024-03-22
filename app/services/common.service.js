@@ -1031,7 +1031,7 @@ async function cancelPayfastPayment(req) {
     const signature = generateSignature();
     const timestamp = generateTimestamp();
 
-    const url = `https://sanbox.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+    const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
     const version = 'v1';
 
     const options = {
