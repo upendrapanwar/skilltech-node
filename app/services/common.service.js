@@ -220,7 +220,7 @@ async function subscription(param) {
     // console.log('testttt');
     result = await User.updateMany({ _id: param.uid }, [
       {
-        $set: {
+        $set: { 
           firstname: param.firstname,
           surname: param.surname,
           id_number: param.id_number,
@@ -235,17 +235,21 @@ async function subscription(param) {
           province: param.province,
           postal_code: param.postal_code,
           method_of_communication: param.method_of_communication,
-          opt_in_promotional: param.opt_in_promotional,
+          opt_in_promotional: {
+            receive_monthly_newsletters: param.monthly_newsletters,
+            exclusive_deals_promotions: param.deals_promotion,
+            keep_in_loop: param.in_loop
+          },
           race: param.race,
           gender: param.gender,
           qualification: param.qualification,
           how_did_you_hear_about_us: param.how_did_you_hear_about_us,
-          opt_in_promotional: param.opt_in_promotional,
+          // opt_in_promotional: param.opt_in_promotional,
           authname: param.firstname + " " + param.surname,
           privacy: param.privacy,
           ecommercePolicy: param.ecommercePolicy,
-          deals_promotion: param.deals_promotion,
-          in_loop: param.in_loop,
+          // deals_promotion: param.deals_promotion,
+          // in_loop: param.in_loop,
           role: "subscriber",
           subscription_date: new Date(),
         },
@@ -454,7 +458,7 @@ async function ambassador_subscription(param) {
           role: "ambassador",
         },
       },
-    ]);
+    ]); 
     //console.log('ambassador=',result);
 
     if (result) {
