@@ -159,6 +159,60 @@ async function create(param) {
     return false;
   }
 }
+// async function create(param) {
+//   try {
+//     if (await User.findOne({ email: param.email })) {
+//       throw 'email "' + param.email + '" is already taken';
+//     }
+
+//     const user = new User({
+//       firstname: param.firstname,
+//       surname: param.surname,
+//       email: param.email,
+//       password: bcrypt.hashSync(param.password, 10),
+//       role: "learner",
+//       isActive: true,
+//     });
+//     //Email send functionality.
+//     const mailOptions = {
+//       from: config.mail_from_email, // sender address
+//       to: user.email,
+//       subject: "Welcome Email - Skill Tech",
+//       text: "Welcome Email",
+//       html:
+//         "Dear <b>" +
+//         user.name +
+//         "</b>,<br/> You are successfully registered.<br/> ",
+//     };
+
+//     const data = await user.save();
+//     const authData  = await authenticate({ email:param.email, password:param.password })
+//     if (data) {
+//       let res = await User.findById(data.id).select(
+//         "-password -social_accounts -reset_password -image_url"
+//       );
+
+//       if (res && authData) {
+//         let response = {
+//           data:data,
+//           authData:{
+//             token:authData.token,
+//             expTime:authData.expTime
+//           }
+//         };
+//         //sendMail(mailOptions);
+//         return response;
+//       } else {
+//         return false;
+//       }
+//     } else {
+//       return false;
+//     }
+//   } catch (err) {
+//     console.log("Error", err);
+//     return false;
+//   }
+// }
 
 /*****************************************************************************************/
 /*****************************************************************************************/
@@ -171,7 +225,7 @@ async function create(param) {
  * @returns Object|null
  */
 async function authenticate({ email, password }) {
-  console.log();
+  console.log(); 
   const user = await User.findOne({ email });
 
   if (user && bcrypt.compareSync(password, user.password)) {
@@ -183,7 +237,7 @@ async function authenticate({ email, password }) {
       updatedAt,
       social_accounts,
       ...userWithoutHash
-    } = user.toObject();
+    } = user.toObject(); 
     const token = jwt.sign({ id: user.id }, config.secret, {
       expiresIn: "2h",
     });
