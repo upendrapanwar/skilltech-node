@@ -377,7 +377,7 @@ async function getSubscriptionCancelledByAmbassador(param) {
     };
 
     if (param && param.start_date && param.end_date) {
-        query.createdAt = { $gte: new Date(param.start_date), $lte: new Date(param.end_date) };
+        query.cancellation_date = { $gte: new Date(param.start_date), $lte: new Date(param.end_date) };
     }
     let cancleByAmbassador = await Purchasedcourses.find(
     query, 
@@ -386,7 +386,7 @@ async function getSubscriptionCancelledByAmbassador(param) {
         is_active: 1,
         userId: 1,
     }
-    ).sort({ createdAt: -1 })
+    ).sort({ cancellation_date: -1 })
         .populate({
             path: 'userId',
             model: User,
@@ -417,7 +417,7 @@ async function getSubscriptionCancelledBySubscriber(param) {
     };
 
     if (param && param.start_date && param.end_date) {
-        query.createdAt = { $gte: new Date(param.start_date), $lte: new Date(param.end_date) };
+        query.cancellation_date = { $gte: new Date(param.start_date), $lte: new Date(param.end_date) };
     }
     let cancelledBySubscriber = await Purchasedcourses.find(
     query, 
@@ -426,7 +426,7 @@ async function getSubscriptionCancelledBySubscriber(param) {
         is_active: 1,
         userId: 1,
     }
-    ).sort({ createdAt: -1 })
+    ).sort({ cancellation_date: -1 })
         .populate({
             path: 'userId',
             model: User,
