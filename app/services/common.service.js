@@ -306,7 +306,7 @@ async function subscription(param) {
           // in_loop: param.in_loop,
           role: "subscriber",
           subscription_date: new Date(),
-        },
+        }, 
       },
     ]);
     //console.log('user',result);
@@ -1032,6 +1032,43 @@ async function saveQuery(param) {
     return null;
   }
 }
+// async function saveQuery(param) {
+//   try {
+//     if (!param) {
+//       console.log("Param is missing here.");
+//       return null;
+//     }
+
+//     const queryData = await Userquery.create({
+//       first_name: param.first_name,
+//       surname: param.surname,
+//       email: param.email,
+//       mobile_number: param.mobile_number,
+//       query: param.query,
+//     });
+
+//     const userQueryData = await queryData.save();
+//     console.log(userQueryData);
+
+//     let userName = `${param.first_name} ${param.surname}`
+//     let info = await transporter.sendMail({
+//       from: `${userName} ${param.email}`, // Sender address
+//       to: 'guild@skilltechsa.co.za', // Recipient address
+//       subject: `Query request from ${userName}`, // Subject line
+//       text: `
+//       Query:      
+//       ${param.query}
+//       `
+//     });
+//     console.log("Message sent: %s", info.messageId);
+//     console.log("Message sent:", info);
+
+//     return userQueryData;
+//   } catch (error) {
+//     console.log("Error in creating or saving query:", error.message);
+//     return null;
+//   }
+// }
 /*****************************************************************************************/
 /*****************************************************************************************/
 /**
@@ -1044,6 +1081,7 @@ async function saveQuery(param) {
 
 async function cancelPayfastPayment(req) {
   const merchantData = req.body;
+  console.log("merchantData", merchantData)
 
   function generateTimestamp() {
     const now = new Date();
@@ -1101,7 +1139,7 @@ async function cancelPayfastPayment(req) {
         'timestamp': timestamp,
         'signature': signature
       }
-    }; 
+    };
 
     console.log("options", options)
 
