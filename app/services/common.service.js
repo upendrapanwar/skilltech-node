@@ -1571,11 +1571,11 @@ async function getPaymentDueThisMonth(req) {
     query.referral_code = ambassador.referral_code;
 
     const dueReferralData = await Referral.find(query)
-    .populate({
-      path: 'userId',
-      model: User,
-      select: 'firstname surname'
-    })
+    // .populate({
+    //   path: 'userId',
+    //   model: User,
+    //   select: 'firstname surname'
+    // })
     .exec();
     const activeReferralCount = dueReferralData.length;
     const amountDue = activeReferralCount * 5000;
