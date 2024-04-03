@@ -96,7 +96,7 @@ router.post('/payment-due-this-month', getAllPaymentDueThisMonth);
 router.post('/defaulted-subscription-paymentof-subscriber/:start_date/:end_date', getDefaultedSubscriptionPaymentOfSubscribers);
 router.post('/my-active-referral/:start_date/:end_date', getActiveReferral);
 router.post('/my-inactive-referral/:start_date/:end_date', getInactiveReferral);
-router.post('/payment-due-this-month/:start_date/:end_date', getPaymentDueThisMonth);
+// router.post('/payment-due-this-month/:start_date/:end_date', getPaymentDueThisMonth);
 
 module.exports = router;  
 
@@ -645,15 +645,15 @@ function getAllPaymentDueThisMonth(req, res, next) {
 }
 /*****************************************************************************************/
 /*****************************************************************************************/
-/**
- * Function for get payment due to ambassador by date
- * @param {*} req 
- * @param {*} res 
- * @param {*} next
- *                  
- */
-function getPaymentDueThisMonth(req, res, next) {
-  commonService.getPaymentDueThisMonth(req)
-      .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
-      .catch(err => next(res.json({ status: false, message: err })))
-}
+// /**
+//  * Function for get payment due to ambassador by date
+//  * @param {*} req 
+//  * @param {*} res 
+//  * @param {*} next
+//  *                  
+//  */
+// function getPaymentDueThisMonth(req, res, next) {
+//   commonService.getPaymentDueThisMonth(req)
+//       .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+//       .catch(err => next(res.json({ status: false, message: err })))
+// }

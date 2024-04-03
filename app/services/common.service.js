@@ -66,7 +66,7 @@ module.exports = {
   getDefaultedSubscriptionPaymentOfSubscribers,
   getActiveReferral,
   getInactiveReferral,
-  getPaymentDueThisMonth,
+  getPaymentDueThisMonth, 
 };
 
 /*****************************************************************************************/
@@ -1141,7 +1141,7 @@ async function cancelPayfastPayment(req) {
       }
     };
 
-    console.log("options", options)
+    console.log("options", options);
 
     const response = await new Promise((resolve, reject) => {
       const req = https.request(url, options, res => {
@@ -1559,12 +1559,12 @@ async function getPaymentDueThisMonth(req) {
       purchagedcourseId: { $ne: null }
     };
 
-    if (param && param.start_date && param.end_date) {
-        query.createdAt = {
-            $gte: new Date(param.start_date),
-            $lte: new Date(param.end_date)
-        };
-    }
+    // if (param && param.start_date && param.end_date) {
+    //     query.createdAt = {
+    //         $gte: new Date(param.start_date),
+    //         $lte: new Date(param.end_date)
+    //     };
+    // }
 
     const ambassador = await User.findById(id);
     
@@ -1581,23 +1581,31 @@ async function getPaymentDueThisMonth(req) {
     const amountDue = activeReferralCount * 5000;
     console.log("activeReferral", dueReferralData);
     
-    if (dueReferralData.length > 0) {
-        const result = dueReferralData.map(data => {
-            return {
-              firstname: data.userId.firstname,
-              surname: data.userId.surname,
-              referral_code: data.referral_code,
-              referral_count: activeReferralCount,
-              due_amount: amountDue,
-            };
-        }).filter(entry => entry !== null);
-        console.log(result);
-        return result;
+    // if (dueReferralData.length > 0) {
+    //     const result = dueReferralData.map(data => {
+    //         return {
+    //           firstname: data.userId.firstname,
+    //           surname: data.userId.surname,
+    //           referral_code: data.referral_code,
+    //           referral_count: activeReferralCount,
+    //           due_amount: amountDue,
+    //         };
+    //     }).filter(entry => entry !== null);
+    //     console.log(result);
+    //     return result;
+    // } else {
+    //     return [];
+    // }
+    if(activeReferralCount && amountDue) {
+      return {
+        referral_count: activeReferralCount,
+        due_amount: amountDue,
+      }
     } else {
-        return [];
-    }
-} catch (error) {
-    console.error('An error occurred:', error);
-    throw error;
-}
+          return [];
+      }
+  } catch (error) {
+      console.error('An error occurred:', error);
+      throw error;
+  }
 }
