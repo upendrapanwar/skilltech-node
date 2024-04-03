@@ -1559,43 +1559,16 @@ async function getPaymentDueThisMonth(req) {
       purchagedcourseId: { $ne: null }
     };
 
-    // if (param && param.start_date && param.end_date) {
-    //     query.createdAt = {
-    //         $gte: new Date(param.start_date),
-    //         $lte: new Date(param.end_date)
-    //     };
-    // }
-
     const ambassador = await User.findById(id);
     
     query.referral_code = ambassador.referral_code;
 
-    const dueReferralData = await Referral.find(query)
-    // .populate({
-    //   path: 'userId',
-    //   model: User,
-    //   select: 'firstname surname'
-    // })
-    .exec();
+    const dueReferralData = await Referral.find(query).exec();
+
     const activeReferralCount = dueReferralData.length;
     const amountDue = activeReferralCount * 5000;
     console.log("activeReferral", dueReferralData);
     
-    // if (dueReferralData.length > 0) {
-    //     const result = dueReferralData.map(data => {
-    //         return {
-    //           firstname: data.userId.firstname,
-    //           surname: data.userId.surname,
-    //           referral_code: data.referral_code,
-    //           referral_count: activeReferralCount,
-    //           due_amount: amountDue,
-    //         };
-    //     }).filter(entry => entry !== null);
-    //     console.log(result);
-    //     return result;
-    // } else {
-    //     return [];
-    // }
     if(activeReferralCount && amountDue) {
       return {
         referral_count: activeReferralCount,
