@@ -42,7 +42,7 @@ let transporter = nodemailer.createTransport({
     user: "highvista@skilltechsa.online", // generated ethereal user
     pass: "FT7q5O0nYNJ6hzwg", // generated ethereal password
   },
-});
+}); 
 
 module.exports = {
   create,
@@ -112,53 +112,6 @@ function sendMail(mailOptions) {
  * @param {*} param
  * @returns JSON|FALSE
  */
-async function create(param) {
-  try {
-    if (await User.findOne({ email: param.email })) {
-      throw 'email "' + param.email + '" is already taken';
-    }
-
-    const user = new User({
-      firstname: param.firstname,
-      surname: param.surname,
-      email: param.email,
-      password: bcrypt.hashSync(param.password, 10),
-      role: "learner",
-      isActive: true,
-    });
-    //Email send functionality.
-    const mailOptions = {
-      from: config.mail_from_email, // sender address
-      to: user.email,
-      subject: "Welcome Email - Skill Tech",
-      text: "Welcome Email",
-      html:
-        "Dear <b>" +
-        user.name +
-        "</b>,<br/> You are successfully registered.<br/> ",
-    };
-
-    const data = await user.save();
-
-    if (data) {
-      let res = await User.findById(data.id).select(
-        "-password -social_accounts -reset_password -image_url"
-      );
-
-      if (res) {
-        //sendMail(mailOptions);
-        return res;
-      } else {
-        return false;
-      }
-    } else {
-      return false;
-    }
-  } catch (err) {
-    console.log("Error", err);
-    return false;
-  }
-}
 // async function create(param) {
 //   try {
 //     if (await User.findOne({ email: param.email })) {
@@ -186,22 +139,15 @@ async function create(param) {
 //     };
 
 //     const data = await user.save();
-//     const authData  = await authenticate({ email:param.email, password:param.password })
+
 //     if (data) {
 //       let res = await User.findById(data.id).select(
 //         "-password -social_accounts -reset_password -image_url"
 //       );
 
-//       if (res && authData) {
-//         let response = {
-//           data:data,
-//           authData:{
-//             token:authData.token,
-//             expTime:authData.expTime
-//           }
-//         };
+//       if (res) {
 //         //sendMail(mailOptions);
-//         return response;
+//         return res;
 //       } else {
 //         return false;
 //       }
@@ -213,6 +159,60 @@ async function create(param) {
 //     return false;
 //   }
 // }
+async function create(param) {
+  try {
+    if (await User.findOne({ email: param.email })) {
+      throw 'email "' + param.email + '" is already taken';
+    }
+
+    const user = new User({
+      firstname: param.firstname,
+      surname: param.surname,
+      email: param.email,
+      password: bcrypt.hashSync(param.password, 10),
+      role: "learner",
+      isActive: true,
+    });
+    //Email send functionality.
+    const mailOptions = {
+      from: config.mail_from_email, // sender address
+      to: user.email,
+      subject: "Welcome Email - Skill Tech",
+      text: "Welcome Email",
+      html:
+        "Dear <b>" +
+        user.name +
+        "</b>,<br/> You are successfully registered.<br/> ",
+    };
+
+    const data = await user.save();
+    const authData  = await authenticate({ email:param.email, password:param.password })
+    if (data) {
+      let res = await User.findById(data.id).select(
+        "-password -social_accounts -reset_password -image_url"
+      );
+
+      if (res && authData) {
+        let response = {
+          data:data,
+          authData:{
+            token:authData.token,
+            expTime:authData.expTime
+          }
+        };
+        //sendMail(mailOptions);
+        return response;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  } catch (err) {
+    console.log("Error", err);
+    return false;
+  }
+}
 
 /*****************************************************************************************/
 /*****************************************************************************************/
@@ -513,7 +513,7 @@ async function ambassador_subscription(param) {
         },
       },
     ]); 
-    //console.log('ambassador=',result);
+    console.log('ambassador=',result);
 
     if (result) {
       let res = await User.findById(param.uid).select(
@@ -992,7 +992,6 @@ async function getOrderHistory(param) {
  */
 async function fetchAmbassadorCode(param) {
   let referralCode = await User.findById(param.userid).select("referral_code");
-
   if (referralCode) {
     return referralCode;
   } else {

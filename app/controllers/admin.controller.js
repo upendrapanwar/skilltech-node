@@ -8,7 +8,7 @@ const msg = require('../helpers/messages.json');
 
 const multer = require('multer');
 
-router.get('/agent-subscription', agentSubscription); 
+router.get('/agent-subscription', agentSubscription);  
 router.get('/agent-subscription-by-id/:id', agentSubscriptionById);
 router.get('/get-active-agents', getActiveAgents);
 router.get('/get-agents-byid/:id', getAgentById); 
@@ -38,6 +38,8 @@ router.get('/active-inactive-referral-per-ambassador/:start_date/:end_date', get
 router.get('/active-referral-per-ambassador/:start_date/:end_date', getActiveReferralAmbassador);
 router.get('/inactive-referral-per-ambassador/:start_date/:end_date', getInactiveReferralAmbassador);
 router.get('/payment-due-to-ambassador/:start_date/:end_date', getPaymentDueToAmbassador);
+
+router.get('/bulk-payment-report', getBulkPaymentReport);
 
 module.exports = router;
 
@@ -425,6 +427,19 @@ function getAllPaymentDueToAmbassador(req, res, next) {
  */
 function getPaymentDueToAmbassador(req, res, next) {
     adminService.getPaymentDueToAmbassador(req.params)
+        .then(inactiveReferral => inactiveReferral ? res.status(200).json({ status: true, data: inactiveReferral }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })));
+
+}
+/**
+ * Function for getting bulk payment report of all ambassador
+ * @param {*} req 
+ * @param {*} res
+ * @param {*} next
+ * 
+ */
+function getBulkPaymentReport(req, res, next) {
+    adminService.getBulkPaymentReport(req)
         .then(inactiveReferral => inactiveReferral ? res.status(200).json({ status: true, data: inactiveReferral }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
         .catch(err => next(res.json({ status: false, message: err })));
 

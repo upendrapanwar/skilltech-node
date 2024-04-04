@@ -42,6 +42,7 @@ module.exports = {
     getActiveReferralAmbassador,
     getInactiveReferralAmbassador,
     getPaymentDueToAmbassador,
+    getBulkPaymentReport,
 };
 
 /*****************************************************************************************/
@@ -411,7 +412,7 @@ async function getSubscriptionCancelledByAmbassador(param) {
  * @return null|Object 
  * 
  */
-async function getSubscriptionCancelledBySubscriber(param) {
+async function getSubscriptionCancelledBySubscriber(param) { 
     let query = {
         is_active: false,
     };
@@ -843,6 +844,77 @@ async function getPaymentDueToAmbassador(param) {
                 referral_count: referralCount,
                 due_amount: amountDue,
             });
+            return acc;
+        }, []);
+
+        console.log(result);
+        return result;
+    } catch (error) {
+        console.error('An error occurred:', error);
+        throw error;
+    }
+}
+
+/**
+ * Function for getting bulk payment report of all ambassador
+ * @param {param}
+ * 
+ * @result null|Object
+ */
+async function getBulkPaymentReport(param) {
+    try {
+        const ambassadors = await Referral.find();
+        console.log("ambassadors", ambassadors);
+        const referralsSet = new Set(ambassadors.map(referral => referral.referral_code));
+        const referrals = Array.from(referralsSet);
+        console.log("referrals", referrals);
+        const ambassadorData = await User.find()
+          .select('firstname surname email referral_code account_holder_name account_number type_of_account branch_code')
+          .exec();
+          console.log("ambassadorData", ambassadorData);
+        const result = ambassadorData.reduce((acc, data) => {
+            const referralCount = ambassadors.filter(referral => referral.referral_code === data.referral_code).length;
+            const amountDue = referralCount * 5000;
+            acc.push({
+                // recipient_name: account_holder_name || 'N/A',
+                recipient_name: `${data.firstname} ${data.surname}`,
+                recipient_account: data.account_number || 'N/A',
+                recipient_acount_type: data.type_of_account || 'N/A',
+                branch_code: data.branch_code || 'N/A',
+                amount: amountDue ? amountDue : '0',
+                own_reference: data.referral_code || 'N/A',
+                recipient_reference: 'High Vista Guild',
+                email_1_notify: `${data.firstname} ${data.surname}`,
+                email_1_address: data.email,
+                email_1_subject: "You've received a payment from High Vista Guild",
+                email_2_notify: '',
+                email_2_address: '',
+                email_2_subject: '',
+                email_3_notify: '',
+                email_3_address: '',
+                email_3_subject: '',
+                email_4_notify: '',
+                email_4_address: '',
+                email_4_subject: '',
+                email_5_notify: '',
+                email_5_address: '',
+                email_5_subject: '',
+                fax_1_notify: '',
+                fax_1_code: '',
+                fax_1_number: '',
+                fax_1_subject: '',
+                fax_2_notify: '',
+                fax_2_code: '',
+                fax_2_number: '',
+                fax_2_subject: '',
+                sms_1_notify: '',
+                sms_1_code: '',
+                sms_1_number: '',
+                sms_2_notify: '',
+                sms_2_code: '',
+                sms_2_number: ''
+            });
+            
             return acc;
         }, []);
 
