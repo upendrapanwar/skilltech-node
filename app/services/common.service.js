@@ -1082,74 +1082,63 @@ async function cancelPayfastPayment(req) {
   const merchantData = req.body;
   console.log("merchantData", merchantData)
 
+  // function generateTimestamp() {
+  //   const now = new Date();
+  //   const offset = '+02:00';
+  //   const timezoneOffset = now.getTimezoneOffset();
+  //   const absTimezoneOffset = Math.abs(timezoneOffset);
+  //   const hours = Math.floor(absTimezoneOffset / 60);
+  //   const minutes = absTimezoneOffset % 60;
+  //   const timezoneString = `${offset.startsWith('-') ? '+' : '-'}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  //   const formattedTimestamp = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}${timezoneString}`;
+  //   return formattedTimestamp;
+  // }
+
   function generateTimestamp() {
     const now = new Date();
-    const offset = '+02:00';
-    const timezoneOffset = now.getTimezoneOffset();
-    const absTimezoneOffset = Math.abs(timezoneOffset);
-    const hours = Math.floor(absTimezoneOffset / 60);
-    const minutes = absTimezoneOffset % 60;
-    const timezoneString = `${offset.startsWith('-') ? '+' : '-'}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    const formattedTimestamp = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}${timezoneString}`;
+    const offsetHours = 2; // Offset for your timezone, you can adjust this as needed
+    const offsetMinutes = 0; // Offset for your timezone, you can adjust this as needed
+    const offsetSign = offsetHours >= 0 ? '+' : '-';
+    const timezoneString = `${offsetSign}${Math.abs(offsetHours).toString().padStart(2, '0')}:${offsetMinutes.toString().padStart(2, '0')}`;
+
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+
+    const formattedTimestamp = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${timezoneString}`;
+    
     return formattedTimestamp;
-  }
-
-  // function generateSignature() {
-  //       let pfOutput = "";
-  //     var data = merchantData.merchantData;
-  //     var passPhrase = 'quorum87ax36Revving';
-  //     for (let key in data) {
-  //       if (data.hasOwnProperty(key)) {
-  //         if (data[key] !== "") {
-  //           pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
-  //             /%20/g,
-  //             "+"
-  //           )}&`;
-  //         }
-  //       }
-  //     }
-  //     let getString = pfOutput.slice(0, -1);
-  //     if (passPhrase !== null) {
-  //       getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
-  //         /%20/g,
-  //         "+"
-  //       )}`;
-  //     }
-  //     const signature = crypto.createHash("md5").update(getString).digest("hex");
-  //     console.log("signature", signature);
-  //     return signature;
-  //     }
-
-  function generateSignature() {
-    let pfOutput = "";
-    const data = merchantData.merchantData;
-    const passPhrase = 'quorum87ax36Revving';
-
-    for (const key in data) {
-        if (data.hasOwnProperty(key)) {
-            if (data[key] !== "") {
-                pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
-                    /%20/g,
-                    "+"
-                )}&`;
-            }
-        }
-    }
-
-    let getString = pfOutput.slice(0, -1); // Remove the trailing '&' from the string
-
-    if (passPhrase.length > 0) {
-        getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
-            /%20/g,
-            "+"
-        )}`;
-    }
-
-    const signature = crypto.createHash("md5").update(getString).digest("hex");
-    console.log("signature", signature);
-    return signature;
 }
 
+
+  function generateSignature() {
+        let pfOutput = "";
+      var data = merchantData.merchantData;
+      var passPhrase = 'quorum87ax36Revving';
+      for (let key in data) {
+        if (data.hasOwnProperty(key)) {
+          if (data[key] !== "") {
+            pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
+              /%20/g,
+              "+"
+            )}&`;
+          }
+        }
+      }
+      let getString = pfOutput.slice(0, -1);
+      if (passPhrase !== null) {
+        getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
+          /%20/g,
+          "+"
+        )}`;
+      }
+      const signature = crypto.createHash("md5").update(getString).digest("hex");
+      console.log("signature", signature);
+      return signature;
+      }
 
   try {
     const token = merchantData.token;
