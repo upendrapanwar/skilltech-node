@@ -1228,7 +1228,7 @@ async function cancelPayfastPayment(req) {
     const options = {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        // 'Content-Type': 'application/x-www-form-urlencoded',
         'merchant-id': merchantId,
         'version': 'v1',
         'timestamp': timestamp,
