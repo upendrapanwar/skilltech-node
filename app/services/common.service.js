@@ -1095,38 +1095,30 @@ async function cancelPayfastPayment(req) {
   }
 
   function generateSignature() {
-    let pfOutput = "";
-    const data = merchantData.merchantData;
-    const passPhrase = 'quorum87ax36Revving';
-
-    // Add merchant-id to the output
-    pfOutput += `merchant-id=${data.merchantId}&`;
-
-    for (const key in data) {
+        let pfOutput = "";
+      var data = merchantData.merchantData;
+      var passPhrase = 'quorum87ax36Revving';
+      for (let key in data) {
         if (data.hasOwnProperty(key)) {
-            if (data[key] !== "" && key !== "merchant_id") { // Exclude merchant_id from signature
-                pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
-                    /%20/g,
-                    "+"
-                )}&`;
-            }
+          if (data[key] !== "") {
+            pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
+              /%20/g,
+              "+"
+            )}&`;
+          }
         }
-    }
-
-    let getString = pfOutput.slice(0, -1); // Remove the trailing '&' from the string
-
-    if (passPhrase.length > 0) {
+      }
+      let getString = pfOutput.slice(0, -1);
+      if (passPhrase !== null) {
         getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
-            /%20/g,
-            "+"
+          /%20/g,
+          "+"
         )}`;
-    }
-
-    const signature = crypto.createHash("md5").update(getString).digest("hex");
-    console.log("signature", signature);
-    return signature;
-}
-
+      }
+      const signature = crypto.createHash("md5").update(getString).digest("hex");
+      console.log("signature", signature);
+      return signature;
+      }
 
   try {
     const token = merchantData.token;
