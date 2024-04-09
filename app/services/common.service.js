@@ -1230,17 +1230,19 @@ async function cancelPayfastPayment(req) {
     console.log("signature", signature);
 
     // const url = `https://sandbox.payfast.co.za/subscriptions/${token}/cancel`;
-    const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+    const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true&merchant-id=${merchantId}&version=v1&timestamp=${timestamp}&signature=${signature}`;
+    // const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
     const version = 'v1';
 
-    const headers = {
-      'merchant-id': merchantId,
-      'version': version,
-      'timestamp': timestamp,
-      'signature': signature
-    };
+    // const headers = {
+    //   'merchant-id': merchantId,
+    //   'version': version,
+    //   'timestamp': timestamp,
+    //   'signature': signature
+    // };
 
-    const response = await axios.put(url, null, { headers });
+    // const response = await axios.put(url, null, { headers });
+    const response = await axios.put(url);
 
     console.log("PayFast cancel response:", response.data);
 
