@@ -1175,9 +1175,6 @@ async function saveQuery(param) {
 //   }
 // }
 
-const https = require('https');
-const crypto = require('crypto');
-
 async function cancelPayfastPayment(req) {
   const merchantData = req.body;
   console.log("merchantData", merchantData)
