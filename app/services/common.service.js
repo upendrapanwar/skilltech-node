@@ -1100,7 +1100,7 @@ async function cancelPayfastPayment(req) {
     const passPhrase = 'quorum87ax36Revving';
 
     // Add merchant-id to the output
-    pfOutput += `merchant-id=${data.merchant_id}&`;
+    pfOutput += `merchant-id=${data.merchantId}&`;
 
     for (const key in data) {
         if (data.hasOwnProperty(key)) {
