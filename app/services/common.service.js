@@ -1094,31 +1094,62 @@ async function cancelPayfastPayment(req) {
     return formattedTimestamp;
   }
 
+  // function generateSignature() {
+  //       let pfOutput = "";
+  //     var data = merchantData.merchantData;
+  //     var passPhrase = 'quorum87ax36Revving';
+  //     for (let key in data) {
+  //       if (data.hasOwnProperty(key)) {
+  //         if (data[key] !== "") {
+  //           pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
+  //             /%20/g,
+  //             "+"
+  //           )}&`;
+  //         }
+  //       }
+  //     }
+  //     let getString = pfOutput.slice(0, -1);
+  //     if (passPhrase !== null) {
+  //       getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
+  //         /%20/g,
+  //         "+"
+  //       )}`;
+  //     }
+  //     const signature = crypto.createHash("md5").update(getString).digest("hex");
+  //     console.log("signature", signature);
+  //     return signature;
+  //     }
+
   function generateSignature() {
-        let pfOutput = "";
-      var data = merchantData.merchantData;
-      var passPhrase = 'quorum87ax36Revving';
-      for (let key in data) {
+    let pfOutput = "";
+    const data = merchantData.merchantData;
+    const passPhrase = 'quorum87ax36Revving';
+
+    for (const key in data) {
         if (data.hasOwnProperty(key)) {
-          if (data[key] !== "") {
-            pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
-              /%20/g,
-              "+"
-            )}&`;
-          }
+            if (data[key] !== "") {
+                pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
+                    /%20/g,
+                    "+"
+                )}&`;
+            }
         }
-      }
-      let getString = pfOutput.slice(0, -1);
-      if (passPhrase !== null) {
+    }
+
+    let getString = pfOutput.slice(0, -1); // Remove the trailing '&' from the string
+
+    if (passPhrase.length > 0) {
         getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
-          /%20/g,
-          "+"
+            /%20/g,
+            "+"
         )}`;
-      }
-      const signature = crypto.createHash("md5").update(getString).digest("hex");
-      console.log("signature", signature);
-      return signature;
-      }
+    }
+
+    const signature = crypto.createHash("md5").update(getString).digest("hex");
+    console.log("signature", signature);
+    return signature;
+}
+
 
   try {
     const token = merchantData.token;
@@ -1135,10 +1166,8 @@ async function cancelPayfastPayment(req) {
         'Content-Type': 'application/x-www-form-urlencoded',
         'merchant-id': merchantId,
         'version': version,
-        // 'timestamp': timestamp,
-        // 'signature': signature
-        'timestamp': "2024-04-09T06:31:28+02:00",
-        'signature': "acfeaefe95bc6780e55624b9383eaf3f"
+        'timestamp': timestamp,
+        'signature': signature
       }
     };
 
