@@ -1078,6 +1078,106 @@ async function saveQuery(param) {
  * @returns Object|null
  */
 
+// async function cancelPayfastPayment(req) {
+//   const merchantData = req.body;
+//   console.log("merchantData", merchantData)
+
+//   function generateTimestamp() {
+//     const now = new Date();
+//     const offset = '+02:00';
+//     const timezoneOffset = now.getTimezoneOffset();
+//     const absTimezoneOffset = Math.abs(timezoneOffset);
+//     const hours = Math.floor(absTimezoneOffset / 60);
+//     const minutes = absTimezoneOffset % 60;
+//     const timezoneString = `${offset.startsWith('-') ? '+' : '-'}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+//     const formattedTimestamp = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}${timezoneString}`;
+//     return formattedTimestamp;
+//   }
+
+//   function generateSignature() {
+//         let pfOutput = "";
+//       var data = merchantData.merchantData;
+//       var passPhrase = 'quorum87ax36Revving';
+//       for (let key in data) {
+//         if (data.hasOwnProperty(key)) {
+//           if (data[key] !== "") {
+//             pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
+//               /%20/g,
+//               "+"
+//             )}&`;
+//           }
+//         }
+//       }
+//       let getString = pfOutput.slice(0, -1);
+//       if (passPhrase !== null) {
+//         getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
+//           /%20/g,
+//           "+"
+//         )}`;
+//       }
+//       const signature = crypto.createHash("md5").update(getString).digest("hex");
+//       console.log("signature", signature);
+//       return signature;
+//       }
+
+//   try {
+//     const token = merchantData.token;
+//     const merchantId = merchantData.merchantId;
+//     const signature = generateSignature();
+//     const timestamp = generateTimestamp();
+
+//     const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+//     const version = 'v1';
+
+//     const options = {
+//       method: 'PUT',
+//       headers: {
+//         'Content-Type': 'application/x-www-form-urlencoded',
+//         'merchant-id': merchantId,
+//         'version': version,
+//         'timestamp': timestamp,
+//         'signature': signature
+//       }
+//     };
+
+//     console.log("options", options);
+
+//     const response = await new Promise((resolve, reject) => {
+//       const req = https.request(url, options, res => {
+//         let data = '';
+//         res.on('data', chunk => {
+//           data += chunk;
+//         });
+//         res.on('end', () => {
+//           resolve({
+//             status: res.statusCode,
+//             data: JSON.parse(data)
+//           });
+//         });
+//       });
+
+//       req.on('error', error => {
+//         reject(error);
+//       });
+//       req.end();
+//     });
+
+//     if (response.status === 200) {
+//       console.log("Cancellation successful.");
+//       return response;
+//     } else {
+//       console.error("Cancellation failed:", response.data);
+//       return response.data;
+//     }
+//   } catch (err) {
+//     console.log("Error:", err);
+//     throw err;
+//   }
+// }
+
+const https = require('https');
+const crypto = require('crypto');
+
 async function cancelPayfastPayment(req) {
   const merchantData = req.body;
   console.log("merchantData", merchantData)
@@ -1095,46 +1195,45 @@ async function cancelPayfastPayment(req) {
   }
 
   function generateSignature() {
-        let pfOutput = "";
-      var data = merchantData.merchantData;
-      var passPhrase = 'quorum87ax36Revving';
-      for (let key in data) {
-        if (data.hasOwnProperty(key)) {
-          if (data[key] !== "") {
-            pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
-              /%20/g,
-              "+"
-            )}&`;
-          }
+    let pfOutput = "";
+    var data = merchantData;
+    var passPhrase = 'quorum87ax36Revving';
+    for (let key in data) {
+      if (data.hasOwnProperty(key)) {
+        if (data[key] !== "") {
+          pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
+            /%20/g,
+            "+"
+          )}&`;
         }
       }
-      let getString = pfOutput.slice(0, -1);
-      if (passPhrase !== null) {
-        getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
-          /%20/g,
-          "+"
-        )}`;
-      }
-      const signature = crypto.createHash("md5").update(getString).digest("hex");
-      console.log("signature", signature);
-      return signature;
-      }
+    }
+    let getString = pfOutput.slice(0, -1);
+    if (passPhrase !== null) {
+      getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
+        /%20/g,
+        "+"
+      )}`;
+    }
+    const signature = crypto.createHash("md5").update(getString).digest("hex");
+    console.log("signature", signature);
+    return signature;
+  }
 
   try {
     const token = merchantData.token;
-    const merchantId = merchantData.merchantId;
+    const merchantId = merchantData['merchant-id'];
     const signature = generateSignature();
     const timestamp = generateTimestamp();
 
     const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
-    const version = 'v1';
 
     const options = {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'merchant-id': merchantId,
-        'version': version,
+        'version': 'v1',
         'timestamp': timestamp,
         'signature': signature
       }
@@ -1174,6 +1273,7 @@ async function cancelPayfastPayment(req) {
     throw err;
   }
 }
+
 
 // async function cancelPayfastPayment(req) {
 //   const merchantData = req.body;
