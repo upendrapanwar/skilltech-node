@@ -1135,9 +1135,10 @@ async function cancelPayfastPayment(req) {
         // 'Content-Type': 'application/x-www-form-urlencoded',
         'merchant-id': merchantId,
         'version': version,
-        'timestamp': timestamp,
-        'signature': "acfeaefe95bc6780e55624b9383eaf3f"
+        // 'timestamp': timestamp,
         // 'signature': signature
+        'timestamp': "2024-04-09T06:31:28+02:00",
+        'signature': "acfeaefe95bc6780e55624b9383eaf3f"
       }
     };
 
