@@ -1221,7 +1221,8 @@ async function cancelPayfastPayment(req) {
       const token = merchantData.token;
       const merchantId = merchantData.merchant_id;
       const signature = generateSignature();
-      const timestamp = generateTimestamp();
+      const timestamp = "2024-04-10T08:30:15+02:00";
+      // const timestamp = generateTimestamp();
 
       const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
       const version = 'v1';
