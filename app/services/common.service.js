@@ -1219,7 +1219,7 @@ async function cancelPayfastPayment(req) {
 
   try {
       const token = merchantData.token;
-      const merchantId = merchantData.merchant_id; // Use merchant_id instead of merchantId
+      const merchantId = merchantData.merchant_id;
       const signature = generateSignature();
       const timestamp = generateTimestamp();
 
@@ -1229,7 +1229,7 @@ async function cancelPayfastPayment(req) {
       const options = {
           method: 'PUT',
           headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
+              // 'Content-Type': 'application/x-www-form-urlencoded',
               'merchant-id': merchantId,
               'version': version,
               'timestamp': timestamp,
