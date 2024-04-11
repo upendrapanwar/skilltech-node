@@ -97,6 +97,8 @@ router.post('/defaulted-subscription-paymentof-subscriber/:start_date/:end_date'
 router.post('/my-active-referral/:start_date/:end_date', getActiveReferral);
 router.post('/my-inactive-referral/:start_date/:end_date', getInactiveReferral);
 
+router.get('/get-referrals-this-month/:id', getReferralsThisMonth);
+
 module.exports = router;  
 
 /**
@@ -633,7 +635,7 @@ function getInactiveReferral(req, res, next) {
 /**
  * Function for get all payment due to ambassador
  * @param {*} req 
- * @param {*} res 
+ * @param {*} res  
  * @param {*} next
  *                  
  */
@@ -644,3 +646,15 @@ function getPaymentDueThisMonth(req, res, next) {
 }
 /*****************************************************************************************/
 /*****************************************************************************************/
+/**
+ * Function for get all referrals of this month of subscriber
+ * @param {*} req 
+ * @param {*} res  
+ * @param {*} next
+ *                  
+ */
+function getReferralsThisMonth(req, res, next) {
+  commonService.getReferralsThisMonth(req)
+      .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+      .catch(err => next(res.json({ status: false, message: err })))
+}

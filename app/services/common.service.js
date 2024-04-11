@@ -67,6 +67,7 @@ module.exports = {
   getActiveReferral,
   getInactiveReferral,
   getPaymentDueThisMonth, 
+  getReferralsThisMonth,
 };
 
 /*****************************************************************************************/
@@ -289,6 +290,11 @@ async function subscription(param) {
           province: param.province,
           postal_code: param.postal_code,
           method_of_communication: param.method_of_communication,
+          policy_consent:{
+            ecommercePolicy: param.ecommercePolicy,
+            privacy: param.privacy,
+            userConsent: param.userConsent,
+          }, 
           opt_in_promotional: {
             receive_monthly_newsletters: param.monthly_newsletters,
             exclusive_deals_promotions: param.deals_promotion,
@@ -300,8 +306,8 @@ async function subscription(param) {
           how_did_you_hear_about_us: param.how_did_you_hear_about_us,
           // opt_in_promotional: param.opt_in_promotional,
           authname: param.firstname + " " + param.surname,
-          privacy: param.privacy,
-          ecommercePolicy: param.ecommercePolicy,
+          // privacy: param.privacy,
+          // ecommercePolicy: param.ecommercePolicy,
           // deals_promotion: param.deals_promotion,
           // in_loop: param.in_loop,
           role: "subscriber",
@@ -309,7 +315,7 @@ async function subscription(param) {
         }, 
       },
     ]);
-    //console.log('user',result);
+    // console.log('user result',result);
 
     if (result) {
       let res = await User.findById(param.uid).select(
@@ -317,7 +323,7 @@ async function subscription(param) {
       );
       // console.log('res=',res);
       if (res) {
-        // console.log('if');
+        // console.log(res);
         return res;
       } else {
         //   console.log('else');
@@ -1682,4 +1688,59 @@ async function getPaymentDueThisMonth(req) {
       console.error('An error occurred:', error);
       throw error;
   }
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * get data of referrals of this month of subscribers to the ambassador
+ *
+ * @param {param}
+ *
+ * @returns Object|null
+ */
+async function getReferralsThisMonth(req) {
+  try {
+    let { id } = req.params;
+
+    const currentDate = new Date();
+    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    let query = {
+      createdAt: {
+        $gte: startOfMonth,
+        $lte: endOfMonth
+    }
+    };
+
+    const ambassador = await User.findById(id);
+    query.referral_code = ambassador.referral_code;
+
+    const referral = await Referral.find(query)
+    .populate({
+      path: 'userId',
+      model: User,
+      select: 'firstname surname'
+    })
+    .exec();
+
+    console.log("referral", referral);
+    
+    if (referral.length > 0) {
+        const result = referral.map(data => {
+            return {
+              firstname: data.userId.firstname,
+              surname: data.userId.surname,
+              referral_used_date: data.createdAt,
+              referral_status: data.purchagedcourseId == null ? "Inactive" : "Active"
+            };
+        });
+        console.log("getReferralsThisMonth result", result);
+        return result;
+    } else {
+        return [];
+    }
+} catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+}
 }

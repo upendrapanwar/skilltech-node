@@ -118,7 +118,7 @@ async function getProfileDetails(param) {
     try {
         console.log("param", param);
         const whereCondition = { _id: param.id };
-        const profileData = await User.find(whereCondition).select("firstname surname id_number email mobile_number alternate_mobile_number street street_name complex_n_unit suburb_district town_city province postal_code method_of_communication opt_in_promotional race gender qualification privacy ecommercePolicy deals_promotion in_loop how_did_you_hear_about_us opt_in_promotional");
+        const profileData = await User.find(whereCondition).select("firstname surname id_number email mobile_number alternate_mobile_number street street_name complex_n_unit suburb_district town_city province postal_code method_of_communication policy_consent opt_in_promotional race gender qualification privacy ecommercePolicy deals_promotion in_loop how_did_you_hear_about_us opt_in_promotional");
         
         if (profileData && profileData.length > 0) {
             console.log("profileData",profileData);

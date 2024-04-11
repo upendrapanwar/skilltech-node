@@ -30,6 +30,11 @@ const schema = new Schema({
         sms: { type: String, required: false, default: 0 },
         phone_call: { type: String, required: false, default: "" },
     }, 
+    policy_consent:{
+        ecommercePolicy: { type: Boolean, required: false, default: false },
+        privacy: { type: Boolean, required: false, default: false },
+        userConsent: { type: Boolean, required: false, default: false },
+    }, 
     opt_in_promotional:{
         receive_monthly_newsletters: { type: String, required: false, default: "" },
         exclusive_deals_promotions: { type: String, required: false, default: "" },
