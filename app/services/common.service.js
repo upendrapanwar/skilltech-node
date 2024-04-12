@@ -39,8 +39,8 @@ let transporter = nodemailer.createTransport({
   port: 587,
   secure: false, // true for 465, false for other ports
   auth: {
-    user: "highvista@skilltechsa.online", // generated ethereal user
-    pass: "FT7q5O0nYNJ6hzwg", // generated ethereal password
+    user: process.env.BREVO_AUTH_USER, // generated ethereal user
+    pass: process.env.BREVO_PASSWORD, // generated ethereal password
   },
 }); 
 
@@ -1013,30 +1013,6 @@ async function fetchAmbassadorCode(param) {
  * @param {param}
  * @returns {Object|null}
  */
-async function saveQuery(param) {
-  try {
-    if (!param) {
-      console.log("Param is missing here.");
-      return null;
-    }
-
-    const queryData = await Userquery.create({
-      first_name: param.first_name,
-      surname: param.surname,
-      email: param.email,
-      mobile_number: param.mobile_number,
-      query: param.query,
-    });
-
-    const userQueryData = await queryData.save(); 
-    console.log(userQueryData);
-
-    return userQueryData;
-  } catch (error) {
-    console.log("Error in creating or saving query:", error.message);
-    return null;
-  }
-}
 // async function saveQuery(param) {
 //   try {
 //     if (!param) {
@@ -1052,21 +1028,8 @@ async function saveQuery(param) {
 //       query: param.query,
 //     });
 
-//     const userQueryData = await queryData.save();
+//     const userQueryData = await queryData.save(); 
 //     console.log(userQueryData);
-
-//     let userName = `${param.first_name} ${param.surname}`
-//     let info = await transporter.sendMail({
-//       from: `${userName} ${param.email}`, // Sender address
-//       to: 'guild@skilltechsa.co.za', // Recipient address
-//       subject: `Query request from ${userName}`, // Subject line
-//       text: `
-//       Query:      
-//       ${param.query}
-//       `
-//     });
-//     console.log("Message sent: %s", info.messageId);
-//     console.log("Message sent:", info);
 
 //     return userQueryData;
 //   } catch (error) {
@@ -1074,6 +1037,43 @@ async function saveQuery(param) {
 //     return null;
 //   }
 // }
+async function saveQuery(param) {
+  try {
+    if (!param) {
+      console.log("Param is missing here.");
+      return null;
+    }
+
+    const queryData = await Userquery.create({
+      first_name: param.first_name,
+      surname: param.surname,
+      email: param.email,
+      mobile_number: param.mobile_number,
+      query: param.query,
+    });
+
+    const userQueryData = await queryData.save();
+    console.log(userQueryData);
+
+    let userName = `${param.first_name} ${param.surname}`
+    let info = await transporter.sendMail({
+      from: `${userName} ${param.email}`, // Sender address
+      to: 'guild@skilltechsa.co.za', // Recipient address
+      subject: `Query request from ${userName}`, // Subject line
+      text: `
+      Query:      
+      ${param.query}
+      `
+    });
+    console.log("Message sent: %s", info.messageId);
+    console.log("Message sent:", info);
+
+    return userQueryData;
+  } catch (error) {
+    console.log("Error in creating or saving query:", error.message);
+    return null;
+  }
+}
 /*****************************************************************************************/
 /*****************************************************************************************/
 /**
