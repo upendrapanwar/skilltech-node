@@ -23,6 +23,7 @@ var corsOptions = {
   origin: '*',
   credentials: true
 }
+
 app.get('/api/v1', function(req, res) { res.redirect('/documentation'); });
 
 //app.use(jwt());

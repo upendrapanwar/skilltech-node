@@ -268,7 +268,7 @@ async function authenticate({ email, password }) {
 async function subscription(param) {
   console.log("param", param);
   var whereCondition = { _id: param.uid };
-  const test = User.findOne(whereCondition);
+  const test = User.findOne(whereCondition); 
   //console.log('test',test);
 
   if (await User.findOne(whereCondition)) {
@@ -353,7 +353,7 @@ async function subscription(param) {
 async function saveMembershipSubscription(param) {
   try {
     console.log("Param data: ", param)
-    const referralCode = param.referralCode;
+    const referralCode = param.referralCode; 
 
     const data = await Subscriptionpayment.findOneAndUpdate(
       { _id: param.id },
@@ -1431,11 +1431,11 @@ async function sendEmailToAmbassador(req) {
     const ambassadorData = await User.findById(id).select("firstname surname email referral_code");
     console.log(ambassadorData);
     if (!ambassadorData) {
-      throw new Error("Ambassador not found");
+      throw new Error("Ambassador not found"); 
     }
 
     const adminData = await User.find({ role: "admin" }).select("firstname surname email");
-    console.log(adminData);
+    console.log("adminData", adminData);
     if (!adminData || adminData.length === 0) {
       throw new Error("Admin email not found");
     }

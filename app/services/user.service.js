@@ -8,6 +8,7 @@ module.exports = {
     create,
     updateProfileDetails,
     getProfileDetails,
+    checkSouthAfricanId,
 };
 
 
@@ -125,6 +126,23 @@ async function getProfileDetails(param) {
             return profileData;
         } else {
             return null;
+        }
+    } catch (error) {
+        console.error('Error fetching profile data:', error);
+        return null;
+    }
+}
+async function checkSouthAfricanId(req) {
+    try {
+        const southAfricanId = req.params.id; 
+        console.log("southAfricanId", southAfricanId);
+    
+        const existingSouthAfricanId = await User.findOne({ id_number: southAfricanId}).select('id_number');
+        console.log("existingSouthAfricanId", existingSouthAfricanId);
+        if (existingSouthAfricanId !== null) {
+          return existingSouthAfricanId;
+        } else {
+            return;
         }
     } catch (error) {
         console.error('Error fetching profile data:', error);

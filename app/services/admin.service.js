@@ -184,7 +184,9 @@ async function getOneAgentById(param) {
  */
 async function getAllActiveSubcribedAmbassadors(param) {
     try {
-        let query = {};
+        let query = {
+            is_active: true,
+        };
 
         if (param && param.start_date && param.end_date) {
             query.createdAt = {
@@ -199,23 +201,22 @@ async function getAllActiveSubcribedAmbassadors(param) {
                 match: { role: 'ambassador' },
                 select: 'firstname surname referral_code ambassador_date',
                 options: {
-                    sort: { createdAt: 1 } // Adjust the sorting options as needed
+                    sort: { createdAt: 1 }
                 }
             })
             .exec();
 
-        console.log("activeSubscribedAmbassadors TEST 1st", activeSubscribedAmbassadors);
+        console.log("activeSubscribedAmbassadors", activeSubscribedAmbassadors);
         
         if (activeSubscribedAmbassadors.length > 0) {
-            // Extract required fields and map them to a new array of objects
             const result = activeSubscribedAmbassadors.map(data => {
                 const user = data.userId;
                 if (!user) {
                     return null; // Skip this entry if userId is null
                 }
                 return {
-                    firstname: user.firstname,
-                    surname: user.surname,
+                    Ambassador_firstname: user.firstname,
+                    Ambassador_lastname: user.surname,
                     referral_code: user.referral_code,
                     ambassador_date: user.ambassador_date,
                     subscription_status: data.is_active ? 'Active' : 'Inactive',
@@ -241,7 +242,9 @@ async function getAllActiveSubcribedAmbassadors(param) {
  */
 async function getAllActiveSubscriptionSubscriber(param) {
     try {
-        let query = {};
+        let query = {
+            is_active: true,
+        };
 
         if (param && param.start_date && param.end_date) {
             query.createdAt = {
@@ -261,7 +264,7 @@ async function getAllActiveSubscriptionSubscriber(param) {
             })
             .exec();
 
-        console.log("activeSubscribedAmbassadors TEST 1st", activeSubscribedAmbassadors);
+        console.log("activeSubscribedAmbassadors", activeSubscribedAmbassadors);
         
         if (activeSubscribedAmbassadors.length > 0) {
             const result = activeSubscribedAmbassadors.map(data => {
@@ -270,8 +273,8 @@ async function getAllActiveSubscriptionSubscriber(param) {
                     return null;
                 }
                 return {
-                    firstname: user.firstname,
-                    surname: user.surname,
+                    Subscriber_firstname: user.firstname,
+                    Subscriber_lastname: user.surname,
                     subscription_status: data.is_active ? 'Active' : 'Inactive',
                     subscription_date: data.createdAt
                 };
@@ -295,114 +298,193 @@ async function getAllActiveSubscriptionSubscriber(param) {
  * 
  */
 async function getDefaultedSubscriptionPaymentOfAmbassador(param) {
-    console.log("param", param)
-    console.log("getAllDefaultedSubscriptionPaymentOfAmbassador")
-    
-    let query = {
-        payment_status: 'cancel'
-    };
+    try {
+        console.log("param", param)
+        console.log("getAllDefaultedSubscriptionPaymentOfAmbassador")
+        
+        let query = { 
+            payment_status: 'cancel' 
+        };
 
-    if (param && param.start_date && param.end_date) {
-        query.createdAt = { $gte: new Date(param.start_date), $lte: new Date(param.end_date) };
-    }
-
-    let defaultAmbassador = await Subscriptionpayment.find(
-        query,
-        {
-            is_active: 1,
-            payment_status: 1,
-            userid: 1
+        if (param && param.start_date && param.end_date) {
+            query.createdAt = { $gte: new Date(param.start_date), $lte: new Date(param.end_date) };
         }
-    ).sort({ createdAt: -1 })
-     .populate({
-            path: 'userid',
-            model: User,
-            match: { role: 'ambassador' },
-            select: 'role firstname surname referral_code'
-        });
 
-    console.log("Defaulted Subscriptions Payments of Ambassador TEST 3rd", defaultAmbassador)
+        let defaultAmbassador = await Subscriptionpayment.find(
+            query,
+            {
+                is_active: 1,   
+                payment_status: 1,
+                userid: 1
+            }
+        ).sort({ createdAt: -1 })
+        .populate({
+                path: 'userid',
+                model: User,
+                match: { role: 'ambassador' },
+                select: 'role firstname surname referral_code'
+            });
 
-    if (defaultAmbassador && defaultAmbassador.length > 0) {
-        return defaultAmbassador;
-    } else {
-        return null;
+        console.log("Defaulted Subscriptions Payments of Ambassador", defaultAmbassador);
+        const result = defaultAmbassador.filter(entry => entry.userid !== null).map(data => ({
+            Ambassador_firstname: data.userid.firstname,
+            Ambassador_lastname: data.userid.surname,
+            referral_code: data.userid.referral_code,
+            payment_status: data.payment_status
+        }));
+        if (result && result.length > 0) {
+            return result;
+        } else {
+            return null;
+        }
+    } catch (error) {
+        console.error('An error occurred:', error);
+        throw error;
     }
 }
 
 
 async function getDefaultedSubscriptionPaymentOfSubscribers(param) {
+    try {
+        console.log("param", param)
+        console.log("getDefaultedSubscriptionPaymentOfSubscribers")
+        let query = {
+            payment_status: 'cancel'
+        };
 
-    console.log("param", param)
-    console.log("getDefaultedSubscriptionPaymentOfSubscribers")
-    let query = {
-        payment_status: 'cancel'
-    };
-
-    if (param && param.start_date && param.end_date) {
-        query.createdAt = { $gte: new Date(param.start_date), $lte: new Date(param.end_date) };
-    }
-
-    let defaultSubscribers = await Subscriptionpayment.find(
-        query,
-        {
-            is_active: 1,
-            payment_status: 1,
-            userid: 1
+        if (param && param.start_date && param.end_date) {
+            query.createdAt = { $gte: new Date(param.start_date), $lte: new Date(param.end_date) };
         }
-    ).sort({ createdAt: -1 })
-     .populate({
-            path: 'userid',
-            model: User,
-            match: { role: 'subscriber' },
-            select: 'role firstname surname'
-        });
 
-    console.log("Defaulted Subscriptions Payments of Subscriber TEST 4th", defaultSubscribers)
+        let defaultSubscribers = await Subscriptionpayment.find(
+            query,
+            {
+                is_active: 1,
+                payment_status: 1,
+                userid: 1
+            }
+        ).sort({ createdAt: -1 })
+        .populate({
+                path: 'userid',
+                model: User,
+                match: { role: 'subscriber' },
+                select: 'role firstname surname'
+            });
 
-    if (defaultSubscribers) {
-        return defaultSubscribers;
-    } else {
-        return null;
-    }
+        console.log("Defaulted Subscriptions Payments of Subscriber", defaultSubscribers)
+        
+        const result = defaultSubscribers.filter(entry => entry.userid !== null).map(data => ({
+            Subscriber_firstname: data.userid.firstname,
+            Subscriber_lastname: data.userid.surname,
+            payment_status: data.payment_status
+        }));
+
+        if (result) {
+            return result;
+        } else {
+            return null;
+        }
+    } catch (error) {
+        console.error('An error occurred:', error);
+        throw error;
 }
+}
+
 
 /**
  * get all data Cancellation of Subscriptions – Cancelled by Ambassador
  * @param {param}
  * @return null|Object 
  */
+// async function getSubscriptionCancelledByAmbassador(param) {
+//     let query = {
+//         is_active: false,
+//     };
+
+//     if (param && param.start_date && param.end_date) {
+//         query.cancellation_date = { $gte: new Date(param.start_date), $lte: new Date(param.end_date) };
+//     }
+//     let cancleByAmbassador = await Purchasedcourses.find(
+//     query, 
+//     {
+//         cancellation_date: 1,
+//         is_active: 1,
+//         userId: 1,
+//     }
+//     ).sort({ cancellation_date: -1 })
+//         .populate({
+//             path: 'userId',
+//             model: User,
+//             match: { role: 'ambassador'},
+//             select: 'role firstname surname referral_code'
+//         })
+
+//     console.log("getSubscriptionCancelledByAmbassador.......", cancleByAmbassador);
+
+//     if (cancleByAmbassador) {
+//         return cancleByAmbassador;
+//     } else {
+//         return null;
+//     }
+// }
+
 async function getSubscriptionCancelledByAmbassador(param) {
-    let query = {
-        is_active: false,
-    };
+    try {
+        const startDate = param && param.start_date ? new Date(param.start_date) : new Date(0); // Default to beginning of time
+        const endDate = param && param.end_date ? new Date(param.end_date) : new Date(); // Default to current date/time
+        const pipeline = [
+            {
+                $match: {
+                    is_active: false,
+                    cancellation_date: {
+                        $gte: new Date(startDate),
+                        $lte: new Date(endDate)
+                    }
+                }
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "user"
+                }
+            },
+            {
+                $unwind: "$user"
+            },
+            {
+                $match: {
+                    "user.role": "ambassador"
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    Ambassador_firstname: "$user.firstname",
+                    Ambassador_lastname: "$user.surname",
+                    referral_code: "$user.referral_code",
+                    cancellation_date: 1
+                }
+            },
+            {
+                $sort: {
+                    cancellation_date: -1
+                }
+            }
+        ];
 
-    if (param && param.start_date && param.end_date) {
-        query.cancellation_date = { $gte: new Date(param.start_date), $lte: new Date(param.end_date) };
-    }
-    let cancleByAmbassador = await Purchasedcourses.find(
-    query, 
-    {
-        cancellation_date: 1,
-        is_active: 1,
-        userId: 1,
-    }
-    ).sort({ cancellation_date: -1 })
-        .populate({
-            path: 'userId',
-            model: User,
-            match: { role: 'ambassador'},
-            select: 'role firstname surname referral_code'
-        })
+        const cancellationRecords = await Purchasedcourses.aggregate(pipeline);
 
-    console.log("getSubscriptionCancelledByAmbassador.......", cancleByAmbassador);
-
-    if (cancleByAmbassador) {
-        return cancleByAmbassador;
-    } else {
-        return null;
+        console.log("getSubscriptionCancelledBySubscriber.......", cancellationRecords);
+        return cancellationRecords;
+    } catch (error) {
+        console.error("Error in getSubscriptionCancelledBySubscriber:", error);
+        throw error; // Rethrow the error to be caught by the caller
     }
 }
+
+
 
 
 /**
@@ -412,35 +494,93 @@ async function getSubscriptionCancelledByAmbassador(param) {
  * @return null|Object 
  * 
  */
-async function getSubscriptionCancelledBySubscriber(param) { 
-    let query = {
-        is_active: false,
-    };
+// async function getSubscriptionCancelledBySubscriber(param) { 
+//     let query = {
+//         is_active: false,
+//     };
 
-    if (param && param.start_date && param.end_date) {
-        query.cancellation_date = { $gte: new Date(param.start_date), $lte: new Date(param.end_date) };
-    }
-    let cancelledBySubscriber = await Purchasedcourses.find(
-    query, 
-    {
-        cancellation_date: 1,
-        is_active: 1,
-        userId: 1,
-    }
-    ).sort({ cancellation_date: -1 })
-        .populate({
-            path: 'userId',
-            model: User,
-            match: { role: 'subscriber'},
-            select: 'role firstname surname'
-        })
+//     if (param && param.start_date && param.end_date) {
+//         query.cancellation_date = { $gte: new Date(param.start_date), $lte: new Date(param.end_date) };
+//     }
+//     let cancelledBySubscriber = await Purchasedcourses.find(
+//     query, 
+//     {
+//         cancellation_date: 1,
+//         is_active: 1,
+//         userId: 1,
+//     }
+//     ).sort({ cancellation_date: -1 })
+//         .populate({
+//             path: 'userId',
+//             model: User,
+//             match: { role: 'subscriber'},
+//             select: 'role firstname surname'
+//         })
 
-    console.log("getSubscriptionCancelled.......", cancelledBySubscriber);
+//     console.log("getSubscriptionCancelled.......", cancelledBySubscriber);
 
-    if (cancelledBySubscriber) {
-        return cancelledBySubscriber;
-    } else {
-        return null;
+//     if (cancelledBySubscriber) {
+//         return cancelledBySubscriber;
+//     } else {
+//         return null;
+//     }
+// }
+
+async function getSubscriptionCancelledBySubscriber(param) {
+    try {
+        const startDate = param && param.start_date ? new Date(param.start_date) : new Date(0); // Default to beginning of time
+        const endDate = param && param.end_date ? new Date(param.end_date) : new Date(); // Default to current date/time
+        const pipeline = [
+            {
+                $match: {
+                    is_active: false,
+                    cancellation_date: {
+                        $gte: new Date(startDate),
+                        $lte: new Date(endDate)
+                        // $gte: new Date(param.start_date),
+                        // $lte: new Date(param.end_date)
+                    }
+                }
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "user"
+                }
+            },
+            {
+                $unwind: "$user"
+            },
+            {
+                $match: {
+                    "user.role": "subscriber"
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    Subscriber_firstname: "$user.firstname",
+                    Subscriber_lastname: "$user.surname",
+                    referral_code: "$user.referral_code",
+                    cancellation_date: 1
+                }
+            },
+            {
+                $sort: {
+                    cancellation_date: -1
+                }
+            }
+        ];
+
+        const cancellationRecords = await Purchasedcourses.aggregate(pipeline);
+
+        console.log("getSubscriptionCancelledBySubscriber.......", cancellationRecords);
+        return cancellationRecords;
+    } catch (error) {
+        console.error("Error in getSubscriptionCancelledBySubscriber:", error);
+        throw error; // Rethrow the error to be caught by the caller
     }
 }
 
@@ -480,7 +620,7 @@ async function getAllActiveAndInactiveReferralPerAmbassador(param) {
                 _id: 0,
                 Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
                 Subscriber_lastname: { $arrayElemAt: ["$subscriber.surname", 0] },
-                Ambassador_referralcode: "$referral_code",
+                referral_code: "$referral_code",
                 Ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
                 Ambassador_lastname: { $arrayElemAt: ["$ambassador.surname", 0] },
                 Date_of_use_of_referral_code: "$createdAt",
@@ -537,7 +677,7 @@ async function getActiveAndInactiveReferralPerAmbassador(param) {
                 _id: 0,
                 Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
                 Subscriber_lastname: { $arrayElemAt: ["$subscriber.surname", 0] },
-                Ambassador_referralcode: "$referral_code",
+                referral_code: "$referral_code",
                 Ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
                 Ambassador_lastname: { $arrayElemAt: ["$ambassador.surname", 0] },
                 Date_of_use_of_referral_code: "$createdAt",
@@ -597,7 +737,7 @@ async function getAllActiveReferralAmbassador(param) {
                 _id: 0,
                 Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
                 Subscriber_lastname: { $arrayElemAt: ["$subscriber.surname", 0] },
-                Ambassador_referralcode: "$referral_code",
+                referral_code: "$referral_code",
                 Ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
                 Ambassador_lastname: { $arrayElemAt: ["$ambassador.surname", 0] },
                 Date_of_use_of_referral_code: "$createdAt",
@@ -647,7 +787,7 @@ async function getActiveReferralAmbassador(param) {
                 _id: 0,
                 Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
                 Subscriber_lastname: { $arrayElemAt: ["$subscriber.surname", 0] },
-                Ambassador_referralcode: "$referral_code",
+                referral_code: "$referral_code",
                 Ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
                 Ambassador_lastname: { $arrayElemAt: ["$ambassador.surname", 0] },
                 Date_of_use_of_referral_code: "$createdAt",
@@ -699,7 +839,7 @@ async function getAllInactiveReferralAmbassador(param) {
                 _id: 0,
                 Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
                 Subscriber_lastname: { $arrayElemAt: ["$subscriber.surname", 0] },
-                Ambassador_referralcode: "$referral_code",
+                referral_code: "$referral_code",
                 Ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
                 Ambassador_lastname: { $arrayElemAt: ["$ambassador.surname", 0] },
                 Date_of_use_of_referral_code: "$createdAt",
@@ -750,7 +890,7 @@ async function getInactiveReferralAmbassador(param) {
                 _id: 0,
                 Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
                 Subscriber_lastname: { $arrayElemAt: ["$subscriber.surname", 0] },
-                Ambassador_referralcode: "$referral_code",
+                referral_code: "$referral_code",
                 Ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
                 Ambassador_lastname: { $arrayElemAt: ["$ambassador.surname", 0] },
                 Date_of_use_of_referral_code: "$createdAt",
@@ -840,7 +980,7 @@ async function getPaymentDueToAmbassador(param) {
             acc.push({
                 Ambassador_firstname: data.firstname,
                 Ambassador_lastname: data.surname,
-                Ambassador_referralcode: data.referral_code,
+                referral_code: data.referral_code,
                 referral_count: referralCount,
                 due_amount: amountDue,
             });
