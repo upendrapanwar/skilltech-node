@@ -192,12 +192,8 @@ function getAllActiveSubcribedAmbassadors(req, res, next) {
  */
 function getActiveSubcribedSubscribers(req, res, next) {
     adminService.getAllActiveSubscriptionSubscriber(req.params)
-        .then(activeSubscriber => {
-            activeSubscriber.length > 0 ?
-                res.status(200).json({ status: true, data: activeSubscriber }) :
-                res.status(400).json({ status: false, message: msg.common.no_data_err, data: null })
-        })
-        .catch(err => next(res.json({ status: false, message: err })));
+    .then(activeSubscribers => activeSubscribers ? res.status(200).json({ status: true, data: activeSubscribers }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+    .catch(err => next(res.json({ status: false, message: err.message })));
 }
 /*****************************************************************************************/
 /*****************************************************************************************/
@@ -209,12 +205,8 @@ function getActiveSubcribedSubscribers(req, res, next) {
  */
 function getAllActiveSubscriptionSubscriber(req, res, next) {
     adminService.getAllActiveSubscriptionSubscriber(req.params)
-        .then(activeSubscriber => {
-            activeSubscriber.length > 0 ?
-                res.status(200).json({ status: true, data: activeSubscriber }) :
-                res.status(400).json({ status: false, message: msg.common.no_data_err, data: null })
-        })
-        .catch(err => next(res.json({ status: false, message: err })));
+    .then(activeSubscribers => activeSubscribers ? res.status(200).json({ status: true, data: activeSubscribers }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+    .catch(err => next(res.json({ status: false, message: err.message })));
 }
 /*****************************************************************************************/
 /*****************************************************************************************/

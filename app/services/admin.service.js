@@ -253,7 +253,7 @@ async function getAllActiveSubscriptionSubscriber(param) {
             };
         }
 
-        const activeSubscribedAmbassadors = await Purchasedcourses.find(query)
+        const activeSubscribedSubscriber = await Purchasedcourses.find(query)
             .populate({
                 path: 'userId',
                 match: { role: 'subscriber' },
@@ -264,10 +264,10 @@ async function getAllActiveSubscriptionSubscriber(param) {
             })
             .exec();
 
-        console.log("activeSubscribedAmbassadors", activeSubscribedAmbassadors);
+        console.log("activeSubscribedSubscriber", activeSubscribedSubscriber);
         
-        if (activeSubscribedAmbassadors.length > 0) {
-            const result = activeSubscribedAmbassadors.map(data => {
+        if (activeSubscribedSubscriber.length > 0) {
+            const result = activeSubscribedSubscriber.map(data => {
                 const user = data.userId;
                 if (!user) {
                     return null;
