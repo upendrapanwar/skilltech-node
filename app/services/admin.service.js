@@ -976,7 +976,7 @@ async function getPaymentDueToAmbassador(param) {
 
         const result = ambassadorData.reduce((acc, data) => {
             const referralCount = ambassadors.filter(referral => referral.referral_code === data.referral_code).length;
-            const amountDue = referralCount * 5000;
+            const amountDue = referralCount * 5;
             acc.push({
                 Ambassador_firstname: data.firstname,
                 Ambassador_lastname: data.surname,

@@ -303,6 +303,7 @@ async function subscription(param) {
           race: param.race,
           gender: param.gender,
           qualification: param.qualification,
+          promotional_consent: param.promotional_consent,
           how_did_you_hear_about_us: param.how_did_you_hear_about_us,
           // opt_in_promotional: param.opt_in_promotional,
           authname: param.firstname + " " + param.surname,
