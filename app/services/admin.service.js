@@ -300,8 +300,6 @@ async function getAllActiveSubscriptionSubscriber(param) {
 async function getDefaultedSubscriptionPaymentOfAmbassador(param) {
     try {
         console.log("param", param)
-        console.log("getAllDefaultedSubscriptionPaymentOfAmbassador")
-        
         let query = { 
             payment_status: 'cancel' 
         };
@@ -335,7 +333,7 @@ async function getDefaultedSubscriptionPaymentOfAmbassador(param) {
         if (result && result.length > 0) {
             return result;
         } else {
-            return null;
+            return [];
         }
     } catch (error) {
         console.error('An error occurred:', error);

@@ -753,7 +753,7 @@ async function getSubscriptionId(req) {
   console.log("reqData", reqData)
   const subscriptionPayment = new Subscriptionpayment({
     userid: reqData.userid,
-    payment_status: reqData.payment_status,
+    // payment_status: reqData.payment_status,
     uuid: "1",
     is_active: false,
   });
