@@ -66,7 +66,10 @@ module.exports = {
   getDefaultedSubscriptionPaymentOfSubscribers,
   getActiveReferral,
   getInactiveReferral,
-  getPaymentDueThisMonth, 
+  getSubscriptionCancelledbySubscriber,
+  getYldAmbassador,
+  getPaymentDue,
+  getPaymentMade,
   getReferralsThisMonth,
 };
 
@@ -1653,42 +1656,105 @@ async function getInactiveReferral(req) {
 /*****************************************************************************************/
 /*****************************************************************************************/
 /**
- * get data of payment due to this month of ambassador
+ * Get data of cancelled subscription
  *
  * @param {param}
  *
  * @returns Object|null
  */
-async function getPaymentDueThisMonth(req) {
+async function getSubscriptionCancelledbySubscriber(param) {
   try {
-    let param = req.params;
-    let id = req.body.userId;
-    let query = {
-      purchagedcourseId: { $ne: null }
-    };
+    const startDate = param && param.start_date ? new Date(param.start_date) : new Date(0);
+    const endDate = param && param.end_date ? new Date(param.end_date) : new Date();
+    const pipeline = [
+        {
+            $match: {
+                is_active: false,
+                cancellation_date: {
+                    $gte: new Date(startDate),
+                    $lte: new Date(endDate)
+                }
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                as: "user"
+            }
+        },
+        {
+            $unwind: "$user"
+        },
+        {
+            $match: {
+                "user.role": "subscriber"
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                Subscriber_firstname: "$user.firstname",
+                Subscriber_lastname: "$user.surname",
+                referral_code: "$user.referral_code",
+                cancellation_date: 1
+            }
+        },
+        {
+            $sort: {
+                cancellation_date: -1
+            }
+        }
+    ];
 
-    const ambassador = await User.findById(id);
-    
-    query.referral_code = ambassador.referral_code;
+    const cancellationRecords = await Purchasedcourses.aggregate(pipeline);
 
-    const dueReferralData = await Referral.find(query).exec();
+    console.log("getSubscriptionCancelledBySubscriber.......", cancellationRecords);
+    return cancellationRecords;
+} catch (error) {
+    console.error("Error in getSubscriptionCancelledBySubscriber:", error);
+    throw error;
+}
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Get data of YLD Ambassador
+ *
+ * @param {param}
+ *
+ * @returns Object|null
+ */
+async function getYldAmbassador(req) {
+ 
+  
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Get data of YLD Ambassador
+ *
+ * @param {param}
+ *
+ * @returns Object|null
+ */
+async function getPaymentDue(req) {
+ 
 
-    const activeReferralCount = dueReferralData.length;
-    const amountDue = activeReferralCount * 5000;
-    console.log("activeReferral", dueReferralData);
-    
-    if(activeReferralCount && amountDue) {
-      return {
-        referral_count: activeReferralCount,
-        due_amount: amountDue,
-      }
-    } else {
-          return [];
-      }
-  } catch (error) {
-      console.error('An error occurred:', error);
-      throw error;
-  }
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Get data of YLD Ambassador
+ *
+ * @param {param}
+ *
+ * @returns Object|null
+ */
+async function getPaymentMade(req) {
+ 
+
 }
 /*****************************************************************************************/
 /*****************************************************************************************/

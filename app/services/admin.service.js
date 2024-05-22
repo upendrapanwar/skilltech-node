@@ -579,7 +579,7 @@ async function getSubscriptionCancelledBySubscriber(param) {
     } catch (error) {
         console.error("Error in getSubscriptionCancelledBySubscriber:", error);
         throw error; // Rethrow the error to be caught by the caller
-    }
+    } 
 }
 
 
