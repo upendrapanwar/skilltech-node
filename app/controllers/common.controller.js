@@ -93,16 +93,12 @@ router.post('/defaulted-subscription-paymentof-subscriber', getAllDefaultedSubsc
 router.post('/my-active-referral', getAllActiveReferral);
 router.post('/my-inactive-referral', getAllInactiveReferral);
 router.post('/subscription-cancelledby-subscriber', getAllSubscriptionCancelledbySubscriber);
-router.post('/yld-referrals', getAllYldAmbassador);
 router.post('/payment-due', getAllPaymentDue);
-router.post('/payment-made', getAllPaymentMade);
 router.post('/defaulted-subscription-paymentof-subscriber/:start_date/:end_date', getDefaultedSubscriptionPaymentOfSubscribers);
 router.post('/my-active-referral/:start_date/:end_date', getActiveReferral);
 router.post('/my-inactive-referral/:start_date/:end_date', getInactiveReferral);
 router.post('/subscription-cancelledby-subscriber/:start_date/:end_date', getSubscriptionCancelledbySubscriber);
-router.post('/yld-referrals/:start_date/:end_date', getYldAmbassador);
 router.post('/payment-due/:start_date/:end_date', getPaymentDue);
-router.post('/payment-made/:start_date/:end_date', getPaymentMade);
 
 router.get('/get-referrals-this-month/:id', getReferralsThisMonth);
 
@@ -668,34 +664,6 @@ function getSubscriptionCancelledbySubscriber(req, res, next) {
 /*****************************************************************************************/
 /*****************************************************************************************/
 /**
- * Function for get all data for YLD ambassador
- * @param {*} req 
- * @param {*} res  
- * @param {*} next
- *                  
- */
-function getAllYldAmbassador(req, res, next) {
-  commonService.getYldAmbassador(req)
-      .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
-      .catch(err => next(res.json({ status: false, message: err })))
-}
-/*****************************************************************************************/
-/*****************************************************************************************/
-/**
- * Function for get data for YLD ambassador by date
- * @param {*} req 
- * @param {*} res  
- * @param {*} next
- *                  
- */
-function getYldAmbassador(req, res, next) {
-  commonService.getYldAmbassador(req)
-      .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
-      .catch(err => next(res.json({ status: false, message: err })))
-}
-/*****************************************************************************************/
-/*****************************************************************************************/
-/**
  * Function for get all data for payment due to ambassador
  * @param {*} req 
  * @param {*} res  
@@ -718,34 +686,6 @@ function getAllPaymentDue(req, res, next) {
  */
 function getPaymentDue(req, res, next) {
   commonService.getPaymentDue(req)
-      .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
-      .catch(err => next(res.json({ status: false, message: err })))
-}
-/*****************************************************************************************/
-/*****************************************************************************************/
-/**
- * Function for get all data for payment made to ambassador
- * @param {*} req 
- * @param {*} res  
- * @param {*} next
- *                  
- */
-function getAllPaymentMade(req, res, next) {
-  commonService.getPaymentMade(req)
-      .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
-      .catch(err => next(res.json({ status: false, message: err })))
-}
-/*****************************************************************************************/
-/*****************************************************************************************/
-/**
- * Function for get data for payment made to ambassador by date
- * @param {*} req 
- * @param {*} res  
- * @param {*} next
- *                  
- */
-function getPaymentMade(req, res, next) {
-  commonService.getPaymentMade(req)
       .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
       .catch(err => next(res.json({ status: false, message: err })))
 }

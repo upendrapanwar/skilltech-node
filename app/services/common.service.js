@@ -67,9 +67,7 @@ module.exports = {
   getActiveReferral,
   getInactiveReferral,
   getSubscriptionCancelledbySubscriber,
-  getYldAmbassador,
   getPaymentDue,
-  getPaymentMade,
   getReferralsThisMonth,
 };
 
@@ -109,7 +107,6 @@ function sendMail(mailOptions) {
 
 /*****************************************************************************************/
 /*****************************************************************************************/
-
 /**
  * Create user in the database
  *
@@ -1529,8 +1526,8 @@ async function getDefaultedSubscriptionPaymentOfSubscribers(req) {
 
       console.log("subscriptions", subscriptions);
       const result = subscriptions.map(subscription => ({
-          firstname: subscription.userid.firstname,
-          surname: subscription.userid.surname,
+          Subscriber_firstname: subscription.userid.firstname,
+          Subscriber_lastname: subscription.userid.surname,
           payment_status: subscription.payment_status
       }));
 
@@ -1581,8 +1578,8 @@ async function getActiveReferral(req) {
     if (activeReferral.length > 0) {
         const result = activeReferral.map(data => {
             return {
-              firstname: data.userId.firstname,
-              surname: data.userId.surname,
+              Subscriber_firstname: data.userId.firstname,
+              Subscriber_lastname: data.userId.surname,
               referral_used_date: data.createdAt,
               referral_status: 'Active'
             };
@@ -1637,8 +1634,8 @@ async function getInactiveReferral(req) {
     if (inactiveReferral.length > 0) {
         const result = inactiveReferral.map(data => {
             return {
-              firstname: data.userId.firstname,
-              surname: data.userId.surname,
+              Subscriber_firstname: data.userId.firstname,
+              Subscriber_lastname: data.userId.surname,
               referral_used_date: data.createdAt,
               referral_status: 'Inactive'
             };
@@ -1661,7 +1658,7 @@ async function getInactiveReferral(req) {
  * @param {param}
  *
  * @returns Object|null
- */
+ */ 
 async function getSubscriptionCancelledbySubscriber(param) {
   try {
     const startDate = param && param.start_date ? new Date(param.start_date) : new Date(0);
@@ -1726,34 +1723,48 @@ async function getSubscriptionCancelledbySubscriber(param) {
  *
  * @returns Object|null
  */
-async function getYldAmbassador(req) {
- 
-  
-}
-/*****************************************************************************************/
-/*****************************************************************************************/
-/**
- * Get data of YLD Ambassador
- *
- * @param {param}
- *
- * @returns Object|null
- */
 async function getPaymentDue(req) {
- 
+  try {
+    let param = req.params;
+    let query = {
+      referral_code: req.body.referral_code
+    };
+    console.log("req.body.referral_code*********", req.body.referral_code)
 
-}
-/*****************************************************************************************/
-/*****************************************************************************************/
-/**
- * Get data of YLD Ambassador
- *
- * @param {param}
- *
- * @returns Object|null
- */
-async function getPaymentMade(req) {
- 
+    if (param && param.start_date && param.end_date) {
+        query.createdAt = {
+            $gte: new Date(param.start_date),
+            $lte: new Date(param.end_date)
+        };
+    }
+    const subscribers = await Referral.find(query)
+    .populate({
+      path: 'userId',
+      model: User,
+      select: 'firstname surname'
+    })
+    .exec();
+    console.log("subscribers", subscribers);
+
+
+    if (subscribers.length > 0) {
+      const result = subscribers.map(data => {
+          return {
+            Subscriber_firstname: data.userId.firstname,
+            Subscriber_lastname: data.userId.surname,
+            referral_code: req.body.referral_code,
+            referral_status: data.purchagedcourseId === null ? 'Inactive' : 'Active',
+          };
+      }).filter(entry => entry !== null);
+      console.log(result);
+      return result;
+    } else {
+        return [];
+    }
+  } catch (error) {
+      console.error('An error occurred:', error);
+      throw error;
+  }
 
 }
 /*****************************************************************************************/
