@@ -12,6 +12,7 @@ router.post('/signup', registerValidation, register);
 router.put('/update-profile-details/:id', updateProfileDetails);
 router.get('/get-profile-details/:id', getProfileDetails);
 router.get('/check-southafrican-id/:id', checkSouthAfricanId);
+router.post('/save-moodle-id/:id', saveMoodleLoginId);
 
 
 module.exports = router;
@@ -79,6 +80,23 @@ function getProfileDetails(req, res, next) {
  */
 function checkSouthAfricanId(req, res, next) {
     userService.checkSouthAfricanId(req)
+    .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
+    .catch(err => next(res.json({ status: false, message: err })));
+}
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function to check South African ID
+ *
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * 
+ * @return JSON|null
+ */
+function saveMoodleLoginId(req, res, next) {
+    userService.saveMoodleLoginId(req)
     .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
     .catch(err => next(res.json({ status: false, message: err })));
 }

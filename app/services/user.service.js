@@ -9,6 +9,7 @@ module.exports = {
     updateProfileDetails,
     getProfileDetails,
     checkSouthAfricanId,
+    saveMoodleLoginId,
 };
 
 
@@ -27,7 +28,7 @@ async function create(param) {
             purchase_type: param.purchase_type,
             isActive: true
         });
-    
+
         const data = await user.save();
     
         if (data) {
@@ -119,7 +120,7 @@ async function getProfileDetails(param) {
     try {
         console.log("param", param);
         const whereCondition = { _id: param.id };
-        const profileData = await User.find(whereCondition).select("firstname surname id_number email mobile_number alternate_mobile_number street street_name complex_n_unit suburb_district town_city province postal_code method_of_communication policy_consent opt_in_promotional race gender qualification privacy ecommercePolicy deals_promotion in_loop how_did_you_hear_about_us opt_in_promotional");
+        const profileData = await User.find(whereCondition).select("firstname surname id_number email mobile_number alternate_mobile_number street street_name complex_n_unit suburb_district town_city province postal_code method_of_communication policy_consent opt_in_promotional race gender qualification privacy ecommercePolicy deals_promotion in_loop how_did_you_hear_about_us opt_in_promotional moodle_pass moodle_login_id");
         
         if (profileData && profileData.length > 0) {
             console.log("profileData",profileData);
@@ -149,4 +150,47 @@ async function checkSouthAfricanId(req) {
         return null;
     }
 }
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+
+/**
+ * Manages to save Moodle login ID
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+
+async function saveMoodleLoginId(req) {
+    try {
+        console.log("param", req.params);
+        console.log("moodle id", req.body);
+        const userId = req.params.id;
+        const moodleLoginId = req.body.moodleLoginId;
+        
+        const whereCondition = { _id: userId };
+        const updatedData = await User.findOneAndUpdate(
+            whereCondition,
+            {
+                $set: {
+                    moodle_login_id: moodleLoginId,
+                }
+            },
+            { new: true }
+        );
+
+        if (updatedData) {
+            return updatedData;
+        } else {
+            return false;
+        }
+    } catch (error) {
+        console.error('Error saving moodle login id:', error);
+        return null;
+    }
+}
+
+/*****************************************************************************************/
+/*****************************************************************************************/
 

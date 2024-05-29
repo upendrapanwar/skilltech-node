@@ -170,6 +170,7 @@ async function create(param) {
       firstname: param.firstname,
       surname: param.surname,
       email: param.email,
+      moodle_pass: btoa( param.password ),
       password: bcrypt.hashSync(param.password, 10),
       role: "learner",
       isActive: true,

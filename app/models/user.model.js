@@ -102,7 +102,9 @@ const schema = new Schema({
     },
     subscription_date:{ type:Date, required:false, default:null },
     subscription_cancellation_date:{type:Date, required:false, default:null},
-    ambassador_date:{type:Date, required:false, default:null}
+    ambassador_date:{type:Date, required:false, default:null},
+    moodle_pass:{type:String, required:false, default:''},
+    moodle_login_id:{type:String, required:false, default:''},
 },{
     timestamps: true
 });
