@@ -625,12 +625,13 @@ async function generateSignature(param) {
   //console.log('getstring=',getString);
   const signature = crypto.createHash("md5").update(getString).digest("hex");
 
+  console.log("signatureData----signature", signature)
   const signatureData = new Subscriptionpayment({
     signatureData: signature,
   });
-  console.log("signatureData", signatureData)
   const data = await signatureData.save();
-
+  console.log("signatureData", data)
+  
   return signature;
 }
 
