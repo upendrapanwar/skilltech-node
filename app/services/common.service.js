@@ -39,10 +39,12 @@ let transporter = nodemailer.createTransport({
   port: 587,
   secure: false, // true for 465, false for other ports
   auth: {
-    user: process.env.BREVO_AUTH_USER, // generated ethereal user
-    pass: process.env.BREVO_PASSWORD, // generated ethereal password
+    // user: process.env.BREVO_AUTH_USER, // generated ethereal user
+    // pass: process.env.BREVO_PASSWORD, // generated ethereal password
+    user: 'userdev174@gmail.com',
+    pass: 'JXMzh8bKyWQREYVg',
   },
-}); 
+});  
 
 module.exports = {
   create,
