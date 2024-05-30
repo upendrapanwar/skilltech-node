@@ -624,13 +624,6 @@ async function generateSignature(param) {
   }
   //console.log('getstring=',getString);
   const signature = crypto.createHash("md5").update(getString).digest("hex");
-
-  console.log("signatureData----signature", signature)
-  const signatureData = new Subscriptionpayment({
-    signatureData: signature,
-  });
-  const data = await signatureData.save();
-  console.log("signatureData", data)
   
   return signature;
 }
@@ -1097,8 +1090,11 @@ async function saveQuery(param) {
  */
 
 async function cancelPayfastPayment(req) {
-  const merchantData = req.body;
-  console.log("merchantData", merchantData)
+  // const merchantData = req.body;
+  const merchant_data = req.body.merchant_data;
+  const token_generated = req.body.token;
+  const merchant_Id = req.body.merchantId;
+  console.log("merchantData req.body", req.body)
 
   function generateTimestamp() {
     const now = new Date();
@@ -1114,7 +1110,7 @@ async function cancelPayfastPayment(req) {
 
   function generateSignature() {
         let pfOutput = "";
-      var data = merchantData.merchantData;
+      var data = merchant_data;
       console.log("signature merchantData", data); 
       var passPhrase = 'quorum87ax36Revving';
       for (let key in data) {
@@ -1142,8 +1138,8 @@ async function cancelPayfastPayment(req) {
       }
 
   try {
-    const token = merchantData.token;
-    const merchantId = merchantData.merchantId;
+    const token = token_generated;
+    const merchantId = merchant_Id;
     const signature = generateSignature();
     const timestamp = generateTimestamp();
 

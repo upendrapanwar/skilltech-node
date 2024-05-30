@@ -16,7 +16,6 @@ const schema = new Schema({
     is_recurring: { type: String, required: false, default: '' },
     userid: { type: String, ref: "User", required: false, default: '' },
     merchantData: { type: String, required: false, default: '' },
-    signatureData: { type: String, required: false, default: '' },
     uuid : { type: String, required: false, default: '' },
     is_active: { type: Boolean, required: false, default: true }
 },{
