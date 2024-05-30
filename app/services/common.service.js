@@ -1125,6 +1125,7 @@ async function cancelPayfastPayment(req) {
           "+"
         )}`;
       }
+      console.log("signature String", getString);
       const signature = crypto.createHash("md5").update(getString).digest("hex");
       console.log("signature", signature);
       return signature;
