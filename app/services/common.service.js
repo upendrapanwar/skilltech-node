@@ -623,8 +623,15 @@ async function generateSignature(param) {
     )}`;
   }
   //console.log('getstring=',getString);
+  const signature = crypto.createHash("md5").update(getString).digest("hex");
 
-  return crypto.createHash("md5").update(getString).digest("hex");
+  const signatureData = new Subscriptionpayment({
+    signatureData: signature,
+  });
+  console.log("signatureData", signatureData)
+  const data = await signatureData.save();
+
+  return signature;
 }
 
 /*****************************************************************************************/
@@ -1107,7 +1114,7 @@ async function cancelPayfastPayment(req) {
   function generateSignature() {
         let pfOutput = "";
       var data = merchantData.merchantData;
-      console.log("signature merchantData", data);
+      console.log("signature merchantData", data); 
       var passPhrase = 'quorum87ax36Revving';
       for (let key in data) {
         if (data.hasOwnProperty(key)) {
