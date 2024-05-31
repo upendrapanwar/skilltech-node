@@ -1090,7 +1090,6 @@ async function saveQuery(param) {
  */
 
 async function cancelPayfastPayment(req) {
-  // const merchantData = req.body;
   const merchant_data = req.body.merchant_data;
   const token_generated = req.body.token;
   const merchant_Id = req.body.merchantId;
@@ -1138,7 +1137,8 @@ async function cancelPayfastPayment(req) {
       }
 
   try {
-    const token = token_generated;
+    // const token = token_generated;
+    const token = "6bee0f59-1976-486d-a921-053754667f26";
     const merchantId = merchant_Id;
     const signature = generateSignature();
     const timestamp = generateTimestamp();
