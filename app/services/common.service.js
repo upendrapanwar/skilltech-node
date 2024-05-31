@@ -1139,65 +1139,97 @@ async function cancelPayfastPayment(req) {
       console.log("signature", signature);
       return signature;
       }
-
-  try {
-    // const token = token_generated;
-    const token = "6bee0f59-1976-486d-a921-053754667f26";
-    const merchantId = merchant_Id;
-    const signature = generateSignature();
-    const timestamp = generateTimestamp();
-
-    const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
-    const version = 'v1';
-
-    console.log("url - token", token);
-    console.log("url - merchantId", merchantId);
-    console.log("url - signature", signature);
-    console.log("url - timestamp", timestamp);
-    const options = {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'merchant-id': merchantId,
-        'version': version,
-        'timestamp': timestamp,
-        'signature': signature
-      }
-    };
-
-    console.log("options", options);
-
-    const response = await new Promise((resolve, reject) => {
-      const req = https.request(url, options, res => {
-        let data = '';
-        res.on('data', chunk => {
-          data += chunk;
-        });
-        res.on('end', () => {
-          resolve({
-            status: res.statusCode,
-            data: JSON.parse(data)
-          });
-        });
-      });
-
-      req.on('error', error => {
-        reject(error);
-      });
-      req.end();
-    });
-
-    if (response.status === 200) {
-      console.log("Cancellation successful.");
-      return response;
-    } else {
-      console.error("Cancellation failed:", response.data);
-      return response.data;
+  
+      try {
+        const token = token_generated;
+        const merchantId = merchant_Id;
+        const signature = generateSignature();
+        const timestamp = generateTimestamp();
+    
+        const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+        const version = 'v1';
+    
+        const options = {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'merchant-id': merchantId,
+                'version': version,
+                'timestamp': timestamp,
+                'signature': signature
+            }
+        };
+    
+        console.log("options", options);
+    
+        // Make the request using Axios
+        const response = await axios.put(url, null, options); // Axios PUT requests allow a data argument, using `null` here as there's no body data
+    
+        if (response.status === 200) {
+            console.log("Cancellation successful.");
+            return response.data;
+        } else {
+            console.error("Cancellation failed:", response.data);
+            return response.data;
+        }
+    } catch (err) {
+        console.log("Error:", err);
+        throw err;
     }
-  } catch (err) {
-    console.log("Error:", err);
-    throw err;
-  }
+
+  // try {
+  //   // const token = token_generated;
+  //   const token = "6bee0f59-1976-486d-a921-053754667f26";
+  //   const merchantId = merchant_Id;
+  //   const signature = generateSignature();
+  //   const timestamp = generateTimestamp();
+
+  //   const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+  //   const version = 'v1';
+
+  //   const options = {
+  //     method: 'PUT',
+  //     headers: {
+  //       'Content-Type': 'application/x-www-form-urlencoded',
+  //       'merchant-id': merchantId,
+  //       'version': version,
+  //       'timestamp': timestamp,
+  //       'signature': signature
+  //     }
+  //   };
+
+  //   console.log("options", options);
+
+  //   const response = await new Promise((resolve, reject) => {
+  //     const req = https.request(url, options, res => {
+  //       let data = '';
+  //       res.on('data', chunk => {
+  //         data += chunk;
+  //       });
+  //       res.on('end', () => {
+  //         resolve({
+  //           status: res.statusCode,
+  //           data: JSON.parse(data)
+  //         });
+  //       });
+  //     });
+
+  //     req.on('error', error => {
+  //       reject(error);
+  //     });
+  //     req.end();
+  //   });
+
+  //   if (response.status === 200) {
+  //     console.log("Cancellation successful.");
+  //     return response;
+  //   } else {
+  //     console.error("Cancellation failed:", response.data);
+  //     return response.data;
+  //   }
+  // } catch (err) {
+  //   console.log("Error:", err);
+  //   throw err;
+  // }
 }
 
 // async function cancelPayfastPayment(req) {
