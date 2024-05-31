@@ -1151,25 +1151,25 @@ async function cancelPayfastPayment(req) {
         console.log("Signature:", signature);
         console.log("Timestamp:", timestamp);
     
-        // const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
-        const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true&merchant-id=${merchantId}&version=v1&timestamp=${timestamp}&signature=${signature}`;
-        // const version = 'v1';
+        const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+        // const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true&merchant-id=${merchantId}&version=v1&timestamp=${timestamp}&signature=${signature}`;
+        const version = 'v1';
     
-        // const options = {
-        //     headers: {
-        //         // 'Content-Type': 'application/x-www-form-urlencoded',
-        //         'merchant-id': merchantId,
-        //         'version': version,
-        //         'timestamp': timestamp,
-        //         'signature': signature
-        //     }
-        // };
+        const options = {
+            headers: {
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+                'merchant-id': merchantId,
+                'version': version,
+                'timestamp': timestamp,
+                'signature': signature
+            }
+        };
     
         console.log("Request URL:", url);
-        // console.log("Request Options:", options);
+        console.log("Request Options:", options);
     
-        // const response = await axios.put(url, null, options);
-        const response = await axios.put(url);
+        const response = await axios.put(url, null, options);
+        // const response = await axios.put(url);
         console.log("Request response:", response);
 
         if (response.status === 200) {
