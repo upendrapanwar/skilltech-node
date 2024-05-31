@@ -1141,10 +1141,16 @@ async function cancelPayfastPayment(req) {
       }
   
       try {
-        const token = token_generated;
-        const merchantId = merchant_Id;
+        // const token = token_generated;
+        const token = "6bee0f59-1976-486d-a921-053754667f26";
+        const merchantId = "your_merchant_id"; // replace with actual merchant ID
         const signature = generateSignature();
         const timestamp = generateTimestamp();
+    
+        // Logging critical variables for debugging
+        console.log("Merchant ID:", merchantId);
+        console.log("Signature:", signature);
+        console.log("Timestamp:", timestamp);
     
         const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
         const version = 'v1';
@@ -1159,7 +1165,8 @@ async function cancelPayfastPayment(req) {
             }
         };
     
-        console.log("options", options);
+        console.log("Request URL:", url);
+        console.log("Request Options:", options);
     
         // Make the request using Axios
         const response = await axios.put(url, null, options); // Axios PUT requests allow a data argument, using `null` here as there's no body data
@@ -1172,7 +1179,20 @@ async function cancelPayfastPayment(req) {
             return response.data;
         }
     } catch (err) {
-        console.log("Error:", err);
+        if (err.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            console.error("Response data:", err.response.data);
+            console.error("Response status:", err.response.status);
+            console.error("Response headers:", err.response.headers);
+        } else if (err.request) {
+            // The request was made but no response was received
+            console.error("Request data:", err.request);
+        } else {
+            // Something happened in setting up the request that triggered an Error
+            console.error("Error message:", err.message);
+        }
+        console.error("Config:", err.config);
         throw err;
     }
 
