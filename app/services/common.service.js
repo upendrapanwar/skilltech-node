@@ -1166,11 +1166,12 @@ async function cancelPayfastPayment(req) {
         // };
     
         console.log("Request URL:", url);
-        console.log("Request Options:", options);
+        // console.log("Request Options:", options);
     
         // const response = await axios.put(url, null, options);
         const response = await axios.put(url);
-    
+        console.log("Request response:", response);
+
         if (response.status === 200) {
             console.log("Cancellation successful.");
             return response.data;
