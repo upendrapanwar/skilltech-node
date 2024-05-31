@@ -1096,15 +1096,19 @@ async function cancelPayfastPayment(req) {
   console.log("merchantData req.body", req.body)
 
   function generateTimestamp() {
-    const now = new Date();
-    const offset = '+02:00';
-    const timezoneOffset = now.getTimezoneOffset();
-    const absTimezoneOffset = Math.abs(timezoneOffset);
-    const hours = Math.floor(absTimezoneOffset / 60);
-    const minutes = absTimezoneOffset % 60;
-    const timezoneString = `${offset.startsWith('-') ? '+' : '-'}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    const formattedTimestamp = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}${timezoneString}`;
-    return formattedTimestamp;
+    // const now = new Date();
+    // const offset = '+02:00';
+    // const timezoneOffset = now.getTimezoneOffset();
+    // const absTimezoneOffset = Math.abs(timezoneOffset);
+    // const hours = Math.floor(absTimezoneOffset / 60);
+    // const minutes = absTimezoneOffset % 60;
+    // const timezoneString = `${offset.startsWith('-') ? '+' : '-'}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    // const formattedTimestamp = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}${timezoneString}`;
+    // return formattedTimestamp;
+    let timestamp = new Date(new Date().toString().split("GMT")[0] + " UTC")
+      .toISOString()
+      .split(".")[0];
+      return timestamp;
   }
 
   function generateSignature() {
