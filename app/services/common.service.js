@@ -1146,6 +1146,10 @@ async function cancelPayfastPayment(req) {
     const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
     const version = 'v1';
 
+    console.log("url - token", token);
+    console.log("url - merchantId", merchantId);
+    console.log("url - signature", signature);
+    console.log("url - timestamp", timestamp);
     const options = {
       method: 'PUT',
       headers: {
