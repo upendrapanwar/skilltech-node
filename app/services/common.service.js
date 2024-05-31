@@ -1168,7 +1168,8 @@ async function cancelPayfastPayment(req) {
         console.log("Request URL:", url);
         console.log("Request Options:", options);
     
-        const response = await axios.put(url, null, options);
+        // const response = await axios.put(url, null, options);
+        const response = await axios.put(url);
     
         if (response.status === 200) {
             console.log("Cancellation successful.");
