@@ -1157,10 +1157,14 @@ async function cancelPayfastPayment(req) {
         const options = {
             headers: {
                 // 'Content-Type': 'application/x-www-form-urlencoded',
-                'merchant-id': merchantId,
-                'version': version,
-                'timestamp': timestamp,
+                'merchant-id': '10030936',
+                'version': 'v1',
+                'timestamp': '2024-05-31T09:46:06',
                 'signature': signature
+                // 'merchant-id': merchantId,
+                // 'version': version,
+                // 'timestamp': timestamp,
+                // 'signature': signature
             }
         };
     
