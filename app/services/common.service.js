@@ -1096,15 +1096,6 @@ async function cancelPayfastPayment(req) {
   console.log("merchantData req.body", req.body)
 
   function generateTimestamp() {
-    // const now = new Date();
-    // const offset = '+02:00';
-    // const timezoneOffset = now.getTimezoneOffset();
-    // const absTimezoneOffset = Math.abs(timezoneOffset);
-    // const hours = Math.floor(absTimezoneOffset / 60);
-    // const minutes = absTimezoneOffset % 60;
-    // const timezoneString = `${offset.startsWith('-') ? '+' : '-'}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    // const formattedTimestamp = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}${timezoneString}`;
-    // return formattedTimestamp;
     let timestamp = new Date(new Date().toString().split("GMT")[0] + " UTC")
       .toISOString()
       .split(".")[0];
@@ -1112,31 +1103,30 @@ async function cancelPayfastPayment(req) {
   }
 
   function generateSignature() {
-      //   let pfOutput = "";
-      // var data = merchant_data;
-      // console.log("signature merchantData", data); 
-      // var passPhrase = 'quorum87ax36Revving';
-      // for (let key in data) {
-      //   if (data.hasOwnProperty(key)) {
-      //     if (data[key] !== "") {
-      //       pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
-      //         /%20/g,
-      //         "+"
-      //       )}&`;
-      //     }
-      //   }
-      // }
-      // console.log("signature pfOutput", pfOutput);
-      // let getString = pfOutput.slice(0, -1);
-      // if (passPhrase !== null) {
-      //   getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
-      //     /%20/g,
-      //     "+"
-      //   )}`;
-      // }
-      // console.log("signature String", getString);
-      const signature = crypto.createHash("md5").update('merchant_id=10030936&merchant_key=zisjxwy4k18g8&amount=10&item_name=#Subscription+Package&passphrase=quorum87ax36Revving').digest("hex");
-      // const signature = crypto.createHash("md5").update(getString).digest("hex");
+        let pfOutput = "";
+      var data = merchant_data;
+      console.log("signature merchantData", data); 
+      var passPhrase = 'quorum87ax36Revving';
+      for (let key in data) {
+        if (data.hasOwnProperty(key)) {
+          if (data[key] !== "") {
+            pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
+              /%20/g,
+              "+"
+            )}&`;
+          }
+        }
+      }
+      console.log("signature pfOutput", pfOutput);
+      let getString = pfOutput.slice(0, -1);
+      if (passPhrase !== null) {
+        getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
+          /%20/g,
+          "+"
+        )}`;
+      }
+      console.log("signature String", getString);
+      const signature = crypto.createHash("md5").update(getString).digest("hex");
       console.log("signature", signature);
       return signature;
       }
