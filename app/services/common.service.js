@@ -1141,9 +1141,8 @@ async function cancelPayfastPayment(req) {
       }
   
       try {
-        // const token = token_generated;
-        const token = "6bee0f59-1976-486d-a921-053754667f26";
-        const merchantId = "your_merchant_id"; // replace with actual merchant ID
+        const token = token_generated;
+        const merchantId = merchant_Id;
         const signature = generateSignature();
         const timestamp = generateTimestamp();
     
