@@ -1096,10 +1096,18 @@ async function cancelPayfastPayment(req) {
   console.log("merchantData req.body", req.body)
 
   function generateTimestamp() {
-    let timestamp = new Date(new Date().toString().split("GMT")[0] + " UTC")
-      .toISOString()
-      .split(".")[0];
-      return timestamp;
+    const now = new Date();
+    const offset = -now.getTimezoneOffset();
+    const sign = offset >= 0 ? '+' : '-';
+    const hours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
+    const minutes = String(Math.abs(offset) % 60).padStart(2, '0');
+    const timezoneOffset = `${sign}${hours}:${minutes}`;
+    const formattedTimestamp = now.toISOString().split('.')[0] + timezoneOffset;
+    return formattedTimestamp;
+    // let timestamp = new Date(new Date().toString().split("GMT")[0] + " UTC")
+    //   .toISOString()
+    //   .split(".")[0];
+    //   return timestamp;
   }
 
   function generateSignature() {
