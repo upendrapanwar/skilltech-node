@@ -1096,6 +1096,7 @@ async function cancelPayfastPayment(req) {
   console.log("merchantData req.body", req.body)
 
   function generateTimestamp() {
+    // For (YYYY-MM-DDTHH:MM:SS[+HH:MM]) format
     const now = new Date();
     const offset = -now.getTimezoneOffset();
     const sign = offset >= 0 ? '+' : '-';
@@ -1104,6 +1105,8 @@ async function cancelPayfastPayment(req) {
     const timezoneOffset = `${sign}${hours}:${minutes}`;
     const formattedTimestamp = now.toISOString().split('.')[0] + timezoneOffset;
     return formattedTimestamp;
+
+    // For (YYYY-MM-DDTHH:MM:SS) format
     // let timestamp = new Date(new Date().toString().split("GMT")[0] + " UTC")
     //   .toISOString()
     //   .split(".")[0];
