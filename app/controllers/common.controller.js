@@ -467,29 +467,17 @@ function cancelCourseByUser(req, res, next) {
  *
  * @return JSON|null
  */
-async function cancelPayfastPayment(req, res, next) {
-  // commonService
-  //   .cancelPayfastPayment(req)
-  //   .then((data) =>
-  //   data
-  //       ? res.status(200).json({ status: true, data: data })
-  //       : res
-  //           .status(400)
-  //           .json({ status: false, message: msg.common.no_data_err, data: [] })
-  //   )
-  //   .catch((err) => next(res.json({ status: false, message: err })));
-    try {
-      const data = await commonService.cancelPayfastPayment(req);
-      console.log('Data:', data);
-      if (data) {
-        res.status(200).json({ status: true, data: data });
-      } else {
-        res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] });
-      }
-    } catch (err) {
-      console.error('Error caught:', err);
-      next(err); // Pass the error to the next middleware
-    }
+function cancelPayfastPayment(req, res, next) {
+  commonService
+    .cancelPayfastPayment(req)
+    .then((data) =>
+    data
+        ? res.status(200).json({ status: true, data: data })
+        : res
+            .status(400)
+            .json({ status: false, message: msg.common.no_data_err, data: [] })
+    )
+    .catch((err) => next(res.json({ status: false, message: err })));
 }
 /*****************************************************************************************/
 /*****************************************************************************************/

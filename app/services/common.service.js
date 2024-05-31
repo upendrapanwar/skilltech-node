@@ -1146,13 +1146,11 @@ async function cancelPayfastPayment(req) {
         const signature = generateSignature();
         const timestamp = generateTimestamp();
     
-        // Logging critical variables for debugging
         console.log("Merchant ID:", merchantId);
         console.log("Signature:", signature);
         console.log("Timestamp:", timestamp);
     
         const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
-        // const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true&merchant-id=${merchantId}&version=v1&timestamp=${timestamp}&signature=${signature}`;
         const version = 'v1';
     
         const options = {
@@ -1169,7 +1167,6 @@ async function cancelPayfastPayment(req) {
         console.log("Request Options:", options);
     
         const response = await axios.put(url, null, options);
-        // const response = await axios.put(url);
         console.log("Request response:", response);
 
         if (response.status === 200) {
