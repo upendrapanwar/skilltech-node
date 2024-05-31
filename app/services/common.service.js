@@ -1156,7 +1156,7 @@ async function cancelPayfastPayment(req) {
     
         const options = {
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                // 'Content-Type': 'application/x-www-form-urlencoded',
                 'merchant-id': merchantId,
                 'version': version,
                 'timestamp': timestamp,
@@ -1167,8 +1167,7 @@ async function cancelPayfastPayment(req) {
         console.log("Request URL:", url);
         console.log("Request Options:", options);
     
-        // Make the request using Axios
-        const response = await axios.put(url, null, options); // Axios PUT requests allow a data argument, using `null` here as there's no body data
+        const response = await axios.put(url, null, options);
     
         if (response.status === 200) {
             console.log("Cancellation successful.");
@@ -1180,7 +1179,6 @@ async function cancelPayfastPayment(req) {
     } catch (err) {
         if (err.response) {
             // The request was made and the server responded with a status code
-            // that falls out of the range of 2xx
             console.error("Response data:", err.response.data);
             console.error("Response status:", err.response.status);
             console.error("Response headers:", err.response.headers);
