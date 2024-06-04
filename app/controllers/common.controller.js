@@ -125,7 +125,9 @@ function register(req, res, next) {
           })
         : res
             .status(400)
-            .json({ status: false, message: "User already Exist!" })
+            .json({ status: false, 
+              message: "User already Exist! Please login or complete the Subscription Registration Form if not already completed."
+                  })
     )
     .catch((err) =>
       next(res.status(400).json({ status: false, message: err }))
