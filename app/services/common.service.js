@@ -25,6 +25,7 @@ const QRCode = require('qrcode');
 const msg = require("../helpers/messages.json");
 const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid"); 
+const SibApiV3Sdk = require('sib-api-v3-sdk');
 
 const {
   User,
@@ -39,10 +40,8 @@ let transporter = nodemailer.createTransport({
   port: 587,
   secure: false, // true for 465, false for other ports
   auth: {
-    // user: process.env.BREVO_AUTH_USER, // generated ethereal user
-    // pass: process.env.BREVO_PASSWORD, // generated ethereal password
-    user: 'userdev174@gmail.com',
-    pass: 'JXMzh8bKyWQREYVg',
+    user: process.env.BREVO_AUTH_USER, // generated ethereal user
+    pass: process.env.BREVO_PASSWORD, // generated ethereal password
   },
 });  
 
@@ -176,6 +175,7 @@ async function create(param) {
       password: bcrypt.hashSync(param.password, 10),
       role: "learner",
       isActive: true,
+      is_blocked: false,
     });
     //Email send functionality.
     const mailOptions = {
@@ -229,7 +229,6 @@ async function create(param) {
  * @returns Object|null
  */
 async function authenticate({ email, password }) {
-  console.log(); 
   const user = await User.findOne({ email });
 
   if (user && bcrypt.compareSync(password, user.password)) {
@@ -249,13 +248,13 @@ async function authenticate({ email, password }) {
     expTime.setHours(expTime.getHours() + 2); //2 hours token expiration time
     //expTime.setMinutes(expTime.getMinutes() + 2);
     expTime = expTime.getTime();
-    console.log(user);
+    console.log('user', user);
     return {
       ...userWithoutHash,
       token,
       expTime,
     };
-  }
+  } 
 }
 
 /*****************************************************************************************/
@@ -348,6 +347,81 @@ async function subscription(param) {
 /*****************************************************************************************/
 /*****************************************************************************************/
 /**
+ * Brevo mail function
+ *
+ * @param {param}
+ *
+ * @returns Object|null
+ */
+const sendEmailByBrevo =  async function sendEmailByBrevo(template_id, recieverEmailId) {
+  try {
+    console.log('template_id', template_id);
+    console.log('recieverEmailId', recieverEmailId);
+  let defaultClient = SibApiV3Sdk.ApiClient.instance;
+
+  let apiKey = defaultClient.authentications['api-key'];
+  // apiKey.apiKey = process.env.BREVO_KEY;
+  
+
+  let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+
+  let templateId = template_id; 
+
+  let sendTestEmail = new SibApiV3Sdk.SendTestEmail(); 
+
+  sendTestEmail.emailTo = [`${recieverEmailId}`];
+
+  apiInstance.sendTestTemplate(templateId, sendTestEmail).then(function() {
+    console.log('API called successfully.');
+  }, function(error) {
+    console.error(error);
+  });
+  } catch (error) {
+      console.log("Error in sending Brevo email:", error.message);
+      return null;
+  }
+}
+
+
+const sendDynamicEmailByBrevo = async function sendDynamicEmailByBrevo(template_id, recieverEmailId, dynamicData) {
+  try {
+    console.log('template_id', template_id);
+    console.log('recieverEmailId', recieverEmailId);
+    console.log('dynamicData', dynamicData);
+
+    let defaultClient = SibApiV3Sdk.ApiClient.instance;
+
+    let apiKey = defaultClient.authentications['api-key'];
+    // apiKey.apiKey = process.env.BREVO_KEY;
+
+    let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+
+    let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+
+    sendSmtpEmail = {
+      to: [{
+        email: recieverEmailId,
+      }],
+      templateId: template_id,
+      params: dynamicData,
+    };
+    // console.log('sendSmtpEmail object:', sendSmtpEmail);
+    console.log('sendSmtpEmail object:', JSON.stringify(sendSmtpEmail, null, 2));
+
+    apiInstance.sendTransacEmail(sendSmtpEmail).then(function(data) {
+      console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+    }, function(error) {
+      console.error(error);
+    });
+  } catch (error) {
+    console.log("Error in sending Brevo email:", error.message);
+    return null;
+  }
+};
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
  * Manages user for subscription
  *
  * @param {param}
@@ -427,6 +501,7 @@ async function saveMembershipSubscription(param) {
         }else{
           console.log(" Payment is Cancelled")
         }
+        sendEmailByBrevo(12, param.email);
         return res;
       } else {
         return false;
@@ -1042,6 +1117,7 @@ async function fetchAmbassadorCode(param) {
 //     return null;
 //   }
 // }
+
 async function saveQuery(param) {
   try {
     if (!param) {
@@ -1079,6 +1155,8 @@ async function saveQuery(param) {
     return null;
   }
 }
+
+
 /*****************************************************************************************/
 /*****************************************************************************************/
 /**
@@ -1264,7 +1342,8 @@ async function cancelPayfastPayment(req) {
 async function cancelCourseByUser(req) {
   console.log("id", req.params.id);  
   try {
-    const id = req.params.id;
+    const orderId = req.params.id;
+    const userId = req.body.userId;
 
     const statusData = {
       is_active: false,
@@ -1273,15 +1352,34 @@ async function cancelCourseByUser(req) {
     console.log("statusData====>", statusData);
 
     const removedCourse = await Purchasedcourses.findOneAndUpdate(
-      { _id: id },
+      { _id: orderId },
       statusData,
       { new: true }
     );
+
     console.log("removeCourse====>", removedCourse);
     if (!removedCourse) {
-      console.log("Course not found for id:", id);
+      console.log("Course not found for id:", orderId);
       return null;
     }
+
+    //For blocking the user on unsubscription
+    const userBlocked = await User.findOneAndUpdate(
+      { _id: userId },
+      {is_active: false},
+      { new: true }
+    );
+    console.log("userBlocked successfully:", userBlocked);
+
+    //for Brevo email to the user on unsubscription
+    // const template_id = 14;
+    // const recieverEmailId = userBlocked.email;
+    // const dynamicData = {
+    //   "FIRSTNAME": userBlocked.firstname,
+    //   "LASTNAME": userBlocked.surname
+    // };
+    // sendDynamicEmailByBrevo(template_id, recieverEmailId, dynamicData);
+    sendEmailByBrevo(14, userBlocked.email);
 
     console.log("Course removed successfully:", removedCourse);
     return removedCourse;
