@@ -360,7 +360,7 @@ const sendEmailByBrevo =  async function sendEmailByBrevo(template_id, recieverE
   let defaultClient = SibApiV3Sdk.ApiClient.instance;
 
   let apiKey = defaultClient.authentications['api-key'];
-  // apiKey.apiKey = process.env.BREVO_KEY;
+  apiKey.apiKey = process.env.BREVO_KEY;
   
 
   let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
@@ -392,7 +392,7 @@ const sendDynamicEmailByBrevo = async function sendDynamicEmailByBrevo(template_
     let defaultClient = SibApiV3Sdk.ApiClient.instance;
 
     let apiKey = defaultClient.authentications['api-key'];
-    // apiKey.apiKey = process.env.BREVO_KEY;
+    apiKey.apiKey = process.env.BREVO_KEY;
 
     let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
