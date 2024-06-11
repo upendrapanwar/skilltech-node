@@ -26,6 +26,7 @@ const msg = require("../helpers/messages.json");
 const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid"); 
 const SibApiV3Sdk = require('sib-api-v3-sdk');
+const cron = require('node-cron');
 
 const {
   User,
@@ -381,6 +382,51 @@ const sendEmailByBrevo =  async function sendEmailByBrevo(template_id, recieverE
       return null;
   }
 }
+
+//Schedule the function to run on every 2 mins
+// cron.schedule('*/2 * * * *', () => {
+//   const templateId = 16;
+//   const receiverEmailId = 'userdev174@gmail.com';
+//   sendEmailByBrevo(templateId, receiverEmailId);
+// }, {
+//   timezone: "Asia/Kolkata"
+// });
+
+// Schedule the function to run on the 1st of every month at 1 am
+cron.schedule('0 1 1 * *', () => {
+  const templateId = 16;
+  const receiverEmailId = 'guild@skilltechsa.co.za';
+  sendEmailByBrevo(templateId, receiverEmailId);
+}, {
+  timezone: "Africa/Johannesburg"
+});
+
+
+
+// const triggerMerchantAPI = async function triggerMerchantAPI() {
+//   try {
+//     let defaultClient = SibApiV3Sdk.ApiClient.instance;
+
+//     let apiKey = defaultClient.authentications['api-key'];
+//     apiKey.apiKey = process.env.BREVO_KEY;
+
+//     let apiInstance = new SibApiV3Sdk.ContactsApi();
+
+//     let createContact = new SibApiV3Sdk.CreateContact();
+
+//     createContact.email = 'userdev174@gmail.com';
+//     createContact.listIds = [7]
+
+//     apiInstance.createContact(createContact).then(function(data) {
+//       console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+//     }, function(error) {
+//       console.error(error);
+//     });
+//   } catch {
+//     console.log("Error in sending Brevo email:", error.message);
+//     return null;
+//   }
+// }
 
 
 const sendDynamicEmailByBrevo = async function sendDynamicEmailByBrevo(template_id, recieverEmailId, dynamicData) {
