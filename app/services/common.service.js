@@ -354,105 +354,31 @@ async function subscription(param) {
  *
  * @returns Object|null
  */
-const sendEmailByBrevo =  async function sendEmailByBrevo(template_id, recieverEmailId) {
+const sendEmailByBrevo = async function sendEmailByBrevo(template_id, receiverEmailId, receiverName, variables) {
   try {
     console.log('template_id', template_id);
-    console.log('recieverEmailId', recieverEmailId);
-  let defaultClient = SibApiV3Sdk.ApiClient.instance;
-
-  let apiKey = defaultClient.authentications['api-key'];
-  apiKey.apiKey = process.env.BREVO_KEY;
-  
-
-  let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-
-  let templateId = template_id; 
-
-  let sendTestEmail = new SibApiV3Sdk.SendTestEmail(); 
-
-  sendTestEmail.emailTo = [`${recieverEmailId}`];
-
-  apiInstance.sendTestTemplate(templateId, sendTestEmail).then(function() {
-    console.log('API called successfully.');
-  }, function(error) {
-    console.error(error);
-  });
-  } catch (error) {
-      console.log("Error in sending Brevo email:", error.message);
-      return null;
-  }
-}
-
-//Schedule the function to run on every 2 mins
-// cron.schedule('*/2 * * * *', () => {
-//   const templateId = 16;
-//   const receiverEmailId = 'userdev174@gmail.com';
-//   sendEmailByBrevo(templateId, receiverEmailId);
-// }, {
-//   timezone: "Asia/Kolkata"
-// });
-
-// Schedule the function to run on the 1st of every month at 1 am
-cron.schedule('0 1 1 * *', () => {
-  const templateId = 16;
-  const receiverEmailId = 'guild@skilltechsa.co.za';
-  sendEmailByBrevo(templateId, receiverEmailId);
-}, {
-  timezone: "Africa/Johannesburg"
-});
-
-
-
-// const triggerMerchantAPI = async function triggerMerchantAPI() {
-//   try {
-//     let defaultClient = SibApiV3Sdk.ApiClient.instance;
-
-//     let apiKey = defaultClient.authentications['api-key'];
-//     apiKey.apiKey = process.env.BREVO_KEY;
-
-//     let apiInstance = new SibApiV3Sdk.ContactsApi();
-
-//     let createContact = new SibApiV3Sdk.CreateContact();
-
-//     createContact.email = 'userdev174@gmail.com';
-//     createContact.listIds = [7]
-
-//     apiInstance.createContact(createContact).then(function(data) {
-//       console.log('API called successfully. Returned data: ' + JSON.stringify(data));
-//     }, function(error) {
-//       console.error(error);
-//     });
-//   } catch {
-//     console.log("Error in sending Brevo email:", error.message);
-//     return null;
-//   }
-// }
-
-
-const sendDynamicEmailByBrevo = async function sendDynamicEmailByBrevo(template_id, recieverEmailId, dynamicData) {
-  try {
-    console.log('template_id', template_id);
-    console.log('recieverEmailId', recieverEmailId);
-    console.log('dynamicData', dynamicData);
+    console.log('receiverEmailId', receiverEmailId);
 
     let defaultClient = SibApiV3Sdk.ApiClient.instance;
-
     let apiKey = defaultClient.authentications['api-key'];
     apiKey.apiKey = process.env.BREVO_KEY;
 
     let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
-    let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+    let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail(); 
 
     sendSmtpEmail = {
       to: [{
-        email: recieverEmailId,
+        email: receiverEmailId,
+        name: receiverName
       }],
       templateId: template_id,
-      params: dynamicData,
+      // params: {},
+      sender: {
+        email: 'guild@skilltechsa.co.za',
+        name: 'High Vista Guild'
+      }
     };
-    // console.log('sendSmtpEmail object:', sendSmtpEmail);
-    console.log('sendSmtpEmail object:', JSON.stringify(sendSmtpEmail, null, 2));
 
     apiInstance.sendTransacEmail(sendSmtpEmail).then(function(data) {
       console.log('API called successfully. Returned data: ' + JSON.stringify(data));
@@ -463,7 +389,121 @@ const sendDynamicEmailByBrevo = async function sendDynamicEmailByBrevo(template_
     console.log("Error in sending Brevo email:", error.message);
     return null;
   }
+}
+
+
+// Schedule the function to run on every 2 mins
+cron.schedule('*/1 * * * *', () => {
+  const templateId = 16;
+  const receiverEmailId = 'shane@skilltechsa.co.za';
+  const receiverName  = 'Shane';
+  sendEmailByBrevo(templateId, receiverEmailId, receiverName);
+});
+
+
+// Schedule the function to run on the 1st of every month at 1 am
+cron.schedule('0 1 1 * *', () => {
+  const templateId = 16;
+  const receiverEmailId = 'guild@skilltechsa.co.za';
+  const receiverName  = 'HVG';
+  sendEmailByBrevo(templateId, receiverEmailId, receiverName);
+  sendEmailCampaign(23);
+});
+
+
+// cron.schedule('*/1 * * * *', () => {
+//   // addContactToList();
+//   // trackEvent();
+//   sendEmailCampaign(23);
+//   console.log('Successfully triggered');
+//   });
+  
+  //For adding contacts in the list in Brevo
+const addContactToList = async function addContactToList() {
+  try {
+    let defaultClient = SibApiV3Sdk.ApiClient.instance;
+
+    let apiKey = defaultClient.authentications['api-key'];
+    apiKey.apiKey = process.env.BREVO_KEY;
+
+    let apiInstance = new SibApiV3Sdk.ContactsApi();
+
+    let createContact = new SibApiV3Sdk.CreateContact();
+
+    createContact.email = 'eynoapoorv@gmail.com';
+    createContact.listIds = [7]
+
+    apiInstance.createContact(createContact).then(function(data) {
+      console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+    }, function(error) {
+      console.error(error);
+    });
+
+    // let listId = 7;
+
+    // let contactEmails = new SibApiV3Sdk.AddContactToList();
+
+    // contactEmails.emails = ["eynoashish@gmail.com"];
+
+    // apiInstance.addContactToList(listId, contactEmails).then(function(data) {
+    //   console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+    // }, function(error) {
+    //   console.error(error);
+    // });
+  } catch {
+    console.log("Error in sending Brevo email:", error.message);
+    return null;
+  }
 };
+
+
+const sendEmailCampaign = async function sendEmailCampaign(campaign_id) {
+  try {
+    let defaultClient = SibApiV3Sdk.ApiClient.instance;
+
+    let apiKey = defaultClient.authentications['api-key'];
+    apiKey.apiKey = process.env.BREVO_KEY;
+
+    let apiInstance = new SibApiV3Sdk.EmailCampaignsApi();
+
+    let campaignId = campaign_id;
+    
+    apiInstance.sendEmailCampaignNow(campaignId).then(function() {
+      console.log('API called successfully.');
+    }, function(error) {
+      console.error(error);
+    });
+
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+
+// const trackEvent = async function trackEvent() {
+//   try {
+//     let defaultClient = SibApiV3Sdk.ApiClient.instance;
+
+//     let apiKey = defaultClient.authentications['api-key'];
+//     apiKey.apiKey = process.env.BREVO_KEY;
+
+//     let apiInstance = new SibApiV3Sdk.EventsApi();
+
+//     let trackEvent = new SibApiV3Sdk.Event();
+
+//     trackEvent.event = 'monthly_report'; 
+
+//     apiInstance.trackEvent(trackEvent).then(function(data) {
+//       console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+//     }, function(error) {
+//       console.error(error);
+//     });
+
+//   } catch (error) {
+//     console.error(error);
+//   }
+// };
+
 
 /*****************************************************************************************/
 /*****************************************************************************************/
@@ -547,7 +587,8 @@ async function saveMembershipSubscription(param) {
         }else{
           console.log(" Payment is Cancelled")
         }
-        sendEmailByBrevo(12, param.email);
+        const receiverName = `${param.firstname} ${param.surname}`
+        sendEmailByBrevo(12, param.email, receiverName);
         return res;
       } else {
         return false;
@@ -1425,7 +1466,9 @@ async function cancelCourseByUser(req) {
     //   "LASTNAME": userBlocked.surname
     // };
     // sendDynamicEmailByBrevo(template_id, recieverEmailId, dynamicData);
-    sendEmailByBrevo(14, userBlocked.email);
+    const receiverName = `${userBlocked.firstname}  ${userBlocked.surname}`
+    console.log("receiverName", receiverName);
+    sendEmailByBrevo(14, userBlocked.email, receiverName);
 
     console.log("Course removed successfully:", removedCourse);
     return removedCourse;
