@@ -367,13 +367,27 @@ const sendEmailByBrevo = async function sendEmailByBrevo(template_id, receiverEm
 
     let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail(); 
 
+    if(variables){
+      sendSmtpEmail = {
+        to: [{
+          email: receiverEmailId,
+          name: receiverName
+        }],
+        templateId: template_id,
+        params: variables,
+        sender: {
+          email: 'guild@skilltechsa.co.za',
+          name: 'High Vista Guild'
+        }
+      };
+    }
+
     sendSmtpEmail = {
       to: [{
         email: receiverEmailId,
         name: receiverName
       }],
       templateId: template_id,
-      // params: {},
       sender: {
         email: 'guild@skilltechsa.co.za',
         name: 'High Vista Guild'
@@ -382,9 +396,11 @@ const sendEmailByBrevo = async function sendEmailByBrevo(template_id, receiverEm
 
     apiInstance.sendTransacEmail(sendSmtpEmail).then(function(data) {
       console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+      return data;
     }, function(error) {
       console.error(error);
     });
+    return data;
   } catch (error) {
     console.log("Error in sending Brevo email:", error.message);
     return null;
@@ -393,19 +409,19 @@ const sendEmailByBrevo = async function sendEmailByBrevo(template_id, receiverEm
 
 
 // Schedule the function to run on every 2 mins
-cron.schedule('*/1 * * * *', () => {
-  const templateId = 16;
-  const receiverEmailId = 'shane@skilltechsa.co.za';
-  const receiverName  = 'Shane';
-  sendEmailByBrevo(templateId, receiverEmailId, receiverName);
-});
+// cron.schedule('*/1 * * * *', () => {
+//   const templateId = 16;
+//   const receiverEmailId = 'shane@skilltechsa.co.za';
+//   const receiverName  = 'Shane';
+//   sendEmailByBrevo(templateId, receiverEmailId, receiverName);
+// });
 
 
 // Schedule the function to run on the 1st of every month at 1 am
 cron.schedule('0 1 1 * *', () => {
   const templateId = 16;
-  const receiverEmailId = 'guild@skilltechsa.co.za';
-  const receiverName  = 'HVG';
+  const receiverEmailId = 'lize@skilltechsa.co.za';
+  const receiverName  = 'Lize';
   sendEmailByBrevo(templateId, receiverEmailId, receiverName);
   sendEmailCampaign(23);
 });
@@ -1514,51 +1530,59 @@ async function sendEmailToAmbassador(req) {
       throw new Error("Admin email not found");
     }
 
-    const adminEmail = adminData[0].email; // Assuming there's only one admin email, you might need to adjust this based on your application logic
-    const adminName = adminData[0].firstname + ' ' + adminData[0].surname;
+    // QR code fuctionality
+    // const url = `https://affiliate.skilltechsa.online/ambessador/ambassador-subscription?url=${ambassadorData.referral_code}`;
+    // const qrCode = await QRCode.toDataURL(url);
+    // console.log(qrCode);
+    // const updatedUser = await User.findOneAndUpdate(
+    //   { _id: id },
+    //   { $set: { qr_code: qrCode } },
+    //   { new: true }
+    // );
 
-
-    const url = `https://affiliate.skilltechsa.online/ambessador/ambassador-subscription?url=${ambassadorData.referral_code}`;
-    const qrCode = await QRCode.toDataURL(url);
-    console.log(qrCode);
-
-    // Save QR code to the database
-    const updatedUser = await User.findOneAndUpdate(
-      { _id: id },
-      { $set: { qr_code: qrCode } },
-      { new: true }
-    );
-
-    let info = await transporter.sendMail({
-      from: `${adminName} ${adminEmail}`, // Sender address
-      to: ambassadorData.email, // Recipient address
-      subject: `Congratulation ${adminData.firstname} as Ambassador! `, // Subject line
-      text: `
-      Hello ${ambassadorData.firstname}, 
+    //Email to Ambassador by Nodemailer
+    // const adminEmail = adminData[0].email;
+    // const adminName = adminData[0].firstname + ' ' + adminData[0].surname;
+    // let info = await transporter.sendMail({
+    //   from: `${adminName} ${adminEmail}`, // Sender address
+    //   to: ambassadorData.email, // Recipient address
+    //   subject: `Congratulation ${adminData.firstname} as Ambassador! `, // Subject line
+    //   text: `
+    //   Hello ${ambassadorData.firstname}, 
       
-      Congratulations! 
+    //   Congratulations! 
 
-      Begin new experience as an Ambasssador.
+    //   Begin new experience as an Ambasssador.
       
-      Referral Code: <span style="font-weight: bold; color: blue">${ambassadorData.referral_code}</span>
+    //   Referral Code: <span style="font-weight: bold; color: blue">${ambassadorData.referral_code}</span>
       
-      Get your QR code below:`,
-      attachments: [
-        {
-            filename: 'qrcode.png',
-            content: qrCode.split(';base64,').pop(),
-            encoding: 'base64'
-        }
-    ]
-    });
+    //   Get your QR code below:`,
+    //   attachments: [
+    //     {
+    //         filename: 'qrcode.png',
+    //         content: qrCode.split(';base64,').pop(),
+    //         encoding: 'base64'
+    //     }
+    // ]
+    // });
 
-    console.log("Message sent: %s", info.messageId);
-    return info;
+    //Email to Ambassador by Brevo
+    const receiverEmailId = ambassadorData.email;
+    const receiverName = ambassadorData.firstname + " " + ambassadorData.surname;
+    const variables = {
+      referral_code: ambassadorData.referral_code
+    }
+    console.log("sendEmailByBrevo ambassador_fullname", receiverName);
+    console.log("sendEmailByBrevo variables", variables);
+    const data = sendEmailByBrevo(24, receiverEmailId, receiverName, variables);
+
+    console.log("sendEmailByBrevo Ambassador", JSON.stringify(data));
+    return JSON.stringify(data);
   } catch (err) {
     console.log("Error:", err);
     throw err;
   }
-}
+};
 /*****************************************************************************************/
 /*****************************************************************************************/
 /**
