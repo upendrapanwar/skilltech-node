@@ -246,13 +246,13 @@ function getReferralCode(req, res, next) {
 /*****************************************************************************************/
 function checkReferralCode(req, res, next) {
   commonService
-    .checkReferralCode(req)
+    .checkReferralCode (req)
     .then((data) =>
       data
         ? res.status(200).json({ status: true, data: data })
         : res
             .status(400)
-            .json({ status: false, message: msg.common.no_data_err, data: [] })
+            .json({ status: false, message:  msg.common.no_data_err, data: [] })
     )
     .catch((err) => next(res.json({ status: false, message: err })));
 }

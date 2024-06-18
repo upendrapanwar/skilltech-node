@@ -408,7 +408,7 @@ const sendEmailByBrevo = async function sendEmailByBrevo(template_id, receiverEm
 }
 
 
-// Schedule the function to run on every 2 mins
+// Schedule the function to run on every 1 minute
 // cron.schedule('*/1 * * * *', () => {
 //   const templateId = 16;
 //   const receiverEmailId = 'shane@skilltechsa.co.za';
@@ -418,13 +418,13 @@ const sendEmailByBrevo = async function sendEmailByBrevo(template_id, receiverEm
 
 
 // Schedule the function to run on the 1st of every month at 1 am
-cron.schedule('0 1 1 * *', () => {
-  const templateId = 16;
-  const receiverEmailId = 'lize@skilltechsa.co.za';
-  const receiverName  = 'Lize';
-  sendEmailByBrevo(templateId, receiverEmailId, receiverName);
-  sendEmailCampaign(23);
-});
+// cron.schedule('0 1 1 * *', () => {
+//   const templateId = 16;
+//   const receiverEmailId = 'lize@skilltechsa.co.za';
+//   const receiverName  = 'Lize';
+//   sendEmailByBrevo(templateId, receiverEmailId, receiverName);
+//   sendEmailCampaign(23);
+// });
 
 
 // cron.schedule('*/1 * * * *', () => {
@@ -970,7 +970,7 @@ async function checkReferralCode(req) {
     // Check if referral code is already used
     const existingReferral = await Referral.findOne({ referral_code: referralCode, userId: userId });
     if (existingReferral) {
-      return ;
+      return;
     }
 
      // Referral code not used, proceed with creation
