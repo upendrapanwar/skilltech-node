@@ -62,7 +62,7 @@ module.exports = {
   saveQuery,
   cancelCourseByUser,
   cancelPayfastPayment,
-  sendEmailToAmbassador,
+  sendSubscriptionEmail,
   payFastNotify,
   getSubscriptionId,
   getDefaultedSubscriptionPaymentOfSubscribers,
@@ -354,65 +354,64 @@ async function subscription(param) {
  *
  * @returns Object|null
  */
-const sendEmailByBrevo = async function sendEmailByBrevo(template_id, receiverEmailId, receiverName, variables) {
-  try {
-    console.log('template_id', template_id);
-    console.log('receiverEmailId', receiverEmailId);
+// const sendEmailByBrevo = async function sendEmailByBrevo(template_id, receiverEmailId, receiverName, variables) {
+//   try {
+//     console.log('template_id', template_id);
+//     console.log('receiverEmailId', receiverEmailId);
+//     console.log('receiverName', receiverName);
+//     console.log('variables', variables);
 
-    let defaultClient = SibApiV3Sdk.ApiClient.instance;
-    let apiKey = defaultClient.authentications['api-key'];
-    apiKey.apiKey = process.env.BREVO_KEY;
+//     let defaultClient = SibApiV3Sdk.ApiClient.instance;
+//     let apiKey = defaultClient.authentications['api-key'];
+//     apiKey.apiKey = process.env.BREVO_KEY;
 
-    let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+//     let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
-    let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail(); 
+//     let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail(); 
 
-    if(variables){
-      sendSmtpEmail = {
-        to: [{
-          email: receiverEmailId,
-          name: receiverName
-        }],
-        templateId: template_id,
-        params: variables,
-        sender: {
-          email: 'guild@skilltechsa.co.za',
-          name: 'High Vista Guild'
-        }
-      };
-    }
+//     if(variables){
+//       sendSmtpEmail = {
+//         to: [{
+//           email: receiverEmailId,
+//           name: receiverName
+//         }],
+//         templateId: template_id,
+//         params: variables,
+//         sender: {
+//           email: 'guild@skilltechsa.co.za',
+//           name: 'High Vista Guild'
+//         }
+//       };
+//     } else {
+//       sendSmtpEmail = {
+//         to: [{
+//           email: receiverEmailId,
+//           name: receiverName
+//         }],
+//         templateId: template_id,
+//         sender: {
+//           email: 'guild@skilltechsa.co.za',
+//           name: 'High Vista Guild'
+//         }
+//       };
+//     }
 
-    sendSmtpEmail = {
-      to: [{
-        email: receiverEmailId,
-        name: receiverName
-      }],
-      templateId: template_id,
-      sender: {
-        email: 'guild@skilltechsa.co.za',
-        name: 'High Vista Guild'
-      }
-    };
+//     const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+//     console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+//     return data;
 
-    apiInstance.sendTransacEmail(sendSmtpEmail).then(function(data) {
-      console.log('API called successfully. Returned data: ' + JSON.stringify(data));
-      return data;
-    }, function(error) {
-      console.error(error);
-    });
-    return data;
-  } catch (error) {
-    console.log("Error in sending Brevo email:", error.message);
-    return null;
-  }
-}
+//   } catch (error) {
+//     console.log("Error in sending Brevo email:", error.message);
+//     return null;
+//   }
+// }
 
 
 // Schedule the function to run on every 1 minute
 // cron.schedule('*/1 * * * *', () => {
-//   const templateId = 16;
-//   const receiverEmailId = 'shane@skilltechsa.co.za';
-//   const receiverName  = 'Shane';
+//   const templateId = 21;
+//   const receiverEmailId = 'Lize@skilltechsa.co.za';
+//   const receiverName  = 'Lize';
 //   sendEmailByBrevo(templateId, receiverEmailId, receiverName);
 // });
 
@@ -423,102 +422,106 @@ const sendEmailByBrevo = async function sendEmailByBrevo(template_id, receiverEm
 //   const receiverEmailId = 'lize@skilltechsa.co.za';
 //   const receiverName  = 'Lize';
 //   sendEmailByBrevo(templateId, receiverEmailId, receiverName);
-//   sendEmailCampaign(23);
+//   createAndSendEmailCampaign();
 // });
 
 
 // cron.schedule('*/1 * * * *', () => {
-//   // addContactToList();
-//   // trackEvent();
-//   sendEmailCampaign(23);
+//   const variables = {
+//     REFERRAL_CODE: "HG246"
+//   }
+//   sendEmailByBrevo(24, "userdev174@gmail.com", "User Dev", variables);
 //   console.log('Successfully triggered');
 //   });
   
   //For adding contacts in the list in Brevo
-const addContactToList = async function addContactToList() {
-  try {
-    let defaultClient = SibApiV3Sdk.ApiClient.instance;
+// const addContactInBrevo = async function addContactInBrevo(ambassadorData) {
+//   try {
+//     let defaultClient = SibApiV3Sdk.ApiClient.instance;
+//     let apiKey = defaultClient.authentications['api-key'];
+//     apiKey.apiKey = process.env.BREVO_KEY;
+//     let apiInstance = new SibApiV3Sdk.ContactsApi();
 
-    let apiKey = defaultClient.authentications['api-key'];
-    apiKey.apiKey = process.env.BREVO_KEY;
-
-    let apiInstance = new SibApiV3Sdk.ContactsApi();
-
-    let createContact = new SibApiV3Sdk.CreateContact();
-
-    createContact.email = 'eynoapoorv@gmail.com';
-    createContact.listIds = [7]
-
-    apiInstance.createContact(createContact).then(function(data) {
-      console.log('API called successfully. Returned data: ' + JSON.stringify(data));
-    }, function(error) {
-      console.error(error);
-    });
-
-    // let listId = 7;
-
-    // let contactEmails = new SibApiV3Sdk.AddContactToList();
-
-    // contactEmails.emails = ["eynoashish@gmail.com"];
-
-    // apiInstance.addContactToList(listId, contactEmails).then(function(data) {
-    //   console.log('API called successfully. Returned data: ' + JSON.stringify(data));
-    // }, function(error) {
-    //   console.error(error);
-    // });
-  } catch {
-    console.log("Error in sending Brevo email:", error.message);
-    return null;
-  }
-};
+//     let createContact = new SibApiV3Sdk.CreateContact();
+//     createContact.email = ambassadorData.email;
+//     createContact.listIds = [7];
+//     createContact.attributes = {
+//       FIRSTNAME: ambassadorData.firstname,
+//       LASTNAME: ambassadorData.surname,
+//       REFERRAL_CODE: ambassadorData.referral_code,
+//       BANK: ambassadorData.bank,
+//       BRANCH: ambassadorData.branch,
+//       TYPE_OF_ACCOUNT: ambassadorData.type_of_account,
+//       ACCOUNT_NUMBER: ambassadorData.account_number,
+//       BRANCH_CODE: ambassadorData.branch_code
+//     };
+//     apiInstance.createContact(createContact).then(function(data) {
+//       console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+//     }, function(error) {
+//       console.error(error);
+//     });
+//   } catch {
+//     console.log("Error in sending Brevo email:", error.message);
+//     return null;
+//   }
+// };
 
 
-const sendEmailCampaign = async function sendEmailCampaign(campaign_id) {
-  try {
-    let defaultClient = SibApiV3Sdk.ApiClient.instance;
-
-    let apiKey = defaultClient.authentications['api-key'];
-    apiKey.apiKey = process.env.BREVO_KEY;
-
-    let apiInstance = new SibApiV3Sdk.EmailCampaignsApi();
-
-    let campaignId = campaign_id;
-    
-    apiInstance.sendEmailCampaignNow(campaignId).then(function() {
-      console.log('API called successfully.');
-    }, function(error) {
-      console.error(error);
-    });
-
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-
-// const trackEvent = async function trackEvent() {
+// const deleteContactBrevo = async function deleteContactBrevo(email) {
 //   try {
 //     let defaultClient = SibApiV3Sdk.ApiClient.instance;
 
 //     let apiKey = defaultClient.authentications['api-key'];
 //     apiKey.apiKey = process.env.BREVO_KEY;
+//     let apiInstance = new SibApiV3Sdk.ContactsApi();
 
-//     let apiInstance = new SibApiV3Sdk.EventsApi();
-
-//     let trackEvent = new SibApiV3Sdk.Event();
-
-//     trackEvent.event = 'monthly_report'; 
-
-//     apiInstance.trackEvent(trackEvent).then(function(data) {
-//       console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+//     let identifier = email;
+//     apiInstance.deleteContact(identifier).then(function() {
+//       console.log('API called successfully.');
 //     }, function(error) {
 //       console.error(error);
 //     });
-
-//   } catch (error) {
-//     console.error(error);
+//   } catch {
+//     console.log("Error in sending Brevo email:", error.message);
+//     return null;
 //   }
 // };
+
+
+const createAndSendEmailCampaign = async function createAndSendEmailCampaign() {
+  try {
+    let defaultClient = SibApiV3Sdk.ApiClient.instance;
+    let apiKey = defaultClient.authentications['api-key'];
+    apiKey.apiKey = process.env.BREVO_KEY;
+    let apiInstance = new SibApiV3Sdk.EmailCampaignsApi();
+    let emailCampaigns = new SibApiV3Sdk.CreateEmailCampaign();
+
+    let scheduledTime = new Date();
+    scheduledTime.setMinutes(scheduledTime.getMinutes() + 5);
+    emailCampaigns = {
+      tag: 'Monthly Report',
+      sender: { name: 'High Vista Guild', email: 'guild@skilltechsa.co.za' },
+      name: 'Ambassador Monthly Report',
+      templateId: 21,
+      scheduledAt: scheduledTime.toISOString(),
+      subject: 'Ambassador Monthly Report',
+      replyTo: 'guild@skilltechsa.co.za',
+      toField: '{{contact.FIRSTNAME}} {{contact.LASTNAME}}',
+      recipients: { listIds: [7]},
+      inlineImageActivation: false,
+      mirrorActive: false,
+      recurring: false,
+      type: 'classic',
+    };
+    apiInstance.createEmailCampaign(emailCampaigns).then(function(data) {
+      console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+    }, function(error) {
+      console.error(error);
+    });
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 
 /*****************************************************************************************/
@@ -603,8 +606,6 @@ async function saveMembershipSubscription(param) {
         }else{
           console.log(" Payment is Cancelled")
         }
-        const receiverName = `${param.firstname} ${param.surname}`
-        sendEmailByBrevo(12, param.email, receiverName);
         return res;
       } else {
         return false;
@@ -617,7 +618,31 @@ async function saveMembershipSubscription(param) {
     console.log("Error", err);
     return false;
   }
-}
+};
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Send email to subscriber
+ *
+ * @param {param}
+ *
+ * @returns Object|null
+ */
+async function sendSubscriptionEmail(req) {
+  try {
+    const { name, email } = req.body;
+    console.log("sendSubscriptionEmail email", email);
+    console.log("sendSubscriptionEmail name", name);
+    const data = sendEmailByBrevo(12, email, name);
+
+    console.log("sendEmailByBrevo Ambassador", JSON.stringify(data));
+    return JSON.stringify(data);
+  } catch (err) {
+    console.log("Error:", err);
+    throw err;
+  }
+};
 /*****************************************************************************************/
 /*****************************************************************************************/
 
@@ -657,8 +682,6 @@ async function ambassador_subscription(param) {
   var whereCondition = { _id: param.uid };
   const test = User.findOne(whereCondition);
 
-  //console.log('test',test);
-  //console.log('param',param);
   if (await User.findOne(whereCondition)) {
     //console.log('inside');
     result = await User.updateMany({ _id: param.uid }, [
@@ -679,6 +702,7 @@ async function ambassador_subscription(param) {
           bank_proof: param.bank_proof,
           type_of_account: param.type_of_account,
           account_number: param.account_number,
+          contact_details: param.contact_details,
           ambassador_date: new Date(),
           //referredby: param.referredby,
           //referredby_firstname: param.referredby_firstname,
@@ -707,6 +731,15 @@ async function ambassador_subscription(param) {
       let res = await User.findById(param.uid).select(
         "-password -community -social_accounts -reset_password -image_url -phone"
       );
+      addContactInBrevo(res);
+      const receiverName = res.firstname + " " + res.surname
+      const variables = {
+        REFERRAL_CODE: res.referral_code
+      }
+      sendEmailByBrevo(24, res.email, receiverName, variables);
+      console.log('receiverName',receiverName);
+      console.log('res.referral_code',res.referral_code);
+      console.log('ambassador details:::::',res);
 
       if (res) {
         return res;
@@ -963,31 +996,32 @@ async function checkReferralCode(req) {
   try {
     const {code} = req.params; 
     const referralCode = code;
-    const { userId } = req.query;
+    const { userId, userName } = req.query;
     console.log("UserID", userId);
     console.log("referralCode", referralCode);
+    console.log("userName", userName);
 
     // Check if referral code is already used
     const existingReferral = await Referral.findOne({ referral_code: referralCode, userId: userId });
     if (existingReferral) {
-      return;
+      return; 
     }
 
      // Referral code not used, proceed with creation
     const countReferral = await User.find({ referral_code: referralCode }).count();
     console.log("countReferral", countReferral);
 
-    const qrCode = await User.find({ referral_code: referralCode }).select("qr_code");
-    console.log("qrCode", qrCode);
+    const ambassadorData = await User.find({ referral_code: referralCode }).select("email firstname surname qr_code");
+    console.log("ambassadorData", ambassadorData);
 
-    if (!qrCode || !qrCode[0].qr_code) {
+    if (!ambassadorData || !ambassadorData[0].qr_code) {
       throw new Error("QR code not found for the user");
     }
 
     const referralData = await Referral.create({
       referral_code: referralCode,
       userId: userId,
-      qr_code: qrCode[0].qr_code,
+      qr_code: ambassadorData[0].qr_code,
     });
 
     const newReferralData = await referralData.save();
@@ -997,6 +1031,21 @@ async function checkReferralCode(req) {
       countReferral: countReferral,
       referralData: newReferralData,
     }
+
+    //For Brevo Email to AMBASSADOR 
+    if(newReferralData){
+      const nameParts = userName.split(' ');
+      const firstname = nameParts[0];
+      const lastname = nameParts.slice(1).join(' ');
+
+      const variables = {
+        FIRSTNAME: firstname,
+        LASTNAME: lastname
+      }
+      const receiverName = ambassadorData[0].firstname + " " + ambassadorData[0].surname;
+      const receiverEmail = ambassadorData[0].email;
+      sendEmailByBrevo(25, receiverEmail, receiverName, variables);
+    };
 
     return data;
 
@@ -1278,14 +1327,32 @@ async function cancelPayfastPayment(req) {
 
   function generateTimestamp() {
     // For (YYYY-MM-DDTHH:MM:SS[+HH:MM]) format
+    // const now = new Date();
+    // const offset = -now.getTimezoneOffset();
+    // const sign = offset >= 0 ? '+' : '-';
+    // const hours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
+    // const minutes = String(Math.abs(offset) % 60).padStart(2, '0');
+    // const timezoneOffset = `${sign}${hours}:${minutes}`;
+    // const formattedTimestamp = now.toISOString().split('.')[0] + timezoneOffset;
+    // return formattedTimestamp;
+
+    // Format the date and time in ISO-8601 format
     const now = new Date();
     const offset = -now.getTimezoneOffset();
     const sign = offset >= 0 ? '+' : '-';
     const hours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
     const minutes = String(Math.abs(offset) % 60).padStart(2, '0');
     const timezoneOffset = `${sign}${hours}:${minutes}`;
-    const formattedTimestamp = now.toISOString().split('.')[0] + timezoneOffset;
-    return formattedTimestamp;
+  
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    const day = String(now.getDate()).padStart(2, '0');
+    const hour = String(now.getHours()).padStart(2, '0');
+    const minute = String(now.getMinutes()).padStart(2, '0');
+    const second = String(now.getSeconds()).padStart(2, '0');
+    const iso8601DateTime = `${year}-${month}-${day}T${hour}:${minute}:${second}${timezoneOffset}`;
+  
+    return iso8601DateTime;
 
     // For (YYYY-MM-DDTHH:MM:SS) format
     // let timestamp = new Date(new Date().toString().split("GMT")[0] + " UTC")
@@ -1474,17 +1541,29 @@ async function cancelCourseByUser(req) {
     );
     console.log("userBlocked successfully:", userBlocked);
 
-    //for Brevo email to the user on unsubscription
-    // const template_id = 14;
-    // const recieverEmailId = userBlocked.email;
-    // const dynamicData = {
-    //   "FIRSTNAME": userBlocked.firstname,
-    //   "LASTNAME": userBlocked.surname
-    // };
-    // sendDynamicEmailByBrevo(template_id, recieverEmailId, dynamicData);
-    const receiverName = `${userBlocked.firstname}  ${userBlocked.surname}`
-    console.log("receiverName", receiverName);
-    sendEmailByBrevo(14, userBlocked.email, receiverName);
+    //For Brevo email to SUBSCIBER, when user unsubscribe the subscription
+    const subscriberName = `${userBlocked.firstname} ${userBlocked.surname}`
+    console.log("subscriberName", subscriberName);
+    sendEmailByBrevo(14, userBlocked.email, subscriberName);
+    deleteContactBrevo(userBlocked.email);
+
+    //For Brevo email to AMBASSADOR, when user unsubscribe the subscription
+    if(userBlocked.role !== "ambassador"){
+      const existingReferral = await Referral.findOne({ userId: userId });
+      console.log("existingReferral", existingReferral);
+      if (existingReferral) {
+        const referralCode = existingReferral.referral_code;
+        const ambassadorData = await User.find({ referral_code: referralCode }).select("email firstname surname");
+        console.log("ambassadorData", ambassadorData);
+        const variables = {
+          FIRSTNAME: userBlocked.firstname,
+          LASTNAME: userBlocked.surname
+        }
+        const ambassadorName = ambassadorData[0].firstname + " " + ambassadorData[0].surname;
+        const receiverEmail = ambassadorData[0].email;
+        sendEmailByBrevo(38, receiverEmail, ambassadorName, variables);
+      }
+    }
 
     console.log("Course removed successfully:", removedCourse);
     return removedCourse;
@@ -1506,83 +1585,7 @@ async function cancelCourseByUser(req) {
 const subscriptionUuId = uuidv4();
 console.log("Subscription UuID:", subscriptionUuId);
 
-/*****************************************************************************************/
-/*****************************************************************************************/
-/**
- * Send email to ambassador
- *
- * @param {param}
- *
- * @returns Object|null
- */
-async function sendEmailToAmbassador(req) {
-  try {
-    const id = req.params.id;
-    const ambassadorData = await User.findById(id).select("firstname surname email referral_code");
-    console.log(ambassadorData);
-    if (!ambassadorData) {
-      throw new Error("Ambassador not found"); 
-    }
 
-    const adminData = await User.find({ role: "admin" }).select("firstname surname email");
-    console.log("adminData", adminData);
-    if (!adminData || adminData.length === 0) {
-      throw new Error("Admin email not found");
-    }
-
-    // QR code fuctionality
-    // const url = `https://affiliate.skilltechsa.online/ambessador/ambassador-subscription?url=${ambassadorData.referral_code}`;
-    // const qrCode = await QRCode.toDataURL(url);
-    // console.log(qrCode);
-    // const updatedUser = await User.findOneAndUpdate(
-    //   { _id: id },
-    //   { $set: { qr_code: qrCode } },
-    //   { new: true }
-    // );
-
-    //Email to Ambassador by Nodemailer
-    // const adminEmail = adminData[0].email;
-    // const adminName = adminData[0].firstname + ' ' + adminData[0].surname;
-    // let info = await transporter.sendMail({
-    //   from: `${adminName} ${adminEmail}`, // Sender address
-    //   to: ambassadorData.email, // Recipient address
-    //   subject: `Congratulation ${adminData.firstname} as Ambassador! `, // Subject line
-    //   text: `
-    //   Hello ${ambassadorData.firstname}, 
-      
-    //   Congratulations! 
-
-    //   Begin new experience as an Ambasssador.
-      
-    //   Referral Code: <span style="font-weight: bold; color: blue">${ambassadorData.referral_code}</span>
-      
-    //   Get your QR code below:`,
-    //   attachments: [
-    //     {
-    //         filename: 'qrcode.png',
-    //         content: qrCode.split(';base64,').pop(),
-    //         encoding: 'base64'
-    //     }
-    // ]
-    // });
-
-    //Email to Ambassador by Brevo
-    const receiverEmailId = ambassadorData.email;
-    const receiverName = ambassadorData.firstname + " " + ambassadorData.surname;
-    const variables = {
-      referral_code: ambassadorData.referral_code
-    }
-    console.log("sendEmailByBrevo ambassador_fullname", receiverName);
-    console.log("sendEmailByBrevo variables", variables);
-    const data = sendEmailByBrevo(24, receiverEmailId, receiverName, variables);
-
-    console.log("sendEmailByBrevo Ambassador", JSON.stringify(data));
-    return JSON.stringify(data);
-  } catch (err) {
-    console.log("Error:", err);
-    throw err;
-  }
-};
 /*****************************************************************************************/
 /*****************************************************************************************/
 /**

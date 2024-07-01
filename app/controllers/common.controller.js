@@ -85,7 +85,7 @@ router.get("/get-user-courses/:id", getUserCourses);
 router.post("/save-query", saveQuery);
 router.put("/cancel-course/:id", cancelCourseByUser);  
 router.post("/cancel-payfast-payment", cancelPayfastPayment);  
-router.get("/send-email-ambassador/:id", sendEmailToAmbassador); 
+router.post("/send-email-subscriber/:id", sendSubscriptionEmail); 
 router.post("/notify/:id", payFastNotify);
 router.post("/getSubscriptionId",getSubscriptionId);
 
@@ -492,9 +492,9 @@ function cancelPayfastPayment(req, res, next) {
  *
  * @return JSON|null
  */
-function sendEmailToAmbassador(req, res, next) {
+function sendSubscriptionEmail(req, res, next) {
   commonService
-    .sendEmailToAmbassador(req)
+    .sendSubscriptionEmail(req)
     .then((removedCourse) =>
       removedCourse
         ? res.status(200).json({ status: true, data: removedCourse })

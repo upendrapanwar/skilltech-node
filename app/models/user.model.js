@@ -105,6 +105,7 @@ const schema = new Schema({
     ambassador_date:{type:Date, required:false, default:null},
     moodle_pass:{type:String, required:false, default:''},
     moodle_login_id:{type:String, required:false, default:''},
+    contact_details: { type: String, required: false, default: '' },
 },{
     timestamps: true
 });

@@ -1001,20 +1001,38 @@ async function getPaymentDueToAmbassador(param) {
  */
 async function getBulkPaymentReport(param) {
     try {
-        const ambassadors = await Referral.find();
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        const startDate = new Date(Date.UTC(currentYear, currentMonth - 1, 1));
+        const endDate = new Date(Date.UTC(currentYear, currentMonth, 0, 23, 59, 59));
+        let query = { 
+            purchagedcourseId: { $ne: null },
+            updatedAt: { $gte: startDate, $lte: endDate }
+        };
+        console.log("query", query);
+        const ambassadors = await Referral.find(query);
         console.log("ambassadors", ambassadors);
         const referralsSet = new Set(ambassadors.map(referral => referral.referral_code));
         const referrals = Array.from(referralsSet);
         console.log("referrals", referrals);
-        const ambassadorData = await User.find()
-          .select('firstname surname email referral_code account_holder_name account_number type_of_account branch_code')
-          .exec();
-          console.log("ambassadorData", ambassadorData);
+
+        const ambassadorData = [];
+        for (let i = 0; i < referrals.length; i++) {
+            const ambassadorDetails = await User.findOne({ referral_code: referrals[i] })
+                .select('firstname surname email referral_code account_holder_name account_number type_of_account branch_code')
+                .exec();
+            if (ambassadorDetails) {
+                ambassadorData.push(ambassadorDetails);
+            }
+        }
+        console.log("ambassadorData", ambassadorData); 
+
+        
         const result = ambassadorData.reduce((acc, data) => {
             const referralCount = ambassadors.filter(referral => referral.referral_code === data.referral_code).length;
-            const amountDue = referralCount * 5000;
+            const amountDue = referralCount * 5;
             acc.push({
-                // recipient_name: account_holder_name || 'N/A',
                 recipient_name: `${data.firstname} ${data.surname}`,
                 recipient_account: data.account_number || 'N/A',
                 recipient_acount_type: data.type_of_account || 'N/A',
