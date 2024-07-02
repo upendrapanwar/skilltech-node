@@ -354,138 +354,130 @@ async function subscription(param) {
  *
  * @returns Object|null
  */
-// const sendEmailByBrevo = async function sendEmailByBrevo(template_id, receiverEmailId, receiverName, variables) {
-//   try {
-//     console.log('template_id', template_id);
-//     console.log('receiverEmailId', receiverEmailId);
-//     console.log('receiverName', receiverName);
-//     console.log('variables', variables);
+const sendEmailByBrevo = async function sendEmailByBrevo(template_id, receiverEmailId, receiverName, variables) {
+  try {
+    console.log('template_id', template_id);
+    console.log('receiverEmailId', receiverEmailId);
+    console.log('receiverName', receiverName);
+    console.log('variables', variables);
 
-//     let defaultClient = SibApiV3Sdk.ApiClient.instance;
-//     let apiKey = defaultClient.authentications['api-key'];
-//     apiKey.apiKey = process.env.BREVO_KEY;
+    let defaultClient = SibApiV3Sdk.ApiClient.instance;
+    let apiKey = defaultClient.authentications['api-key'];
+    apiKey.apiKey = process.env.BREVO_KEY;
 
-//     let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+    let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
-//     let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail(); 
+    let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail(); 
 
-//     if(variables){
-//       sendSmtpEmail = {
-//         to: [{
-//           email: receiverEmailId,
-//           name: receiverName
-//         }],
-//         templateId: template_id,
-//         params: variables,
-//         sender: {
-//           email: 'guild@skilltechsa.co.za',
-//           name: 'High Vista Guild'
-//         }
-//       };
-//     } else {
-//       sendSmtpEmail = {
-//         to: [{
-//           email: receiverEmailId,
-//           name: receiverName
-//         }],
-//         templateId: template_id,
-//         sender: {
-//           email: 'guild@skilltechsa.co.za',
-//           name: 'High Vista Guild'
-//         }
-//       };
-//     }
+    if(variables){
+      sendSmtpEmail = {
+        to: [{
+          email: receiverEmailId,
+          name: receiverName
+        }],
+        templateId: template_id,
+        params: variables,
+        sender: {
+          email: 'guild@skilltechsa.co.za',
+          name: 'High Vista Guild'
+        }
+      };
+    } else {
+      sendSmtpEmail = {
+        to: [{
+          email: receiverEmailId,
+          name: receiverName
+        }],
+        templateId: template_id,
+        sender: {
+          email: 'guild@skilltechsa.co.za',
+          name: 'High Vista Guild'
+        }
+      };
+    }
 
-//     const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
-//     console.log('API called successfully. Returned data: ' + JSON.stringify(data));
-//     return data;
+    const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+    return data;
 
-//   } catch (error) {
-//     console.log("Error in sending Brevo email:", error.message);
-//     return null;
-//   }
-// }
-
-
-// Schedule the function to run on every 1 minute
-// cron.schedule('*/1 * * * *', () => {
-//   const templateId = 21;
-//   const receiverEmailId = 'Lize@skilltechsa.co.za';
-//   const receiverName  = 'Lize';
-//   sendEmailByBrevo(templateId, receiverEmailId, receiverName);
-// });
-
+  } catch (error) {
+    console.log("Error in sending Brevo email:", error.message);
+    return null;
+  }
+}
 
 // Schedule the function to run on the 1st of every month at 1 am
-// cron.schedule('0 1 1 * *', () => {
-//   const templateId = 16;
-//   const receiverEmailId = 'lize@skilltechsa.co.za';
-//   const receiverName  = 'Lize';
-//   sendEmailByBrevo(templateId, receiverEmailId, receiverName);
-//   createAndSendEmailCampaign();
-// });
+cron.schedule('0 1 1 * *', () => {
+  const templateId = 16;
+  const receiverEmailId = 'lize@skilltechsa.co.za';
+  const receiverName  = 'Lize';
+  sendEmailByBrevo(templateId, receiverEmailId, receiverName);
+  createAndSendEmailCampaign();
+});
 
 
 // cron.schedule('*/1 * * * *', () => {
-//   const variables = {
-//     REFERRAL_CODE: "HG246"
-//   }
-//   sendEmailByBrevo(24, "userdev174@gmail.com", "User Dev", variables);
+//   const templateId = 16;
+//   const receiverEmailId = 'eynoashish@gmail.com';
+//   const receiverName  = 'Ashish';
+//   sendEmailByBrevo(templateId, receiverEmailId, receiverName);
+//   createAndSendEmailCampaign();
 //   console.log('Successfully triggered');
 //   });
   
-  //For adding contacts in the list in Brevo
-// const addContactInBrevo = async function addContactInBrevo(ambassadorData) {
-//   try {
-//     let defaultClient = SibApiV3Sdk.ApiClient.instance;
-//     let apiKey = defaultClient.authentications['api-key'];
-//     apiKey.apiKey = process.env.BREVO_KEY;
-//     let apiInstance = new SibApiV3Sdk.ContactsApi();
 
-//     let createContact = new SibApiV3Sdk.CreateContact();
-//     createContact.email = ambassadorData.email;
-//     createContact.listIds = [7];
-//     createContact.attributes = {
-//       FIRSTNAME: ambassadorData.firstname,
-//       LASTNAME: ambassadorData.surname,
-//       REFERRAL_CODE: ambassadorData.referral_code,
-//       BANK: ambassadorData.bank,
-//       BRANCH: ambassadorData.branch,
-//       TYPE_OF_ACCOUNT: ambassadorData.type_of_account,
-//       ACCOUNT_NUMBER: ambassadorData.account_number,
-//       BRANCH_CODE: ambassadorData.branch_code
-//     };
-//     apiInstance.createContact(createContact).then(function(data) {
-//       console.log('API called successfully. Returned data: ' + JSON.stringify(data));
-//     }, function(error) {
-//       console.error(error);
-//     });
-//   } catch {
-//     console.log("Error in sending Brevo email:", error.message);
-//     return null;
-//   }
-// };
+//For adding contacts in the list in Brevo
+const addContactInBrevo = async function addContactInBrevo(ambassadorData) {
+  try {
+    let defaultClient = SibApiV3Sdk.ApiClient.instance;
+    let apiKey = defaultClient.authentications['api-key'];
+    apiKey.apiKey = process.env.BREVO_KEY;
+    let apiInstance = new SibApiV3Sdk.ContactsApi();
+
+    let createContact = new SibApiV3Sdk.CreateContact();
+    createContact.email = ambassadorData.email;
+    createContact.listIds = [7];
+    createContact.attributes = {
+      FIRSTNAME: ambassadorData.firstname,
+      LASTNAME: ambassadorData.surname,
+      REFERRAL_CODE: ambassadorData.referral_code,
+      BANK: ambassadorData.bank,
+      BRANCH: ambassadorData.branch,
+      TYPE_OF_ACCOUNT: ambassadorData.type_of_account,
+      ACCOUNT_NUMBER: ambassadorData.account_number,
+      BRANCH_CODE: ambassadorData.branch_code
+    };
+    apiInstance.createContact(createContact).then(function(data) {
+      console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+    }, function(error) {
+      console.error(error);
+    });
+  } catch {
+    console.log("Error in sending Brevo email:", error.message);
+    return null;
+  }
+};
 
 
-// const deleteContactBrevo = async function deleteContactBrevo(email) {
-//   try {
-//     let defaultClient = SibApiV3Sdk.ApiClient.instance;
+const deleteContactBrevo = async function deleteContactBrevo(email) {
+  try {
+    let defaultClient = SibApiV3Sdk.ApiClient.instance;
 
-//     let apiKey = defaultClient.authentications['api-key'];
-//     apiKey.apiKey = process.env.BREVO_KEY;
-//     let apiInstance = new SibApiV3Sdk.ContactsApi();
+    let apiKey = defaultClient.authentications['api-key'];
+    apiKey.apiKey = process.env.BREVO_KEY;
+    let apiInstance = new SibApiV3Sdk.ContactsApi();
 
-//     let identifier = email;
-//     apiInstance.deleteContact(identifier).then(function() {
-//       console.log('API called successfully.');
-//     }, function(error) {
-//       console.error(error);
-//     });
-//   } catch {
-//     console.log("Error in sending Brevo email:", error.message);
-//     return null;
-//   }
-// };
+    let identifier = email;
+    apiInstance.deleteContact(identifier).then(function() {
+      console.log('API called successfully.');
+    }, function(error) {
+      console.error(error);
+    });
+  } catch {
+    console.log("Error in sending Brevo email:", error.message);
+    return null;
+  }
+};
 
 
 const createAndSendEmailCampaign = async function createAndSendEmailCampaign() {
@@ -683,19 +675,10 @@ async function ambassador_subscription(param) {
   const test = User.findOne(whereCondition);
 
   if (await User.findOne(whereCondition)) {
-    //console.log('inside');
     result = await User.updateMany({ _id: param.uid }, [
       {
         $set: {
-          //firstname: param.firstname,
-          //surname: param.surname,
-          //id_number: param.id_number,
-          //subscriber_email: param.email,
-          //mobile_number: param.mobile_number,
-          //alternate_mobile_number: param.alternate_mobile_number,
-          //account_holder_title: param.account_holder_title,
           account_holder_name: param.account_holder_name,
-          //account_holder_surname: param.account_holder_surname,
           bank: param.bank,
           branch: param.branch,
           branch_code: param.branch_code,
@@ -704,23 +687,11 @@ async function ambassador_subscription(param) {
           account_number: param.account_number,
           contact_details: param.contact_details,
           ambassador_date: new Date(),
-          //referredby: param.referredby,
-          //referredby_firstname: param.referredby_firstname,
-          //referredby_surname: param.referredby_surname,
           referral_code: param.referral_code,
-          //referredby_email: param.referredby_email,
-          //referredby_mobile_number: param.referredby_mobile_number,
           refer_friend: param.refer_friend,
           certificate: param.certificate,
           confirm_details: param.confirm_details,
-          //terms_n_condition:param.terms_n_condition,
           update_information: param.update_information,
-          //center_to_assist: param.center_to_assist,
-          //pop: param.pop,
-          //authname: param.firstname +' '+param.surname,
-          //signature: param.signature,
-          // signed_place: param.signed_place,
-          // signed_on: param.signed_on,
           role: "ambassador",
         },
       },
