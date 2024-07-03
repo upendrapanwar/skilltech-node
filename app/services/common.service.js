@@ -982,8 +982,17 @@ async function checkReferralCode(req) {
     const countReferral = await User.find({ referral_code: referralCode }).count();
     console.log("countReferral", countReferral);
 
-    const ambassadorData = await User.find({ referral_code: referralCode }).select("email firstname surname qr_code");
+    let query = { 
+      referral_code: referralCode,
+      is_active: true,
+    };
+    const ambassadorData = await User.find(query).select("email firstname surname qr_code");
     console.log("ambassadorData", ambassadorData);
+
+     // Check if ambassadorData is an empty array
+    if (!ambassadorData.length) {
+      return ;
+    }
 
     if (!ambassadorData || !ambassadorData[0].qr_code) {
       throw new Error("QR code not found for the user");

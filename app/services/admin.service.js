@@ -1021,7 +1021,11 @@ async function getBulkPaymentReport(param) {
 
         const ambassadorData = [];
         for (let i = 0; i < referrals.length; i++) {
-            const ambassadorDetails = await User.findOne({ referral_code: referrals[i] })
+            let queryUser = { 
+                referral_code: referrals[i],
+                is_active: true,
+              };
+            const ambassadorDetails = await User.findOne(queryUser)
                 .select('firstname surname email referral_code account_holder_name account_number type_of_account branch_code')
                 .exec();
             if (ambassadorDetails) {
