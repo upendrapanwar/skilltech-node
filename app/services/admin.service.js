@@ -1004,8 +1004,9 @@ async function getBulkPaymentReport(param) {
         const now = new Date();
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
-        const startDate = new Date(Date.UTC(currentYear, currentMonth - 1, 1));
+        // const startDate = new Date(Date.UTC(currentYear, currentMonth - 1, 1));
         // const endDate = new Date(Date.UTC(currentYear, currentMonth, 0, 23, 59, 59));
+        const startDate = new Date(Date.UTC(2024, 6, 1, 0, 0, 1)); // July 1, 2024
         const endDate = new Date(Date.UTC(2024, 6, 2, 23, 59, 59)); // July 2, 2024
         let query = { 
             purchagedcourseId: { $ne: null },
