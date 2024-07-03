@@ -484,7 +484,7 @@ function cancelPayfastPayment(req, res, next) {
 /*****************************************************************************************/
 /*****************************************************************************************/
 /**
- * Function to send email to ambassador
+ * Function to send email to subscriber
 *
  * @param {*} req
  * @param {*} res
@@ -504,7 +504,8 @@ function sendSubscriptionEmail(req, res, next) {
     )
     .catch((err) => next(res.json({ status: false, message: err })));
   }
-
+/*****************************************************************************************/
+/*****************************************************************************************/
 /**
  * Function to get response from payfast notify url
  *

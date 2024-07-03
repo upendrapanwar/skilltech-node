@@ -1005,10 +1005,11 @@ async function getBulkPaymentReport(param) {
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
         const startDate = new Date(Date.UTC(currentYear, currentMonth - 1, 1));
-        const endDate = new Date(Date.UTC(currentYear, currentMonth, 0, 23, 59, 59));
+        // const endDate = new Date(Date.UTC(currentYear, currentMonth, 0, 23, 59, 59));
+        const endDate = new Date(Date.UTC(2024, 6, 2, 23, 59, 59)); // July 2, 2024
         let query = { 
             purchagedcourseId: { $ne: null },
-            updatedAt: { $gte: startDate, $lte: endDate }
+            createdAt: { $gte: startDate, $lte: endDate }
         };
         console.log("query", query);
         const ambassadors = await Referral.find(query);
