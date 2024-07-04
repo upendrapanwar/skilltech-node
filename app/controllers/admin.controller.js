@@ -39,7 +39,7 @@ router.get('/active-referral-per-ambassador/:start_date/:end_date', getActiveRef
 router.get('/inactive-referral-per-ambassador/:start_date/:end_date', getInactiveReferralAmbassador);
 router.get('/payment-due-to-ambassador/:start_date/:end_date', getPaymentDueToAmbassador);
 
-router.get('/bulk-payment-report', getBulkPaymentReport);
+router.get('/bulk-payment-report/:start_date/:end_date', getBulkPaymentReport);
 
 module.exports = router;
 
@@ -431,7 +431,7 @@ function getPaymentDueToAmbassador(req, res, next) {
  * 
  */
 function getBulkPaymentReport(req, res, next) {
-    adminService.getBulkPaymentReport(req)
+    adminService.getBulkPaymentReport(req.params)
         .then(inactiveReferral => inactiveReferral ? res.status(200).json({ status: true, data: inactiveReferral }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
         .catch(err => next(res.json({ status: false, message: err })));
 

@@ -731,6 +731,11 @@ async function getAllActiveReferralAmbassador(param) {
             }
         },
         {
+            $match: {
+                "ambassador.is_active": true
+            }
+        },
+        {
             $project: {
                 _id: 0,
                 Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
@@ -778,6 +783,11 @@ async function getActiveReferralAmbassador(param) {
                 localField: "referral_code",
                 foreignField: "referral_code",
                 as: "ambassador"
+            }
+        },
+        {
+            $match: {
+                "ambassador.is_active": true
             }
         },
         {
@@ -833,6 +843,11 @@ async function getAllInactiveReferralAmbassador(param) {
             }
         },
         {
+            $match: {
+                "ambassador.is_active": false
+            }
+        },
+        {
             $project: {
                 _id: 0,
                 Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
@@ -881,6 +896,11 @@ async function getInactiveReferralAmbassador(param) {
                 localField: "referral_code",
                 foreignField: "referral_code",
                 as: "ambassador"
+            }
+        },
+        {
+            $match: {
+                "ambassador.is_active": false
             }
         },
         {
@@ -966,8 +986,10 @@ async function getPaymentDueToAmbassador(param) {
         const referralsSet = new Set(ambassadors.map(referral => referral.referral_code));
         const referrals = Array.from(referralsSet);
         console.log("referrals", referrals);
+        
         const ambassadorData = await User.find({
             referral_code: { $in: referrals },
+            is_active: true
           })
           .select('firstname surname referral_code')
           .exec();
@@ -1001,6 +1023,7 @@ async function getPaymentDueToAmbassador(param) {
  */
 async function getBulkPaymentReport(param) {
     try {
+        console.log("getBulkPaymentReport - param: ", param)
         const now = new Date();
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
@@ -1010,8 +1033,14 @@ async function getBulkPaymentReport(param) {
         const endDate = new Date(Date.UTC(2024, 6, 2, 23, 59, 59)); // July 2, 2024
         let query = { 
             purchagedcourseId: { $ne: null },
-            createdAt: { $gte: startDate, $lte: endDate }
+            // createdAt: { $gte: startDate, $lte: endDate }
         };
+        if (param && param.start_date && param.end_date) {
+            query.createdAt = {
+                $gte: new Date(param.start_date),
+                $lte: new Date(param.end_date)
+            };
+        }
         console.log("query", query);
         const ambassadors = await Referral.find(query);
         console.log("ambassadors", ambassadors);
