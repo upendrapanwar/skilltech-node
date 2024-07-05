@@ -3,10 +3,13 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const msg = require("../helpers/messages.json");
 const { User } = require('../helpers/db');
+const fs = require('fs');
+const path = require('path');
 
 module.exports = {
     create,
     updateProfileDetails,
+    updateAmbassadorProfileDetails,
     getProfileDetails,
     checkSouthAfricanId,
     saveMoodleLoginId,
@@ -54,7 +57,7 @@ async function create(param) {
 /*****************************************************************************************/
 
 /**
- * Manages user for update profile data
+ * For update profile data of Subscriber
  *  
  * @param {param}
  * 
@@ -102,6 +105,86 @@ async function updateProfileDetails(param, data) {
         return false;
     }
 }
+/*****************************************************************************************/
+/*****************************************************************************************/
+
+/**
+ * For update profile data of Ambassador
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+async function updateAmbassadorProfileDetails(param, data) {
+    console.log("param", param);
+    console.log("updateAmbassadorProfileDetails data:", data);
+
+    try {
+        const whereCondition = { _id: param.id };
+        let userData = await User.findById(whereCondition).select("bank_proof certificate");
+
+        //Add certificate and bank proof file in server
+        const res = data.certificate;
+        const base64Data = res.replace(/^data:([A-Za-z-+/]+);base64,/, "");
+        let certificateName =
+            "CER-" + Math.floor(Math.random() * 1000000) + "-" + Date.now() + ".pdf";
+        let certificatePath = path.join(
+            __dirname,
+            "../../uploads/certificate/" + certificateName
+        );
+        fs.writeFileSync(certificatePath, base64Data, { encoding: "base64" });
+        data.certificate = "uploads/certificate/" + certificateName;
+    
+        const res_bankproof = data.bank_proof;
+        const base64DataBankProof = res_bankproof.replace(
+            /^data:([A-Za-z-+/]+);base64,/,
+            ""
+        );
+        let bankProofName =
+            "CER-" + Math.floor(Math.random() * 1000000) + "-" + Date.now() + ".pdf";
+        let bankProofPath = path.join(
+            __dirname,
+            "../../uploads/bank_proof/" + bankProofName
+        );
+        fs.writeFileSync(bankProofPath, base64DataBankProof, { encoding: "base64" });
+        data.bank_proof = "uploads/bank_proof/" + bankProofName;
+
+        // Delete the existing certificate and bank proof file
+        if (userData.certificate && fs.existsSync(path.join(__dirname, "../../", userData.certificate))) {
+            fs.unlinkSync(path.join(__dirname, "../../", userData.certificate));
+        }
+        if (userData.bank_proof && fs.existsSync(path.join(__dirname, "../../", userData.bank_proof))) {
+            fs.unlinkSync(path.join(__dirname, "../../", userData.bank_proof));
+        }
+    
+        const updatedData = await User.findOneAndUpdate(
+            whereCondition,
+            {
+                $set: {
+                    bank: data.bank,
+                    branch: data.branch,
+                    branch_code: data.branch_code,
+                    account_number: data.account_number,
+                    account_holder_name: data.account_holder_name,
+                    type_of_account : data.type_of_account,
+                    contact_details: data.contact_details,
+                    bank_proof: data.bank_proof,
+                    certificate: data.certificate,
+                }
+            },
+            { new: true }
+        );
+
+        if (updatedData) {
+            return updatedData;
+        } else {
+            return false;
+        }
+    } catch (err) {
+        console.error("Error updating profile details:", err);
+        return false;
+    }
+}
 
 
 
@@ -120,7 +203,7 @@ async function getProfileDetails(param) {
     try {
         console.log("param", param);
         const whereCondition = { _id: param.id };
-        const profileData = await User.find(whereCondition).select("firstname surname id_number email mobile_number alternate_mobile_number street street_name complex_n_unit suburb_district town_city province postal_code method_of_communication policy_consent opt_in_promotional race gender qualification privacy ecommercePolicy deals_promotion in_loop how_did_you_hear_about_us opt_in_promotional moodle_pass moodle_login_id account_holder_name bank branch branch_code type_of_account account_number contact_details bank_proof certificate confirm_details update_information referral_code");
+        const profileData = await User.find(whereCondition).select("firstname surname id_number email mobile_number alternate_mobile_number street street_name complex_n_unit suburb_district town_city province postal_code method_of_communication policy_consent opt_in_promotional race gender qualification privacy ecommercePolicy deals_promotion in_loop how_did_you_hear_about_us opt_in_promotional moodle_pass moodle_login_id account_holder_name bank branch branch_code type_of_account account_number contact_details bank_proof certificate confirm_details update_information referral_code contact_details");
         
         if (profileData && profileData.length > 0) {
             console.log("profileData",profileData);
@@ -133,6 +216,8 @@ async function getProfileDetails(param) {
         return null;
     }
 }
+
+
 async function checkSouthAfricanId(req) {
     try {
         const southAfricanId = req.params.id; 

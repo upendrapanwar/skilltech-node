@@ -10,6 +10,7 @@ const multer = require('multer');
 
 router.post('/signup', registerValidation, register);
 router.put('/update-profile-details/:id', updateProfileDetails);
+router.put('/update-ambassador-profile-details/:id', updateAmbassadorProfileDetails);
 router.get('/get-profile-details/:id', getProfileDetails);
 router.get('/check-southafrican-id/:id', checkSouthAfricanId);
 router.post('/save-moodle-id/:id', saveMoodleLoginId);
@@ -36,7 +37,7 @@ function register(req, res, next) {
 /*****************************************************************************************/
 
 /**
- * Function update profile details the user
+ * Function update profile details the Subscriber
  * 
  * @param {*} req 
  * @param {*} res 
@@ -46,6 +47,23 @@ function register(req, res, next) {
  */
 function updateProfileDetails(req, res, next) {
     userService.updateProfileDetails(req.params, req.body)
+    .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
+    .catch(err => next(res.json({ status: false, message: err })));
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+
+/**
+ * Function update profile details the Ambassador
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * 
+ * @return JSON|null
+ */
+function updateAmbassadorProfileDetails(req, res, next) {
+    userService.updateAmbassadorProfileDetails(req.params, req.body)
     .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
     .catch(err => next(res.json({ status: false, message: err })));
 }

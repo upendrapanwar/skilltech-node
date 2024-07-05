@@ -15,6 +15,7 @@ function jwt() {
             '/common/signin',
             '/common/subscription',
             '/common/notify',
+
             //user
             '/user/login',
             '/user/social-login',
@@ -22,6 +23,7 @@ function jwt() {
             
             '/user/forgot-password',
             '/user/reset-password',
+
         ]
     })
 }

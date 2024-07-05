@@ -214,13 +214,20 @@ async function getAllActiveSubcribedAmbassadors(param) {
                 if (!user) {
                     return null; // Skip this entry if userId is null
                 }
+                const formatDate = (dateString) => {
+                    const date = new Date(dateString);
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const year = date.getFullYear();
+                    return `${day}-${month}-${year}`;
+                };
                 return {
                     Ambassador_firstname: user.firstname,
                     Ambassador_lastname: user.surname,
                     referral_code: user.referral_code,
-                    ambassador_date: user.ambassador_date,
+                    ambassador_date: formatDate(user.ambassador_date),
                     subscription_status: data.is_active ? 'Active' : 'Inactive',
-                    subscription_date: data.createdAt
+                    subscription_date: formatDate(data.createdAt)
                 };
             }).filter(entry => entry !== null);
             return result;
@@ -271,12 +278,19 @@ async function getAllActiveSubscriptionSubscriber(param) {
                 const user = data.userId;
                 if (!user) {
                     return null;
-                }
+                };
+                const formatDate = (dateString) => {
+                    const date = new Date(dateString);
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const year = date.getFullYear();
+                    return `${day}-${month}-${year}`;
+                };
                 return {
                     Subscriber_firstname: user.firstname,
                     Subscriber_lastname: user.surname,
                     subscription_status: data.is_active ? 'Active' : 'Inactive',
-                    subscription_date: data.createdAt
+                    subscription_date: formatDate(data.createdAt)
                 };
             }).filter(entry => entry !== null);
             return result;
@@ -473,9 +487,19 @@ async function getSubscriptionCancelledByAmbassador(param) {
         ];
 
         const cancellationRecords = await Purchasedcourses.aggregate(pipeline);
-
+        const formatDate = (dateString) => {
+            const date = new Date(dateString);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+        };
+        const formattedRecords = cancellationRecords.map(record => ({
+            ...record,
+            cancellation_date: formatDate(record.cancellation_date)
+        }));
         console.log("getSubscriptionCancelledBySubscriber.......", cancellationRecords);
-        return cancellationRecords;
+        return formattedRecords;
     } catch (error) {
         console.error("Error in getSubscriptionCancelledBySubscriber:", error);
         throw error; // Rethrow the error to be caught by the caller
@@ -573,9 +597,19 @@ async function getSubscriptionCancelledBySubscriber(param) {
         ];
 
         const cancellationRecords = await Purchasedcourses.aggregate(pipeline);
-
+        const formatDate = (dateString) => {
+            const date = new Date(dateString);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+        };
+        const formattedRecords = cancellationRecords.map(record => ({
+            ...record,
+            cancellation_date: formatDate(record.cancellation_date)
+        }));
         console.log("getSubscriptionCancelledBySubscriber.......", cancellationRecords);
-        return cancellationRecords;
+        return formattedRecords;
     } catch (error) {
         console.error("Error in getSubscriptionCancelledBySubscriber:", error);
         throw error; // Rethrow the error to be caught by the caller
@@ -634,7 +668,19 @@ async function getAllActiveAndInactiveReferralPerAmbassador(param) {
         { $sort: { "createdAt": 1 } }
     ]).exec();
 
-    return referralData;
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
+    const formattedData = referralData.map(data => ({
+        ...data,
+        Date_of_use_of_referral_code: formatDate(data.Date_of_use_of_referral_code)
+    }));
+
+    return formattedData;
 }
 /**
  * Function get Active and inactive referralsPer Ambassador – Year To Date (YTD) by date selection
@@ -691,7 +737,19 @@ async function getActiveAndInactiveReferralPerAmbassador(param) {
         { $sort: { "createdAt": 1 } }
     ]).exec();
 
-    return referralData;
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
+    const formattedData = referralData.map(data => ({
+        ...data,
+        Date_of_use_of_referral_code: formatDate(data.Date_of_use_of_referral_code)
+    }));
+
+    return formattedData;
 }
 
 
@@ -749,7 +807,19 @@ async function getAllActiveReferralAmbassador(param) {
         { $sort: { "createdAt": 1 } }
     ]).exec();
 
-    return referralData;
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
+    const formattedData = referralData.map(data => ({
+        ...data,
+        Date_of_use_of_referral_code: formatDate(data.Date_of_use_of_referral_code)
+    }));
+
+    return formattedData;
 }
 /**
  * Function get Active Referrals per Ambassador by date selection
@@ -804,7 +874,19 @@ async function getActiveReferralAmbassador(param) {
         { $sort: { "createdAt": 1 } }
     ]).exec();
 
-    return referralData;
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
+    const formattedData = referralData.map(data => ({
+        ...data,
+        Date_of_use_of_referral_code: formatDate(data.Date_of_use_of_referral_code)
+    }));
+
+    return formattedData;
 }
 
 /**
@@ -861,7 +943,19 @@ async function getAllInactiveReferralAmbassador(param) {
         { $sort: { "createdAt": 1 } }
     ]).exec();
 
-    return referralData;
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
+    const formattedData = referralData.map(data => ({
+        ...data,
+        Date_of_use_of_referral_code: formatDate(data.Date_of_use_of_referral_code)
+    }));
+
+    return formattedData;
 
 }
 /**
@@ -917,7 +1011,19 @@ async function getInactiveReferralAmbassador(param) {
         { $sort: { "createdAt": 1 } }
     ]).exec();
 
-    return referralData;
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
+    const formattedData = referralData.map(data => ({
+        ...data,
+        Date_of_use_of_referral_code: formatDate(data.Date_of_use_of_referral_code)
+    }));
+
+    return formattedData;
 
 }
 /**
