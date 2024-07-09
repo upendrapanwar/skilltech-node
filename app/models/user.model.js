@@ -24,6 +24,18 @@ const schema = new Schema({
     branch_code: { type: String, required: false, default: '' },
     type_of_account: { type: String, required: false, default: '' },
     account_number: { type: String, required: false, default: '' },
+    bank_contact_details: {
+        email: { type: String, required: false, default: '' },
+        mobile_number: { type: String, required: false, default: '' },
+        alternate_mobile_number: { type: String, required: false, default: '' },
+        street: { type: String, required: false, default: '' },
+        street_name: { type: String, required: false, default: '' },
+        complex_n_unit: { type: String, required: false, default: '' },
+        suburb_district: { type: String, required: false, default: '' },
+        town_city: { type: String, required: false, default: '' },
+        province: { type: String, required: false, default: '' },
+        postal_code: { type: String, required: false, default: '' },
+    },
     method_of_communication:{
         email: { type: String, required: false, default: "" },
         whatsapp: { type: String, required: false, default: "" },
@@ -105,7 +117,6 @@ const schema = new Schema({
     ambassador_date:{type:Date, required:false, default:null},
     moodle_pass:{type:String, required:false, default:''},
     moodle_login_id:{type:String, required:false, default:''},
-    contact_details: { type: String, required: false, default: '' },
 },{
     timestamps: true
 });

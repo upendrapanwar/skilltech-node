@@ -157,6 +157,7 @@ async function updateAmbassadorProfileDetails(param, data) {
             fs.unlinkSync(path.join(__dirname, "../../", userData.bank_proof));
         }
     
+        //Upadate data in database
         const updatedData = await User.findOneAndUpdate(
             whereCondition,
             {
@@ -167,7 +168,18 @@ async function updateAmbassadorProfileDetails(param, data) {
                     account_number: data.account_number,
                     account_holder_name: data.account_holder_name,
                     type_of_account : data.type_of_account,
-                    contact_details: data.contact_details,
+                    bank_contact_details: {
+                        email: data.contact_details.email,
+                        mobile_number: data.contact_details.mobile_number,
+                        alternate_mobile_number: data.contact_details.alternate_mobile_number,
+                        street: data.contact_details.street,
+                        street_name: data.contact_details.street_name,
+                        complex_n_unit: data.contact_details.complex_n_unit,
+                        suburb_district: data.contact_details.suburb_district,
+                        town_city: data.contact_details.town_city,
+                        province: data.contact_details.province,
+                        postal_code: data.contact_details.postal_code,
+                    },
                     bank_proof: data.bank_proof,
                     certificate: data.certificate,
                 }
@@ -203,7 +215,7 @@ async function getProfileDetails(param) {
     try {
         console.log("param", param);
         const whereCondition = { _id: param.id };
-        const profileData = await User.find(whereCondition).select("firstname surname id_number email mobile_number alternate_mobile_number street street_name complex_n_unit suburb_district town_city province postal_code method_of_communication policy_consent opt_in_promotional race gender qualification privacy ecommercePolicy deals_promotion in_loop how_did_you_hear_about_us opt_in_promotional moodle_pass moodle_login_id account_holder_name bank branch branch_code type_of_account account_number contact_details bank_proof certificate confirm_details update_information referral_code contact_details");
+        const profileData = await User.find(whereCondition).select("firstname surname id_number email mobile_number alternate_mobile_number street street_name complex_n_unit suburb_district town_city province postal_code method_of_communication policy_consent opt_in_promotional race gender qualification privacy ecommercePolicy deals_promotion in_loop how_did_you_hear_about_us opt_in_promotional moodle_pass moodle_login_id account_holder_name bank branch branch_code type_of_account account_number bank_contact_details bank_proof certificate confirm_details update_information referral_code");
         
         if (profileData && profileData.length > 0) {
             console.log("profileData",profileData);

@@ -417,11 +417,17 @@ cron.schedule('0 1 1 * *', () => {
 
 
 // cron.schedule('*/1 * * * *', () => {
-//   const templateId = 16;
-//   const receiverEmailId = 'eynoashish@gmail.com';
-//   const receiverName  = 'Ashish';
+//   const templateId = 24;
+//   const receiverEmailId = 'userdev174@gmail.com';
+//   // const receiverEmailId = 'shane@skilltechsa.co.za';
+//   const receiverName  = 'Shane Smith';
+//   const variables = {
+//     REFERRAL_CODE: HG240
+//     // FIRSTNAME: firstname,
+//     // LASTNAME: lastname
+//   }
 //   sendEmailByBrevo(templateId, receiverEmailId, receiverName);
-//   createAndSendEmailCampaign();
+//   // createAndSendEmailCampaign();
 //   console.log('Successfully triggered');
 //   });
   
@@ -685,7 +691,7 @@ async function ambassador_subscription(param) {
           bank_proof: param.bank_proof,
           type_of_account: param.type_of_account,
           account_number: param.account_number,
-          contact_details: param.contact_details,
+          bank_contact_details: param.contact_details,
           ambassador_date: new Date(),
           referral_code: param.referral_code,
           refer_friend: param.refer_friend,
@@ -1002,6 +1008,7 @@ async function checkReferralCode(req) {
       referral_code: referralCode,
       userId: userId,
       qr_code: ambassadorData[0].qr_code,
+      is_active: true,
     });
 
     const newReferralData = await referralData.save();
@@ -1506,7 +1513,6 @@ async function cancelCourseByUser(req) {
       statusData,
       { new: true }
     );
-
     console.log("removeCourse====>", removedCourse);
     if (!removedCourse) {
       console.log("Course not found for id:", orderId);
@@ -1520,6 +1526,14 @@ async function cancelCourseByUser(req) {
       { new: true }
     );
     console.log("userBlocked successfully:", userBlocked);
+
+    //For Changing status of Referral code used on unsubscription
+    const referralStatus = await Referral.findOneAndUpdate(
+      { purchagedcourseId: orderId},
+      {is_active: false},
+      { new: true }
+    );
+    console.log("referral status changed successfully:", referralStatus);
 
     //For Brevo email to SUBSCIBER, when user unsubscribe the subscription
     const subscriberName = `${userBlocked.firstname} ${userBlocked.surname}`
@@ -1632,7 +1646,8 @@ async function getActiveReferral(req) {
     let param = req.params;
     let id = req.body.userId;
     let query = {
-      purchagedcourseId: { $ne: null }
+      purchagedcourseId: { $ne: null },
+      is_active: true
     };
 
     if (param && param.start_date && param.end_date) {
@@ -1688,7 +1703,8 @@ async function getInactiveReferral(req) {
     let param = req.params;
     let id = req.body.userId;
     let query = {
-      purchagedcourseId: null
+      purchagedcourseId: { $ne: null },
+      is_active: false
     };
 
     if (param && param.start_date && param.end_date) {
@@ -1807,7 +1823,8 @@ async function getPaymentDue(req) {
   try {
     let param = req.params;
     let query = {
-      referral_code: req.body.referral_code
+      referral_code: req.body.referral_code,
+      is_active: true
     };
     console.log("req.body.referral_code*********", req.body.referral_code)
 

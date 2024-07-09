@@ -23,7 +23,6 @@ function jwt() {
             
             '/user/forgot-password',
             '/user/reset-password',
-
         ]
     })
 }

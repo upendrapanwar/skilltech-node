@@ -17,6 +17,7 @@ const schema = new Schema({
     default: null,
   },
   qr_code: { type: String, required: true, default: "" },
+  is_active: { type: Boolean, required: false, default: true },
  },
  {
     timestamps:true

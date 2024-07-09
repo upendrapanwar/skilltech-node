@@ -7,7 +7,7 @@ const errorHandler = require('./app/helpers/error-handler');
 const config = require('./app/config/index');
 const package = require('./package.json');
 const app = express();
-//const path require("")
+// const path = require('path');
 const https = require('https');
 const fs = require('fs');
 var fileupload = require("express-fileupload");
