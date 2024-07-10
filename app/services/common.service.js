@@ -417,16 +417,17 @@ cron.schedule('0 1 1 * *', () => {
 
 
 // cron.schedule('*/1 * * * *', () => {
-//   const templateId = 24;
-//   const receiverEmailId = 'userdev174@gmail.com';
-//   // const receiverEmailId = 'shane@skilltechsa.co.za';
+//   const templateId = 38;
+//   // const receiverEmailId = 'userdev174@gmail.com';
+//   const receiverEmailId = 'shane@skilltechsa.co.za';
 //   const receiverName  = 'Shane Smith';
-//   const variables = {
-//     REFERRAL_CODE: HG240
-//     // FIRSTNAME: firstname,
-//     // LASTNAME: lastname
-//   }
+//   // const variables = {
+//   //   REFERRAL_CODE: HG240
+//   //   // FIRSTNAME: firstname,
+//   //   // LASTNAME: lastname
+//   // }
 //   sendEmailByBrevo(templateId, receiverEmailId, receiverName);
+//   // sendEmailByBrevo(templateId, receiverEmailId, receiverName, variables);
 //   // createAndSendEmailCampaign();
 //   console.log('Successfully triggered');
 //   });
