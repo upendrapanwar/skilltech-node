@@ -117,6 +117,10 @@ const schema = new Schema({
     ambassador_date:{type:Date, required:false, default:null},
     moodle_pass:{type:String, required:false, default:''},
     moodle_login_id:{type:String, required:false, default:''},
+    cart_items: { type: [{
+        subscription_type: {type:String, required:false, default:''},
+        quantity: { type: Number, required: true, default: 1 },
+    }], required: false, default: [] },
 },{
     timestamps: true
 });

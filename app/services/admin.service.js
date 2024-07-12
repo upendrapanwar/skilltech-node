@@ -977,60 +977,19 @@ async function getInactiveReferralAmbassador(param) {
     return formattedData;
 
 }
+
+
 /**
- * Function get Inactive Referrals per Ambassador by date selection
+ * Function to get data for payment due to Ambassador by date selection
  * @param {param}
  * 
  * @result null|Object
  */
-// async function getPaymentDueToAmbassador(param) {
-//     try {
-//         let query = {};
-    
-//         if (param && param.start_date && param.end_date) {
-//             query.createdAt = {
-//                 $gte: new Date(param.start_date),
-//                 $lte: new Date(param.end_date)
-//             };
-//         }
-//         const ambassadors = await Referral.find(query);
-//         console.log("ambassadors", ambassadors);
-//         const referrals = ambassadors.map(referral => referral.referral_code);
-//         console.log("referrals", referrals);
-//         const ambassadorData = await User.find({
-//             referral_code: { $in: referrals },
-//           })
-//           .select('firstname surname referral_code')
-//           .exec();
 
-//         const activeReferralCount = ambassadorData.length;
-//         const amountDue = activeReferralCount * 5000;
-//         console.log("activeReferral", ambassadorData);
-        
-//         if (ambassadorData.length > 0) {
-//             const result = ambassadorData.map(data => {
-//                 return {
-//                     Ambassador_firstname: data.firstname,
-//                     Ambassador_lastname: data.surname,
-//                     Ambassador_referralcode: data.referral_code,
-//                     referral_count: activeReferralCount,
-//                     due_amount: amountDue,
-//                 };
-//             }).filter(entry => entry !== null);
-//             console.log(result);
-//             return result;
-//         } else {
-//             return [];
-//         }
-//     } catch (error) {
-//         console.error('An error occurred:', error);
-//         throw error;
-//     }
-
-// }
 async function getPaymentDueToAmbassador(param) {
     try {
         let query = {
+            purchagedcourseId: { $ne: null },
             is_active: true,
         };
     
@@ -1083,13 +1042,11 @@ async function getPaymentDueToAmbassador(param) {
 async function getBulkPaymentReport(param) {
     try {
         console.log("getBulkPaymentReport - param: ", param)
-        const now = new Date();
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
+        // const now = new Date();
+        // const currentMonth = now.getMonth();
+        // const currentYear = now.getFullYear();
         // const startDate = new Date(Date.UTC(currentYear, currentMonth - 1, 1));
         // const endDate = new Date(Date.UTC(currentYear, currentMonth, 0, 23, 59, 59));
-        const startDate = new Date(Date.UTC(2024, 6, 1, 0, 0, 1)); // July 1, 2024
-        const endDate = new Date(Date.UTC(2024, 6, 2, 23, 59, 59)); // July 2, 2024
         let query = { 
             purchagedcourseId: { $ne: null },
             is_active: true,
@@ -1098,8 +1055,8 @@ async function getBulkPaymentReport(param) {
             query.createdAt = {
                 $gte: new Date(param.start_date),
                 $lte: new Date(param.end_date)
-            };
-        }
+            }
+        };
         console.log("query", query);
         const ambassadors = await Referral.find(query);
         console.log("ambassadors", ambassadors);

@@ -14,6 +14,8 @@ module.exports = {
     getProfileDetails,
     checkSouthAfricanId,
     saveMoodleLoginId,
+    saveCartItem,
+    getCartItem,
 };
 
 
@@ -408,4 +410,82 @@ async function saveMoodleLoginId(req) {
 
 /*****************************************************************************************/
 /*****************************************************************************************/
+/**
+ * Manages to save cart items
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+
+async function saveCartItem(req) {
+    try {
+        const userId = req.params.id;
+        const cartItems = req.body;
+
+        if (!cartItems || !Array.isArray(cartItems)) {
+            throw new Error("cart_items is missing or not an array");
+        }
+
+        const formattedCartItems = cartItems.map(item => ({
+            subscription_type: item.subscription_type,
+            quantity: item.quantity,
+            // price: item.price
+        }));
+
+        const whereCondition = { _id: userId };
+        const updatedData = await User.findOneAndUpdate(
+            whereCondition,
+            {
+                $set: {
+                    cart_items: formattedCartItems,
+                }
+            },
+            { new: true }
+        );
+
+        if (updatedData) {
+            return updatedData;
+        } else {
+            return false;
+        }
+    } catch (error) {
+        console.error('Error in saving cart items:', error);
+        return null;
+    }
+}
+
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Manages to get cart items
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+
+async function getCartItem(req) {
+    try {
+        console.log("param", req.params);
+        const userId = req.params.id;
+
+        const cartItem = await User.findById(userId).select('cart_items');
+
+        if (cartItem) {
+            return cartItem;
+        } else {
+            return false;
+        }
+    } catch (error) {
+        console.error('Error in saving cart items:', error);
+        return null;
+    }
+}
+
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+
 

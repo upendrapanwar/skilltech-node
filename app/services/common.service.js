@@ -71,6 +71,7 @@ module.exports = {
   getSubscriptionCancelledbySubscriber,
   getPaymentDue,
   getReferralsThisMonth,
+  getAmbassadorMonthlyPay,
 };
 
 /*****************************************************************************************/
@@ -1673,10 +1674,17 @@ async function getActiveReferral(req) {
     
     if (activeReferral.length > 0) {
         const result = activeReferral.map(data => {
+          const formatDate = (dateString) => {
+            const date = new Date(dateString);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+          };
             return {
               Subscriber_firstname: data.userId.firstname,
               Subscriber_lastname: data.userId.surname,
-              referral_used_date: data.createdAt,
+              referral_used_date: formatDate(data.createdAt),
               referral_status: 'Active'
             };
         }).filter(entry => entry !== null);
@@ -1730,10 +1738,17 @@ async function getInactiveReferral(req) {
     
     if (inactiveReferral.length > 0) {
         const result = inactiveReferral.map(data => {
+            const formatDate = (dateString) => {
+              const date = new Date(dateString);
+              const day = String(date.getDate()).padStart(2, '0');
+              const month = String(date.getMonth() + 1).padStart(2, '0');
+              const year = date.getFullYear();
+              return `${day}-${month}-${year}`;
+            };
             return {
               Subscriber_firstname: data.userId.firstname,
               Subscriber_lastname: data.userId.surname,
-              referral_used_date: data.createdAt,
+              referral_used_date: formatDate(data.createdAt),
               referral_status: 'Inactive'
             };
         }).filter(entry => entry !== null);
@@ -1803,9 +1818,19 @@ async function getSubscriptionCancelledbySubscriber(param) {
     ];
 
     const cancellationRecords = await Purchasedcourses.aggregate(pipeline);
-
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
+    const formattedRecords = cancellationRecords.map(record => ({
+        ...record,
+        cancellation_date: formatDate(record.cancellation_date)
+    }));
     console.log("getSubscriptionCancelledBySubscriber.......", cancellationRecords);
-    return cancellationRecords;
+    return formattedRecords;
 } catch (error) {
     console.error("Error in getSubscriptionCancelledBySubscriber:", error);
     throw error;
@@ -1825,6 +1850,7 @@ async function getPaymentDue(req) {
     let param = req.params;
     let query = {
       referral_code: req.body.referral_code,
+      purchagedcourseId: { $ne: null },
       is_active: true
     };
     console.log("req.body.referral_code*********", req.body.referral_code)
@@ -1851,7 +1877,7 @@ async function getPaymentDue(req) {
             Subscriber_firstname: data.userId.firstname,
             Subscriber_lastname: data.userId.surname,
             referral_code: req.body.referral_code,
-            referral_status: data.purchagedcourseId === null ? 'Inactive' : 'Active',
+            referral_status: 'Active',
           };
       }).filter(entry => entry !== null);
       console.log(result);
@@ -1882,6 +1908,7 @@ async function getReferralsThisMonth(req) {
     const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
     let query = {
+      purchagedcourseId: { $ne: null },
       createdAt: {
         $gte: startOfMonth,
         $lte: endOfMonth
@@ -1895,7 +1922,7 @@ async function getReferralsThisMonth(req) {
     .populate({
       path: 'userId',
       model: User,
-      select: 'firstname surname'
+      select: 'firstname surname is_active'
     })
     .exec();
 
@@ -1907,7 +1934,7 @@ async function getReferralsThisMonth(req) {
               firstname: data.userId.firstname,
               surname: data.userId.surname,
               referral_used_date: data.createdAt,
-              referral_status: data.purchagedcourseId == null ? "Inactive" : "Active"
+              referral_status: data.is_active == false ? "Inactive" : "Active"
             };
         });
         console.log("getReferralsThisMonth result", result);
@@ -1920,3 +1947,70 @@ async function getReferralsThisMonth(req) {
     throw error;
 }
 }
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Manages to get Ambassador's monthly pay
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+
+async function getAmbassadorMonthlyPay(req) {
+  try {
+    const userId = req.params.id;
+    console.log("getAmbassadorMonthlyPay referralCode", req.params);
+
+    const ambassadorData = await User.findById(userId).select('referral_code');
+    const referralCode = ambassadorData.referral_code;
+    console.log("getAmbassadorMonthlyPay referralCode", referralCode);
+
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+
+    let lastFourMonthsData = [];
+
+    for (let i = 0; i <= 4; i++) {
+      let month = currentMonth - i;
+      let year = currentYear;
+      
+      if (month < 0) {
+        month += 12;
+        year -= 1;
+      }
+
+      const startDate = new Date(year, month, 1);
+      const endDate = new Date(year, month + 1, 0); // Last day of the month
+
+      let query = {
+        referral_code: referralCode,
+        purchagedcourseId: { $ne: null },
+        is_active: true,
+        createdAt: {
+          $gte: startDate,
+          $lte: endDate
+        }
+      };
+
+      const subscribers = await Referral.find(query);
+      const referralCount = subscribers.filter(referral => referral.referral_code === referralCode).length;
+      const monthlyPay = referralCount * 5;
+      console.log("getAmbassadorMonthlyPay subscribers: ", subscribers);
+
+      lastFourMonthsData.push({
+        month: startDate.toLocaleString('default', { month: 'long' }),
+        monthly_pay: monthlyPay
+      });
+    }
+    console.log("getAmbassadorMonthlyPay lastFourMonthsData: ", lastFourMonthsData);
+    return lastFourMonthsData;
+  } catch (error) {
+    console.error('An error occurred:', error);
+    throw error;
+  }
+};
+
+/*****************************************************************************************/
+/*****************************************************************************************/
