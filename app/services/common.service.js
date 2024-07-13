@@ -1972,7 +1972,7 @@ async function getAmbassadorMonthlyPay(req) {
 
     let lastFourMonthsData = [];
 
-    for (let i = 0; i <= 4; i++) {
+    for (let i = 1; i <= 4; i++) {
       let month = currentMonth - i;
       let year = currentYear;
       
