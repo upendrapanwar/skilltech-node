@@ -118,8 +118,9 @@ const schema = new Schema({
     moodle_pass:{type:String, required:false, default:''},
     moodle_login_id:{type:String, required:false, default:''},
     cart_items: { type: [{
-        subscription_type: {type:String, required:false, default:''},
+        title: {type:String, required:false, default:''},
         quantity: { type: Number, required: true, default: 1 },
+        price: {type: Number, required:false, default:''},
     }], required: false, default: [] },
 },{
     timestamps: true

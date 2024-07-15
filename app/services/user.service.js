@@ -16,6 +16,7 @@ module.exports = {
     saveMoodleLoginId,
     saveCartItem,
     getCartItem,
+    deleteCartItem,
 };
 
 
@@ -428,9 +429,9 @@ async function saveCartItem(req) {
         }
 
         const formattedCartItems = cartItems.map(item => ({
-            subscription_type: item.subscription_type,
+            title: item.title,
             quantity: item.quantity,
-            // price: item.price
+            price: item.price
         }));
 
         const whereCondition = { _id: userId };
@@ -483,6 +484,44 @@ async function getCartItem(req) {
         return null;
     }
 }
+
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Manages to delete cart items
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+
+async function deleteCartItem(req) {
+    try {
+        const userId = req.params.id;
+
+        const whereCondition = { _id: userId };
+        const updatedData = await User.findOneAndUpdate(
+            whereCondition,
+            {
+                $set: {
+                    cart_items: [],
+                }
+            },
+            { new: true }
+        );
+
+        if (updatedData) {
+            return updatedData;
+        } else {
+            return false;
+        }
+    } catch (error) {
+        console.error('Error in deleting cart items:', error);
+        return null;
+    }
+}
+
 
 
 /*****************************************************************************************/

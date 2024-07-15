@@ -16,6 +16,7 @@ router.get('/check-southafrican-id/:id', checkSouthAfricanId);
 router.post('/save-moodle-id/:id', saveMoodleLoginId);
 router.post('/save-cart-item/:id', saveCartItem);
 router.get('/get-cart-item/:id', getCartItem);
+router.post('/remove-cart-item/:id', deleteCartItem);
 
 
 module.exports = router;
@@ -151,6 +152,23 @@ function saveCartItem(req, res, next) {
  */
 function getCartItem(req, res, next) {
     userService.getCartItem(req)
+    .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
+    .catch(err => next(res.json({ status: false, message: err })));
+}
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function to delete cart items
+ *
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * 
+ * @return JSON|null
+ */
+function deleteCartItem(req, res, next) {
+    userService.deleteCartItem(req)
     .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
     .catch(err => next(res.json({ status: false, message: err })));
 }

@@ -1310,7 +1310,7 @@ async function saveQuery(param) {
 
 async function cancelPayfastPayment(req) {
   const merchant_data = req.body.merchant_data;
-  const token_generated = req.body.token;
+  const token_generated = req.body.token; 
   const merchant_Id = req.body.merchantId;
   console.log("merchantData req.body", req.body)
 
