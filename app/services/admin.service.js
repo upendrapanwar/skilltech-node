@@ -569,6 +569,11 @@ async function getAllActiveAndInactiveReferralPerAmbassador(param) {
 
     let referralData = await Referral.aggregate([
         {
+            $match: {
+                purchagedcourseId: { $ne: null }, 
+            }
+        },
+        {
             $lookup: {
                 from: "users",
                 localField: "userId",
@@ -639,6 +644,7 @@ async function getActiveAndInactiveReferralPerAmbassador(param) {
     let referralData = await Referral.aggregate([
         {
             $match: {
+                purchagedcourseId: { $ne: null }, 
                 createdAt: { $gte: new Date(param.start_date), $lte: new Date(param.end_date) }
             }
         },
