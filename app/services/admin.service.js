@@ -605,9 +605,9 @@ async function getAllActiveAndInactiveReferralPerAmbassador(param) {
                 Date_of_use_of_referral_code: "$createdAt",
                 HVG_Subscription_status: {
                     $cond: {
-                        if: { $eq: ["$is_active", true] },
-                         then: "Inactive",
-                        else: "Active"
+                        if: { $or: [{ $eq: ["$is_active", true] }, { $eq: [{ $ifNull: ["$is_active", ""] }, ""] }] },
+                        then: "Active",
+                        else: "Inactive"
                     }
                 }
             }
@@ -680,9 +680,9 @@ async function getActiveAndInactiveReferralPerAmbassador(param) {
                 Date_of_use_of_referral_code: "$createdAt",
                 HVG_Subscription_status: {
                     $cond: {
-                        if: { $eq: ["$is_active", true] },
-                        then: "Inactive",
-                        else: "Active"
+                        if: { $or: [{ $eq: ["$is_active", true] }, { $eq: [{ $ifNull: ["$is_active", ""] }, ""] }] },
+                        then: "Active",
+                        else: "Inactive"
                     }
                 }
             }
