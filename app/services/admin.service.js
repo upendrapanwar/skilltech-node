@@ -605,9 +605,9 @@ async function getAllActiveAndInactiveReferralPerAmbassador(param) {
                 Date_of_use_of_referral_code: "$createdAt",
                 HVG_Subscription_status: {
                     $cond: {
-                        if: { $ne: ["$purchagedcourseId", null] },
-                        then: "Active",
-                        else: "Inactive"
+                        if: { $eq: ["$is_active", true] },
+                         then: "Inactive",
+                        else: "Active"
                     }
                 }
             }
@@ -680,9 +680,9 @@ async function getActiveAndInactiveReferralPerAmbassador(param) {
                 Date_of_use_of_referral_code: "$createdAt",
                 HVG_Subscription_status: {
                     $cond: {
-                        if: { $ne: ["$purchagedcourseId", null] },
-                        then: "Active",
-                        else: "Inactive"
+                        if: { $eq: ["$is_active", true] },
+                        then: "Inactive",
+                        else: "Active"
                     }
                 }
             }
