@@ -27,6 +27,7 @@ const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid"); 
 const SibApiV3Sdk = require('sib-api-v3-sdk');
 const cron = require('node-cron');
+const mime = require("mime-types");
 
 const {
   User,
@@ -653,87 +654,178 @@ async function sendSubscriptionEmail(req) {
  *
  * @returns Object|null
  */
+const saveBase64File = (base64String, uploadDir) => {
+  const matches = base64String.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
+  if (!matches || matches.length !== 3) {
+    throw new Error("Invalid base64 string");
+  }
+
+  const mimeType = matches[1];
+  const base64Data = matches[2];
+  const extension = mime.extension(mimeType);
+  if (!extension) {
+    throw new Error("Unsupported file type");
+  }
+
+  const fileName = `CER-${Math.floor(Math.random() * 1000000)}-${Date.now()}.${extension}`;
+  const filePath = path.join(__dirname, `../../uploads/${uploadDir}/`, fileName);
+  fs.writeFileSync(filePath, base64Data, { encoding: "base64" });
+
+  return `uploads/${uploadDir}/${fileName}`;
+};
+
 async function ambassador_subscription(param) {
-  const res = param.certificate;
-  const base64Data = res.replace(/^data:([A-Za-z-+/]+);base64,/, "");
-  let certificateName =
-    "CER-" + Math.floor(Math.random() * 1000000) + "-" + Date.now() + ".pdf";
-  let certificatePath = path.join(
-    __dirname,
-    "../../uploads/certificate/" + certificateName
-  );
-  fs.writeFileSync(certificatePath, base64Data, { encoding: "base64" });
-  param.certificate = "uploads/certificate/" + certificateName;
+  try {
+    if (param.certificate) {
+      param.certificate = saveBase64File(param.certificate, "certificate");
+    }
+    if (param.bank_proof) {
+      param.bank_proof = saveBase64File(param.bank_proof, "bank_proof");
+    }
 
-  const res_bankproof = param.bank_proof;
-  const base64DataBankProof = res_bankproof.replace(
-    /^data:([A-Za-z-+/]+);base64,/,
-    ""
-  );
-  let bankProofName =
-    "CER-" + Math.floor(Math.random() * 1000000) + "-" + Date.now() + ".pdf";
-  let bankProofPath = path.join(
-    __dirname,
-    "../../uploads/bank_proof/" + bankProofName
-  );
-  fs.writeFileSync(bankProofPath, base64DataBankProof, { encoding: "base64" });
-  param.bank_proof = "uploads/bank_proof/" + bankProofName;
+    console.log('param.certificate=', param.certificate);
+    console.log('param.bank_proof=', param.bank_proof);
 
-  var whereCondition = { _id: param.uid };
-  const test = User.findOne(whereCondition);
+    const whereCondition = { _id: param.uid };
 
-  if (await User.findOne(whereCondition)) {
-    result = await User.updateMany({ _id: param.uid }, [
-      {
-        $set: {
-          account_holder_name: param.account_holder_name,
-          bank: param.bank,
-          branch: param.branch,
-          branch_code: param.branch_code,
-          bank_proof: param.bank_proof,
-          type_of_account: param.type_of_account,
-          account_number: param.account_number,
-          bank_contact_details: param.contact_details,
-          ambassador_date: new Date(),
-          referral_code: param.referral_code,
-          refer_friend: param.refer_friend,
-          certificate: param.certificate,
-          confirm_details: param.confirm_details,
-          update_information: param.update_information,
-          role: "ambassador",
+    if (await User.findOne(whereCondition)) {
+      const result = await User.updateMany({ _id: param.uid }, [
+        {
+          $set: {
+            account_holder_name: param.account_holder_name,
+            bank: param.bank,
+            branch: param.branch,
+            branch_code: param.branch_code,
+            bank_proof: param.bank_proof,
+            type_of_account: param.type_of_account,
+            account_number: param.account_number,
+            bank_contact_details: param.contact_details,
+            ambassador_date: new Date(),
+            referral_code: param.referral_code,
+            refer_friend: param.refer_friend,
+            certificate: param.certificate,
+            confirm_details: param.confirm_details,
+            update_information: param.update_information,
+            role: "ambassador",
+          },
         },
-      },
-    ]); 
-    console.log('ambassador=',result);
+      ]);
+      console.log('ambassador=', result);
 
-    if (result) {
-      let res = await User.findById(param.uid).select(
-        "-password -community -social_accounts -reset_password -image_url -phone"
-      );
-      addContactInBrevo(res);
-      const receiverName = res.firstname + " " + res.surname
-      const variables = {
-        REFERRAL_CODE: res.referral_code
-      }
-      sendEmailByBrevo(24, res.email, receiverName, variables);
-      console.log('receiverName',receiverName);
-      console.log('res.referral_code',res.referral_code);
-      console.log('ambassador details:::::',res);
+      if (result) {
+        let res = await User.findById(param.uid).select(
+          "-password -community -social_accounts -reset_password -image_url -phone"
+        );
+        addContactInBrevo(res);
+        const receiverName = res.firstname + " " + res.surname;
+        const variables = {
+          REFERRAL_CODE: res.referral_code,
+        };
+        sendEmailByBrevo(24, res.email, receiverName, variables);
+        console.log('receiverName', receiverName);
+        console.log('res.referral_code', res.referral_code);
+        console.log('ambassador details:::::', res);
 
-      if (res) {
-        return res;
+        if (res) {
+          return res;
+        } else {
+          return false;
+        }
       } else {
         return false;
       }
     } else {
       return false;
     }
-  } else {
+  } catch (error) {
+    console.error("Error processing ambassador subscription:", error);
     return false;
   }
-
-  //const data = await user.save();
 }
+
+
+
+// async function ambassador_subscription(param) {
+//   const res = param.certificate;
+//   const base64Data = res.replace(/^data:([A-Za-z-+/]+);base64,/, "");
+//   let certificateName =
+//     "CER-" + Math.floor(Math.random() * 1000000) + "-" + Date.now() + ".pdf";
+//   let certificatePath = path.join(
+//     __dirname,
+//     "../../uploads/certificate/" + certificateName
+//   );
+//   fs.writeFileSync(certificatePath, base64Data, { encoding: "base64" });
+//   param.certificate = "uploads/certificate/" + certificateName;
+
+//   const res_bankproof = param.bank_proof;
+//   const base64DataBankProof = res_bankproof.replace(
+//     /^data:([A-Za-z-+/]+);base64,/,
+//     ""
+//   );
+//   let bankProofName =
+//     "CER-" + Math.floor(Math.random() * 1000000) + "-" + Date.now() + ".pdf";
+//   let bankProofPath = path.join(
+//     __dirname,
+//     "../../uploads/bank_proof/" + bankProofName
+//   );
+//   fs.writeFileSync(bankProofPath, base64DataBankProof, { encoding: "base64" });
+//   param.bank_proof = "uploads/bank_proof/" + bankProofName;
+
+//   var whereCondition = { _id: param.uid };
+//   const test = User.findOne(whereCondition);
+
+//   if (await User.findOne(whereCondition)) {
+//     result = await User.updateMany({ _id: param.uid }, [
+//       {
+//         $set: {
+//           account_holder_name: param.account_holder_name,
+//           bank: param.bank,
+//           branch: param.branch,
+//           branch_code: param.branch_code,
+//           bank_proof: param.bank_proof,
+//           type_of_account: param.type_of_account,
+//           account_number: param.account_number,
+//           bank_contact_details: param.contact_details,
+//           ambassador_date: new Date(),
+//           referral_code: param.referral_code,
+//           refer_friend: param.refer_friend,
+//           certificate: param.certificate,
+//           confirm_details: param.confirm_details,
+//           update_information: param.update_information,
+//           role: "ambassador",
+//         },
+//       },
+//     ]); 
+//     console.log('ambassador=',result);
+
+//     if (result) {
+//       let res = await User.findById(param.uid).select(
+//         "-password -community -social_accounts -reset_password -image_url -phone"
+//       );
+//       addContactInBrevo(res);
+//       const receiverName = res.firstname + " " + res.surname
+//       const variables = {
+//         REFERRAL_CODE: res.referral_code
+//       }
+//       sendEmailByBrevo(24, res.email, receiverName, variables);
+//       console.log('receiverName',receiverName);
+//       console.log('res.referral_code',res.referral_code);
+//       console.log('ambassador details:::::',res);
+
+//       if (res) {
+//         return res;
+//       } else {
+//         return false;
+//       }
+//     } else {
+//       return false;
+//     }
+//   } else {
+//     return false;
+//   }
+
+//   //const data = await user.save();
+// }
 
 /*****************************************************************************************/
 /*****************************************************************************************/
@@ -986,7 +1078,7 @@ async function checkReferralCode(req) {
       return; 
     }
 
-     // Referral code not used, proceed with creation
+    // Referral code not used, proceed with creation
     const countReferral = await User.find({ referral_code: referralCode }).count();
     console.log("countReferral", countReferral);
 
@@ -994,7 +1086,7 @@ async function checkReferralCode(req) {
       referral_code: referralCode,
       is_active: true,
     };
-    const ambassadorData = await User.find(query).select("email firstname surname qr_code");
+    const ambassadorData = await User.find(query).select("email firstname surname");
     console.log("ambassadorData", ambassadorData);
 
      // Check if ambassadorData is an empty array
@@ -1002,14 +1094,9 @@ async function checkReferralCode(req) {
       return ;
     }
 
-    if (!ambassadorData || !ambassadorData[0].qr_code) {
-      throw new Error("QR code not found for the user");
-    }
-
     const referralData = await Referral.create({
       referral_code: referralCode,
       userId: userId,
-      qr_code: ambassadorData[0].qr_code,
       is_active: true,
     });
 
@@ -1118,7 +1205,7 @@ async function getMyCourses(param) {
 /*****************************************************************************************/
 /**
  * get user courses
- *
+ *                    
  * @param {param}
  *
  * @returns Object|null
