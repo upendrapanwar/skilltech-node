@@ -1364,25 +1364,71 @@ async function saveQuery(param) {
     const userQueryData = await queryData.save();
     console.log(userQueryData);
 
-    let userName = `${param.first_name} ${param.surname}`
-    let info = await transporter.sendMail({
-      from: `${userName} ${param.email}`, // Sender address
-      to: 'guild@skilltechsa.co.za', // Recipient address
-      subject: `Query request from ${userName}`, // Subject line
-      text: `
-      Query:      
-      ${param.query}
-      `
-    });
-    console.log("Message sent: %s", info.messageId);
-    console.log("Message sent:", info);
+    // let userName = `${param.first_name} ${param.surname}`
+    // let info = await transporter.sendMail({
+    //   from: `${userName} ${param.email}`, // Sender address
+    //   to: 'guild@skilltechsa.co.za', // Recipient address
+    //   subject: `Query request from ${userName}`, // Subject line
+    //   text: `
+    //   Query:      
+    //   ${param.query}
+    //   `
+    // });
+    // console.log("Message sent: %s", info.messageId);
+    // console.log("Message sent:", info);
 
+
+    //For Brevo email for user query
+    const userData = {
+      firstname: param.firstname,
+      surname: param.surname,
+      mobile_number: param.mobile_number,
+      query: param.query
+    }
+    addContactInBrevoForQuery(userData)
+    const variables = {
+      FIRSTNAME: param.firstname,
+      LASTNAME: param.surname,
+      CONTACT_NUMBER: param.mobile_number,
+      QUERY: param.query
+    }
+    const ambassadorName = param.firstname + " " + param.surname;
+    const receiverEmail = param.email;
+    sendEmailByBrevo(77, receiverEmail, ambassadorName, variables);
+
+      
     return userQueryData;
   } catch (error) {
     console.log("Error in creating or saving query:", error.message);
     return null;
   }
-}
+};
+const addContactInBrevoForQuery = async function addContactInBrevoForQuery(userData) {
+  try {
+    let defaultClient = SibApiV3Sdk.ApiClient.instance;
+    let apiKey = defaultClient.authentications['api-key'];
+    apiKey.apiKey = process.env.BREVO_KEY;
+    let apiInstance = new SibApiV3Sdk.ContactsApi();
+
+    let createContact = new SibApiV3Sdk.CreateContact();
+    createContact.email = ambassadorData.email;
+    createContact.listIds = [9];
+    createContact.attributes = {
+      FIRSTNAME: userData.firstname,
+      LASTNAME: userData.surname,
+      CONTACT_NUMBER: userData.mobile_number,
+      QUERY: userData.query
+    };
+    apiInstance.createContact(createContact).then(function(data) {
+      console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+    }, function(error) {
+      console.error(error);
+    });
+  } catch {
+    console.log("Error in sending Brevo email:", error.message);
+    return null;
+  }
+};
 
 
 /*****************************************************************************************/
@@ -1394,185 +1440,94 @@ async function saveQuery(param) {
  *
  * @returns Object|null
  */
-
 async function cancelPayfastPayment(req) {
-  const merchant_data = req.body.merchant_data;
   const token_generated = req.body.token; 
-  const merchant_Id = req.body.merchantId;
-  console.log("merchantData req.body", req.body)
-
+    
   function generateTimestamp() {
-    // For (YYYY-MM-DDTHH:MM:SS[+HH:MM]) format
-    // const now = new Date();
-    // const offset = -now.getTimezoneOffset();
-    // const sign = offset >= 0 ? '+' : '-';
-    // const hours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
-    // const minutes = String(Math.abs(offset) % 60).padStart(2, '0');
-    // const timezoneOffset = `${sign}${hours}:${minutes}`;
-    // const formattedTimestamp = now.toISOString().split('.')[0] + timezoneOffset;
-    // return formattedTimestamp;
-
-    // Format the date and time in ISO-8601 format
     const now = new Date();
-    const offset = -now.getTimezoneOffset();
-    const sign = offset >= 0 ? '+' : '-';
-    const hours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
-    const minutes = String(Math.abs(offset) % 60).padStart(2, '0');
-    const timezoneOffset = `${sign}${hours}:${minutes}`;
-  
     const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
-    const hour = String(now.getHours()).padStart(2, '0');
-    const minute = String(now.getMinutes()).padStart(2, '0');
-    const second = String(now.getSeconds()).padStart(2, '0');
-    const iso8601DateTime = `${year}-${month}-${day}T${hour}:${minute}:${second}${timezoneOffset}`;
-  
-    return iso8601DateTime;
-
-    // For (YYYY-MM-DDTHH:MM:SS) format
-    // let timestamp = new Date(new Date().toString().split("GMT")[0] + " UTC")
-    //   .toISOString()
-    //   .split(".")[0];
-    //   return timestamp;
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const timezoneOffset = now.getTimezoneOffset();
+    const offsetHours = String(Math.floor(Math.abs(timezoneOffset) / 60)).padStart(2, '0');
+    const offsetMinutes = String(Math.abs(timezoneOffset) % 60).padStart(2, '0');
+    const offsetSign = timezoneOffset < 0 ? '+' : '-';
+    const formattedOffset = `${offsetSign}${offsetHours}:${offsetMinutes}`;
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${formattedOffset}`;
   }
 
   function generateSignature() {
-        let pfOutput = "";
-      var data = merchant_data;
-      console.log("signature merchantData", data); 
-      var passPhrase = 'quorum87ax36Revving';
-      for (let key in data) {
-        if (data.hasOwnProperty(key)) {
-          if (data[key] !== "") {
-            pfOutput += `${key}=${encodeURIComponent(data[key]).replace(
-              /%20/g,
-              "+"
-            )}&`;
-          }
-        }
-      }
-      console.log("signature pfOutput", pfOutput);
-      let getString = pfOutput.slice(0, -1);
-      if (passPhrase !== null) {
-        getString += `&passphrase=${encodeURIComponent(passPhrase).replace(
-          /%20/g,
-          "+"
-        )}`;
-      }
-      console.log("signature String", getString);
-      const signature = crypto.createHash("md5").update(getString).digest("hex");
-      console.log("signature", signature);
-      return signature;
-      }
+    const data = {
+        'merchant-id': '10030936',
+        'passphrase': 'quorum87ax36Revving',
+        'timestamp': generateTimestamp(),
+        'version': 'v1'
+    };
+
+    const orderedKeys = ['merchant-id', 'passphrase', 'timestamp', 'version'];
+    let pfOutput = orderedKeys.map(key => `${key}=${encodeURIComponent(data[key]).replace(/%20/g, "+")}`).join('&');
+    console.log("signature String", pfOutput);
+
+    const signature = crypto.createHash("md5").update(pfOutput).digest("hex");
+    console.log("signature", signature);
+    return signature;
+  }
+
+  try {
+      const token = token_generated;
+      const merchantId = '10030936';
+      const signature = generateSignature();
+      const timestamp = generateTimestamp();
   
-      try {
-        const token = token_generated;
-        const merchantId = merchant_Id;
-        const signature = generateSignature();
-        const timestamp = generateTimestamp();
-    
-        console.log("Merchant ID:", merchantId);
-        console.log("Signature:", signature);
-        console.log("Timestamp:", timestamp);
-    
-        const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
-        const version = 'v1';
-    
-        const options = {
-            headers: {
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-                'merchant-id': merchantId,
-                'version': version,
-                'timestamp': timestamp,
-                'signature': signature
-            }
-        };
-    
-        console.log("Request URL:", url);
-        console.log("Request Options:", options);
-    
-        const response = await axios.put(url, null, options);
-        console.log("Request response:", response);
+      console.log("Merchant ID:", merchantId);
+      console.log("Signature:", signature);
+      console.log("Timestamp:", timestamp);
+  
+      const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+      const version = 'v1';
+  
+      const options = {
+          headers: {
+              // 'Content-Type': 'application/x-www-form-urlencoded',
+              'merchant-id': merchantId,
+              'version': version,
+              'timestamp': timestamp,
+              'signature': signature
+          }
+      };
+  
+      console.log("Request URL:", url);
+      console.log("Request Options:", options);
+  
+      const response = await axios.put(url, null, options);
+      console.log("Request response:", response);
 
-        if (response.status === 200) {
-            console.log("Cancellation successful.");
-            return response.data;
-        } else {
-            console.error("Cancellation failed:", response.data);
-            return response.data;
-        }
-    } catch (err) {
-        if (err.response) {
-            // The request was made and the server responded with a status code
-            console.error("Response data:", err.response.data);
-            console.error("Response status:", err.response.status);
-            console.error("Response headers:", err.response.headers);
-        } else if (err.request) {
-            // The request was made but no response was received
-            console.error("Request data:", err.request);
-        } else {
-            // Something happened in setting up the request that triggered an Error
-            console.error("Error message:", err.message);
-        }
-        console.error("Config:", err.config);
-        throw err;
-    }
-
-  // try {
-  //   // const token = token_generated;
-  //   const token = "6bee0f59-1976-486d-a921-053754667f26";
-  //   const merchantId = merchant_Id;
-  //   const signature = generateSignature();
-  //   const timestamp = generateTimestamp();
-
-  //   const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
-  //   const version = 'v1';
-
-  //   const options = {
-  //     method: 'PUT',
-  //     headers: {
-  //       'Content-Type': 'application/x-www-form-urlencoded',
-  //       'merchant-id': merchantId,
-  //       'version': version,
-  //       'timestamp': timestamp,
-  //       'signature': signature
-  //     }
-  //   };
-
-  //   console.log("options", options);
-
-  //   const response = await new Promise((resolve, reject) => {
-  //     const req = https.request(url, options, res => {
-  //       let data = '';
-  //       res.on('data', chunk => {
-  //         data += chunk;
-  //       });
-  //       res.on('end', () => {
-  //         resolve({
-  //           status: res.statusCode,
-  //           data: JSON.parse(data)
-  //         });
-  //       });
-  //     });
-
-  //     req.on('error', error => {
-  //       reject(error);
-  //     });
-  //     req.end();
-  //   });
-
-  //   if (response.status === 200) {
-  //     console.log("Cancellation successful.");
-  //     return response;
-  //   } else {
-  //     console.error("Cancellation failed:", response.data);
-  //     return response.data;
-  //   }
-  // } catch (err) {
-  //   console.log("Error:", err);
-  //   throw err;
-  // }
+      if (response.status === 200) {
+          console.log("Cancellation successful.");
+          return response.data;
+      } else {
+          console.error("Cancellation failed:", response.data);
+          return response.data;
+      }
+  } catch (err) {
+      if (err.response) {
+          // The request was made and the server responded with a status code
+          console.error("Response data:", err.response.data);
+          console.error("Response status:", err.response.status);
+          console.error("Response headers:", err.response.headers);
+      } else if (err.request) {
+          // The request was made but no response was received
+          console.error("Request data:", err.request);
+      } else {
+          // Something happened in setting up the request that triggered an Error
+          console.error("Error message:", err.message);
+      }
+      console.error("Config:", err.config);
+      throw err;
+  }
 }
 
 
@@ -1595,7 +1550,7 @@ async function cancelCourseByUser(req) {
       is_active: false,
       cancellation_date: new Date(),
     };
-    console.log("statusData====>", statusData);
+    console.log("statusData====>", statusData); 
 
     const removedCourse = await Purchasedcourses.findOneAndUpdate(
       { _id: orderId },

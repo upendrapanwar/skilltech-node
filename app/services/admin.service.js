@@ -192,7 +192,7 @@ async function getAllActiveSubcribedAmbassadors(param) {
             query.createdAt = {
                 $gte: new Date(param.start_date),
                 $lte: new Date(param.end_date)
-            }; 
+            };
         }
 
         const activeSubscribedAmbassadors = await Purchasedcourses.find(query)
