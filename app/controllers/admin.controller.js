@@ -40,6 +40,8 @@ router.get('/inactive-referral-per-ambassador/:start_date/:end_date', getInactiv
 router.get('/payment-due-to-ambassador/:start_date/:end_date', getPaymentDueToAmbassador);
 
 router.get('/bulk-payment-report/:start_date/:end_date', getBulkPaymentReport);
+router.get('/consolidated-information-report', getAllConsolidatedInformationReport);
+router.get('/consolidated-information-report/:start_date/:end_date', getConsolidatedInformationReport);
 
 module.exports = router;
 
@@ -432,6 +434,32 @@ function getPaymentDueToAmbassador(req, res, next) {
  */
 function getBulkPaymentReport(req, res, next) {
     adminService.getBulkPaymentReport(req.params)
+        .then(inactiveReferral => inactiveReferral ? res.status(200).json({ status: true, data: inactiveReferral }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })));
+
+}
+/**
+ * Function for getting all consolidated information report of all ambassador & subscribe
+ * @param {*} req 
+ * @param {*} res
+ * @param {*} next
+ * 
+ */
+function getAllConsolidatedInformationReport(req, res, next) {
+    adminService.getConsolidatedInformationReport(req.params)
+        .then(inactiveReferral => inactiveReferral ? res.status(200).json({ status: true, data: inactiveReferral }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })));
+
+}
+/**
+ * Function for getting consolidated information report of all ambassador & subscribe
+ * @param {*} req 
+ * @param {*} res
+ * @param {*} next
+ * 
+ */
+function getConsolidatedInformationReport(req, res, next) {
+    adminService.getConsolidatedInformationReport(req.params)
         .then(inactiveReferral => inactiveReferral ? res.status(200).json({ status: true, data: inactiveReferral }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
         .catch(err => next(res.json({ status: false, message: err })));
 

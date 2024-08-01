@@ -16,7 +16,7 @@ router.get('/check-southafrican-id/:id', checkSouthAfricanId);
 router.post('/save-moodle-id/:id', saveMoodleLoginId);
 router.post('/save-cart-item/:id', saveCartItem);
 router.get('/get-cart-item/:id', getCartItem);
-router.post('/remove-cart-item/:id', deleteCartItem);
+router.post('/remove-cart-item/:id', deleteCartItem); 
 
 
 module.exports = router;

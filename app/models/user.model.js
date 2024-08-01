@@ -60,9 +60,10 @@ const schema = new Schema({
     how_did_you_hear_about_us: {
         social_media_page: { type: String, required: false, default: "" },
         our_website: { type: String, required: false, default: "" },
-        // referred_by_ambassador: { type: String, required: false, default: "" },
-        // referred_by_friend: { type: String, required: false, default: "" },
-        stumbled_on_browsing: { type: String, required: false, default: "" }
+        referred_by_ambassador: { type: String, required: false, default: "" },
+        referred_by_friend: { type: String, required: false, default: "" },
+        stumbled_on_browsing: { type: String, required: false, default: "" },
+        other_option: { type: String, required: false, default: "" }
     },
     //reasons_for_subscribing: { type: String, required: false, default: '' },
     //how_did_you_hear_about_us_other: { type: String, required: false, default: '' },

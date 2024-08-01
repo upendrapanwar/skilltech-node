@@ -19,6 +19,7 @@ const nodemailer = require("nodemailer");
 const msg = require("../helpers/messages.json");
 const { User, Subscriptionpayment, Purchasedcourses, Referral } = require('../helpers/db');
 const crypto = require("crypto");
+const { unsubscribe } = require('diagnostics_channel');
 
 module.exports = {
     agentSubscription,
@@ -43,6 +44,7 @@ module.exports = {
     getInactiveReferralAmbassador,
     getPaymentDueToAmbassador,
     getBulkPaymentReport,
+    getConsolidatedInformationReport,
 };
 
 /*****************************************************************************************/
@@ -1130,6 +1132,60 @@ async function getBulkPaymentReport(param) {
             
             return acc;
         }, []);
+
+        console.log(result);
+        return result;
+    } catch (error) {
+        console.error('An error occurred:', error);
+        throw error;
+    }
+}
+/**
+ * Function for getting consolidated information report of all ambassador & subscribe
+ * @param {param}
+ * 
+ * @result null|Object
+ */
+async function getConsolidatedInformationReport(param) {
+    try {
+        let query = {};
+        if (param && param.start_date && param.end_date) {
+            query.createdAt = {
+                $gte: new Date(param.start_date),
+                $lte: new Date(param.end_date)
+            };
+        }
+
+        const userData = await User.find(query)
+          .select("firstname surname id_number email mobile_number alternate_mobile_number province race gender bank account_number account_holder_name type_of_account bank_proof certificate role is_active referral_code")
+          .exec();
+        
+        // Filter out the user with email 'admin@gmail.com'
+        const filteredUserData = userData.filter(data => data.email !== 'admin@gmail.com');
+
+        // Map the user data to the required format
+        const result = filteredUserData.map(data => ({
+            firstname: data.firstname || 'none',
+            lastname: data.surname || 'none',
+            id_number: data.id_number || 'none',
+            email: data.email || 'none',
+            mobile_number: data.mobile_number || 'none',
+            alternate_mobile_number: data.alternate_mobile_number || 'none',
+            province: data.province || 'none',
+            race: data.race || 'none',
+            gender: data.gender || 'none',
+            bank: data.bank || 'none',
+            account_number: data.account_number || 'none',
+            account_holder_name: data.account_holder_name || 'none',
+            type_of_account: data.type_of_account || 'none',
+            proof_of_banking_uploaded: data.bank_proof ? 'Y' : 'N',
+            id_uploaded: data.certificate ? 'Y' : 'N',
+            role: data.role === 'ambassador' ? 'Ambassador' : 'Subscriber',
+            is_active: data.is_active ? 'Active' : 'Inactive',
+            referral_code: data.referral_code || 'none',
+            unsubscribe_status: data.is_active ? 'Y' : 'N',
+            stopped_payment_status: 'N',
+        }));
 
         console.log(result);
         return result;
