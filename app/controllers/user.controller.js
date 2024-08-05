@@ -9,6 +9,7 @@ const msg = require('../helpers/messages.json');
 const multer = require('multer');
 
 router.post('/signup', registerValidation, register);
+router.post('/forgot-password/:id', forgotPassword);
 router.put('/update-profile-details/:id', updateProfileDetails);
 router.put('/update-ambassador-profile-details/:id', updateAmbassadorProfileDetails);
 router.get('/get-profile-details/:id', getProfileDetails);
@@ -32,6 +33,23 @@ module.exports = router;
  */
 function register(req, res, next) {
     userService.create(req.body)
+    .then(user => user ? res.status(201).json({ status: true, message: msg.user.signup.success, data: user }) : res.status(400).json({ status: false, message: msg.user.signup.error }))
+    .catch(err => next(res.status(400).json({ status: false, message: err })));
+}
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function to update the new password of the user
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * 
+ * @return JSON|null
+ */
+function forgotPassword(req, res, next) {
+    userService.forgotPassword(req)
     .then(user => user ? res.status(201).json({ status: true, message: msg.user.signup.success, data: user }) : res.status(400).json({ status: false, message: msg.user.signup.error }))
     .catch(err => next(res.status(400).json({ status: false, message: err })));
 }

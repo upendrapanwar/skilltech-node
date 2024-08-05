@@ -1616,13 +1616,14 @@ async function getpayfastTransactionHistory() {
     let timestamp = generateTimestamp();
     console.log("Timestamp: ", timestamp);
     const data = {
+        'date': '2024-07-23',
         'merchant-id': process.env.PAYFAST_MERCHANT_ID,
         'passphrase': process.env.PAYFAST_PASSPHRASE,
         'timestamp': timestamp,
         'version': 'v1'
     };
 
-    const orderedKeys = ['merchant-id', 'passphrase', 'timestamp', 'version'];
+    const orderedKeys = ['date', 'merchant-id', 'passphrase', 'timestamp', 'version'];
     let pfOutput = orderedKeys.map(key => `${key}=${encodeURIComponent(data[key]).replace(/%20/g, "+")}`).join('&');
     console.log("signature String", pfOutput);
 

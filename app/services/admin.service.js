@@ -201,7 +201,7 @@ async function getAllActiveSubcribedAmbassadors(param) {
             .populate({
                 path: 'userId',
                 match: { role: 'ambassador' },
-                select: 'firstname surname referral_code ambassador_date',
+                select: 'firstname surname id_number referral_code ambassador_date',
                 options: {
                     sort: { createdAt: 1 }
                 }
@@ -226,6 +226,7 @@ async function getAllActiveSubcribedAmbassadors(param) {
                 return {
                     Ambassador_firstname: user.firstname,
                     Ambassador_lastname: user.surname,
+                    id_number: user.id_number,
                     referral_code: user.referral_code,
                     ambassador_date: formatDate(user.ambassador_date),
                     subscription_status: data.is_active ? 'Active' : 'Inactive',
@@ -266,7 +267,7 @@ async function getAllActiveSubscriptionSubscriber(param) {
             .populate({
                 path: 'userId',
                 match: { role: 'subscriber' },
-                select: 'firstname surname',
+                select: 'firstname surname id_number',
                 options: {
                     sort: { createdAt: 1 } // Adjust the sorting options as needed
                 }
@@ -291,6 +292,7 @@ async function getAllActiveSubscriptionSubscriber(param) {
                 return {
                     Subscriber_firstname: user.firstname,
                     Subscriber_lastname: user.surname,
+                    id_number: user.id_number,
                     subscription_status: data.is_active ? 'Active' : 'Inactive',
                     subscription_date: formatDate(data.createdAt)
                 };
@@ -336,13 +338,14 @@ async function getDefaultedSubscriptionPaymentOfAmbassador(param) {
                 path: 'userid',
                 model: User,
                 match: { role: 'ambassador' },
-                select: 'role firstname surname referral_code'
+                select: 'role firstname surname id_number referral_code'
             });
 
         console.log("Defaulted Subscriptions Payments of Ambassador", defaultAmbassador);
         const result = defaultAmbassador.filter(entry => entry.userid !== null).map(data => ({
             Ambassador_firstname: data.userid.firstname,
             Ambassador_lastname: data.userid.surname,
+            id_number: data.userid.id_number,
             referral_code: data.userid.referral_code,
             payment_status: data.payment_status
         }));
@@ -382,7 +385,7 @@ async function getDefaultedSubscriptionPaymentOfSubscribers(param) {
                 path: 'userid',
                 model: User,
                 match: { role: 'subscriber' },
-                select: 'role firstname surname'
+                select: 'role firstname surname id_number'
             });
 
         console.log("Defaulted Subscriptions Payments of Subscriber", defaultSubscribers)
@@ -390,6 +393,7 @@ async function getDefaultedSubscriptionPaymentOfSubscribers(param) {
         const result = defaultSubscribers.filter(entry => entry.userid !== null).map(data => ({
             Subscriber_firstname: data.userid.firstname,
             Subscriber_lastname: data.userid.surname,
+            id_number: data.userid.id_number,
             payment_status: data.payment_status
         }));
 
@@ -445,6 +449,7 @@ async function getSubscriptionCancelledByAmbassador(param) {
                     _id: 0,
                     Ambassador_firstname: "$user.firstname",
                     Ambassador_lastname: "$user.surname",
+                    id_number: "$user.id_number",
                     referral_code: "$user.referral_code",
                     cancellation_date: 1
                 }
@@ -524,6 +529,7 @@ async function getSubscriptionCancelledBySubscriber(param) {
                     _id: 0,
                     Subscriber_firstname: "$user.firstname",
                     Subscriber_lastname: "$user.surname",
+                    id_number: "$user.id_number",
                     referral_code: "$user.referral_code",
                     cancellation_date: 1
                 }
@@ -601,6 +607,7 @@ async function getAllActiveAndInactiveReferralPerAmbassador(param) {
                 _id: 0,
                 Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
                 Subscriber_lastname: { $arrayElemAt: ["$subscriber.surname", 0] },
+                id_number: { $arrayElemAt: ["$subscriber.id_number", 0] },
                 referral_code: "$referral_code",
                 Ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
                 Ambassador_lastname: { $arrayElemAt: ["$ambassador.surname", 0] },
@@ -676,6 +683,7 @@ async function getActiveAndInactiveReferralPerAmbassador(param) {
                 _id: 0,
                 Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
                 Subscriber_lastname: { $arrayElemAt: ["$subscriber.surname", 0] },
+                id_number: { $arrayElemAt: ["$subscriber.id_number", 0] },
                 referral_code: "$referral_code",
                 Ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
                 Ambassador_lastname: { $arrayElemAt: ["$ambassador.surname", 0] },
@@ -754,6 +762,7 @@ async function getAllActiveReferralAmbassador(param) {
                 _id: 0,
                 Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
                 Subscriber_lastname: { $arrayElemAt: ["$subscriber.surname", 0] },
+                id_number: { $arrayElemAt: ["$subscriber.id_number", 0] },
                 referral_code: "$referral_code",
                 Ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
                 Ambassador_lastname: { $arrayElemAt: ["$ambassador.surname", 0] },
@@ -822,6 +831,7 @@ async function getActiveReferralAmbassador(param) {
                 _id: 0,
                 Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
                 Subscriber_lastname: { $arrayElemAt: ["$subscriber.surname", 0] },
+                id_number: { $arrayElemAt: ["$subscriber.id_number", 0] },
                 referral_code: "$referral_code",
                 Ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
                 Ambassador_lastname: { $arrayElemAt: ["$ambassador.surname", 0] },
@@ -892,6 +902,7 @@ async function getAllInactiveReferralAmbassador(param) {
                 _id: 0,
                 Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
                 Subscriber_lastname: { $arrayElemAt: ["$subscriber.surname", 0] },
+                id_number: { $arrayElemAt: ["$subscriber.id_number", 0] },
                 referral_code: "$referral_code",
                 Ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
                 Ambassador_lastname: { $arrayElemAt: ["$ambassador.surname", 0] },
@@ -961,6 +972,7 @@ async function getInactiveReferralAmbassador(param) {
                 _id: 0,
                 Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
                 Subscriber_lastname: { $arrayElemAt: ["$subscriber.surname", 0] },
+                id_number: { $arrayElemAt: ["$subscriber.id_number", 0] },
                 referral_code: "$referral_code",
                 Ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
                 Ambassador_lastname: { $arrayElemAt: ["$ambassador.surname", 0] },
@@ -1017,7 +1029,7 @@ async function getPaymentDueToAmbassador(param) {
             referral_code: { $in: referrals },
             is_active: true,
           })
-          .select('firstname surname referral_code')
+          .select('firstname surname id_number referral_code')
           .exec();
 
         const result = ambassadorData.reduce((acc, data) => {
@@ -1026,6 +1038,7 @@ async function getPaymentDueToAmbassador(param) {
             acc.push({
                 Ambassador_firstname: data.firstname,
                 Ambassador_lastname: data.surname,
+                id_number: data.id_number,
                 referral_code: data.referral_code,
                 referral_count: referralCount,
                 due_amount: amountDue,
@@ -1079,7 +1092,7 @@ async function getBulkPaymentReport(param) {
                 is_active: true,
               };
             const ambassadorDetails = await User.findOne(queryUser)
-                .select('firstname surname email referral_code account_holder_name account_number type_of_account branch_code')
+                .select('firstname surname id_number email referral_code account_holder_name account_number type_of_account branch_code')
                 .exec();
             if (ambassadorDetails) {
                 ambassadorData.push(ambassadorDetails);

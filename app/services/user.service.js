@@ -9,6 +9,7 @@ const mime = require("mime-types");
 
 module.exports = {
     create,
+    forgotPassword,
     updateProfileDetails,
     updateAmbassadorProfileDetails,
     getProfileDetails,
@@ -55,6 +56,45 @@ async function create(param) {
         return false;
     }
    
+}
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * For update the new password of the user
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+async function forgotPassword(req) {
+    console.log("req.params.id", req.params.id);
+    console.log("req.body.new_password", req.body.new_password);
+
+    const id = req.params.id;
+    const new_password = req.body.new_password;
+
+    const whereCondition = { _id: id };
+    try {
+        const updatedData = await User.findOneAndUpdate(
+            whereCondition,
+            {
+                $set: {
+                    password: bcrypt.hashSync(param.password, 10),
+                }
+            },
+            { new: true }
+        );
+
+        if (updatedData) {
+            return updatedData;
+        } else {
+            return false;
+        }
+    } catch (err) {
+        console.error("Error updating user new password:", err);
+        return false;
+    }  
 }
 
 /*****************************************************************************************/
@@ -206,100 +246,6 @@ async function updateAmbassadorProfileDetails(param, data) {
         return false;
     }
 };
-
-
-// async function updateAmbassadorProfileDetails(param, data) {
-//     console.log("param", param);
-//     console.log("updateAmbassadorProfileDetails data:", data);
-
-//     try {
-//         const whereCondition = { _id: param.id };
-//         let userData = await User.findById(whereCondition).select("bank_proof certificate");
-
-//         const certificateRegex = /^uploads\/certificate\/CER-\d+-\d+\.pdf$/;
-//         const bankProofRegex = /^uploads\/bank_proof\/CER-\d+-\d+\.pdf$/;
-
-//         //Add certificate and bank proof file in server
-//         if (!certificateRegex.test(data.certificate)) {
-//             const res = data.certificate;
-//             const base64Data = res.replace(/^data:([A-Za-z-+/]+);base64,/, "");
-//             let certificateName =
-//                 "CER-" + Math.floor(Math.random() * 1000000) + "-" + Date.now() + ".pdf";
-//             let certificatePath = path.join(
-//                 __dirname,
-//                 "../../uploads/certificate/" + certificateName
-//             );
-//             fs.writeFileSync(certificatePath, base64Data, { encoding: "base64" });
-//             data.certificate = "uploads/certificate/" + certificateName;
-
-//             // Delete the existing certificate file
-//             if (userData.certificate && fs.existsSync(path.join(__dirname, "../../", userData.certificate))) {
-//                 fs.unlinkSync(path.join(__dirname, "../../", userData.certificate));
-//             }
-//         }
-
-//         if (!bankProofRegex.test(data.bank_proof)) {
-//             const res_bankproof = data.bank_proof;
-//             const base64DataBankProof = res_bankproof.replace(
-//                 /^data:([A-Za-z-+/]+);base64,/,
-//                 ""
-//             );
-//             let bankProofName =
-//                 "CER-" + Math.floor(Math.random() * 1000000) + "-" + Date.now() + ".pdf";
-//             let bankProofPath = path.join(
-//                 __dirname,
-//                 "../../uploads/bank_proof/" + bankProofName
-//             );
-//             fs.writeFileSync(bankProofPath, base64DataBankProof, { encoding: "base64" });
-//             data.bank_proof = "uploads/bank_proof/" + bankProofName;
-
-//             // Delete the existing bank proof file
-//             if (userData.bank_proof && fs.existsSync(path.join(__dirname, "../../", userData.bank_proof))) {
-//                 fs.unlinkSync(path.join(__dirname, "../../", userData.bank_proof));
-//             }
-//         }
-
-//         // Update data in the database
-//         const updatedData = await User.findOneAndUpdate(
-//             whereCondition,
-//             {
-//                 $set: {
-//                     bank: data.bank,
-//                     branch: data.branch,
-//                     branch_code: data.branch_code,
-//                     account_number: data.account_number,
-//                     account_holder_name: data.account_holder_name,
-//                     type_of_account: data.type_of_account,
-//                     bank_contact_details: {
-//                         email: data.contact_details.email,
-//                         mobile_number: data.contact_details.mobile_number,
-//                         alternate_mobile_number: data.contact_details.alternate_mobile_number,
-//                         street: data.contact_details.street,
-//                         street_name: data.contact_details.street_name,
-//                         complex_n_unit: data.contact_details.complex_n_unit,
-//                         suburb_district: data.contact_details.suburb_district,
-//                         town_city: data.contact_details.town_city,
-//                         province: data.contact_details.province,
-//                         postal_code: data.contact_details.postal_code,
-//                     },
-//                     bank_proof: data.bank_proof,
-//                     certificate: data.certificate,
-//                 }
-//             },
-//             { new: true }
-//         );
-
-//         if (updatedData) {
-//             return updatedData;
-//         } else {
-//             return false;
-//         }
-//     } catch (err) {
-//         console.error("Error updating profile details:", err);
-//         return false;
-//     }
-// };
-
 
 
 /*****************************************************************************************/
