@@ -32,6 +32,10 @@
         },
         "profile": {
             "update_success": "Profile updated successfully."
+        }, 
+        "forgot_password": {
+            "success": "Data retrived successfully.",
+            "error": "Data not found."
         }
 
     } 

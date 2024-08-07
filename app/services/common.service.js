@@ -73,6 +73,7 @@ module.exports = {
   getPaymentDue,
   getReferralsThisMonth,
   getAmbassadorMonthlyPay,
+  varifyEmaiForgotPassword,
 };
 
 /*****************************************************************************************/
@@ -516,7 +517,7 @@ const addContactInBrevo = async function addContactInBrevo(ambassadorData) {
   }
 };
 
-const updateContactAttributeBrevo = async function updateContactAttributeBrevo(email, subscriber_firstname, subscriber_lastname) {
+const updateContactAttributeBrevo = async function updateContactAttributeBrevo(email, subscriber_firstname, subscriber_lastname, token) {
   try {
     let defaultClient = SibApiV3Sdk.ApiClient.instance;
 
@@ -527,7 +528,11 @@ const updateContactAttributeBrevo = async function updateContactAttributeBrevo(e
     let identifier = email; 
     let updateContact = new SibApiV3Sdk.UpdateContact(); 
 
-    updateContact.attributes = {'SUBSCRIBER_FIRSTNAME':subscriber_firstname,'SUBSCRIBER_LASTNAME':subscriber_lastname};
+    if(token){
+      updateContact.attributes = {'TOKEN_FORGOT_PASSWORD':token};
+    } else {
+      updateContact.attributes = {'SUBSCRIBER_FIRSTNAME':subscriber_firstname,'SUBSCRIBER_LASTNAME':subscriber_lastname};
+    }
 
     apiInstance.updateContact(identifier, updateContact).then(function() {
     console.log('updateContactAttributeBrevo API called successfully.');
@@ -2265,6 +2270,77 @@ async function getAmbassadorMonthlyPay(req) {
     throw error;
   }
 };
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * For varify email for forgot password
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+async function varifyEmaiForgotPassword(req) {
+  console.log("req.params.id", req.params.id);
+  const emailId = req.params.id;
+
+  try {
+      const userData = await User.find({ email: emailId }).select('_id firstname surname email');
+      console.log("userData", userData);
+
+      const firstname = userData[0].firstname;
+      const surname = userData[0].surname;
+      const email = userData[0].email;
+      const id = userData[0]._id;
+      const current_date_time = generateTimestamp();
+      
+      // Generate a JWT token
+      // const payload = {
+      //   id,
+      //   dateTime: current_date_time,
+      // };
+      // const secretKey = '20240805'; // Use a secure key
+      // const token = jwt.sign(payload, secretKey, { expiresIn: '24h' });
+      // console.log("token forgot password", token);
+      // const forgot_password_link = `https://affiliate.skilltechsa.online/forgot-password?var=${token}`
+      
+
+      //Encode id and date_time
+      const userId = btoa(id);
+      const dateTime = btoa(current_date_time);
+      const forgot_password_link = `https://affiliate.skilltechsa.online/forgot-password?var1=${userId}&var2=${dateTime}`
+
+      //Brevo email for changing password
+      updateContactAttributeBrevo(email, "", "", forgot_password_link)
+      const variables = {
+        FIRSTNAME: firstname,
+        LASTNAME: surname,
+      }
+      const receiverName = firstname + " " + surname;
+      const receiverEmail = email;
+      sendEmailByBrevo(79, receiverEmail, receiverName, variables);
+
+      if (userData) {
+          return userData;
+      } else {
+          return false;
+      }
+  } catch (err) {
+      console.error("Error in getting user data:", err);
+      return false;
+  }  
+};
+
+function generateTimestamp() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+}
 
 /*****************************************************************************************/
 /*****************************************************************************************/

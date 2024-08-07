@@ -68,11 +68,21 @@ async function create(param) {
  * @returns Object|null
  */
 async function forgotPassword(req) {
-    console.log("req.params.id", req.params.id);
-    console.log("req.body.new_password", req.body.new_password);
+    console.log("forgotPassword body", req.body);
 
-    const id = req.params.id;
     const new_password = req.body.new_password;
+    const var1 = req.body.id;
+    const id = atob(var1);
+    const var2 = req.body.dateTime;
+    const date_time = atob(var2);
+
+    const tokenDate = new Date(date_time);
+    const currentDate = new Date();
+    const expiryDate = new Date(currentDate.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
+    if (tokenDate < expiryDate) {
+        return res.status(400).json({ error: 'Token expired' });
+    }
+
 
     const whereCondition = { _id: id };
     try {
@@ -80,7 +90,7 @@ async function forgotPassword(req) {
             whereCondition,
             {
                 $set: {
-                    password: bcrypt.hashSync(param.password, 10),
+                    password: bcrypt.hashSync(new_password, 10),
                 }
             },
             { new: true }
