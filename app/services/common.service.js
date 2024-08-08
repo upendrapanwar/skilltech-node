@@ -1621,7 +1621,7 @@ async function getpayfastTransactionHistory() {
     let timestamp = generateTimestamp();
     console.log("Timestamp: ", timestamp);
     const data = {
-        'date': '2024-07-23',
+        'date': '2024-07-24',
         'merchant-id': process.env.PAYFAST_MERCHANT_ID,
         'passphrase': process.env.PAYFAST_PASSPHRASE,
         'timestamp': timestamp,
@@ -1780,7 +1780,7 @@ async function cancelCourseByUser(req) {
     //For blocking the user on unsubscription
     const userBlocked = await User.findOneAndUpdate(
       { _id: userId },
-      {is_active: false},
+      {is_active: false, subscription_cancellation_date: new Date()},
       { new: true }
     );
     console.log("userBlocked successfully:", userBlocked);

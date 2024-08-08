@@ -1170,12 +1170,22 @@ async function getConsolidatedInformationReport(param) {
         }
 
         const userData = await User.find(query)
-          .select("firstname surname id_number email mobile_number alternate_mobile_number province race gender bank account_number account_holder_name type_of_account bank_proof certificate role is_active referral_code")
+          .select("firstname surname id_number email mobile_number alternate_mobile_number province race gender bank account_number account_holder_name type_of_account bank_proof certificate role is_active referral_code subscription_cancellation_date subscription_stopped_payment_date")
           .exec();
         
         // Filter out the user with email 'admin@gmail.com'
         const filteredUserData = userData.filter(data => data.email !== 'admin@gmail.com');
 
+        const formatDate = (dateString) => {
+            console.log("dateString", dateString)
+            if(dateString !== null) {
+                const date = new Date(dateString);
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}-${month}-${year}`;
+            }
+        };
         // Map the user data to the required format
         const result = filteredUserData.map(data => ({
             firstname: data.firstname || 'none',
@@ -1197,7 +1207,9 @@ async function getConsolidatedInformationReport(param) {
             is_active: data.is_active ? 'Active' : 'Inactive',
             referral_code: data.referral_code || 'none',
             unsubscribe_status: data.is_active ? 'Y' : 'N',
+            unsubscribed_date: formatDate(data.subscription_cancellation_date) || 'none',
             stopped_payment_status: 'N',
+            stopped_payment_date: formatDate(data.subscription_stopped_payment_date) || 'none',
         }));
 
         console.log(result);

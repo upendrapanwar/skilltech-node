@@ -23,6 +23,7 @@ const schema = new Schema(
     paymentType: { type: String, required: false, default: "" },
     course_category: { type: String, required: false, default: "" },
     cancellation_date: { type: Date, required: false, default: null },
+    stopped_payment_date: { type: Date, required: false, default: null },
     is_active: { type: Boolean, required: false, default: true },
   },
   {
