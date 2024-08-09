@@ -43,6 +43,9 @@ router.get('/bulk-payment-report/:start_date/:end_date', getBulkPaymentReport);
 router.get('/consolidated-information-report', getAllConsolidatedInformationReport);
 router.get('/consolidated-information-report/:start_date/:end_date', getConsolidatedInformationReport);
 
+router.post('/varify-email-forgot-password/:id', varifyEmailForgotPassword);
+router.post('/forgot-password', forgotPassword);
+
 module.exports = router;
 
 /** 
@@ -460,6 +463,32 @@ function getAllConsolidatedInformationReport(req, res, next) {
  */
 function getConsolidatedInformationReport(req, res, next) {
     adminService.getConsolidatedInformationReport(req.params)
+        .then(inactiveReferral => inactiveReferral ? res.status(200).json({ status: true, data: inactiveReferral }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })));
+
+}
+/**
+ * Function for varify email for forgot password
+ * @param {*} req 
+ * @param {*} res
+ * @param {*} next
+ * 
+ */
+function varifyEmailForgotPassword(req, res, next) {
+    adminService.varifyEmailForgotPassword(req)
+        .then(inactiveReferral => inactiveReferral ? res.status(200).json({ status: true, data: inactiveReferral }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })));
+
+}
+/**
+ * Function to update new password for forgot password
+ * @param {*} req 
+ * @param {*} res
+ * @param {*} next
+ * 
+ */
+function forgotPassword(req, res, next) {
+    adminService.forgotPassword(req)
         .then(inactiveReferral => inactiveReferral ? res.status(200).json({ status: true, data: inactiveReferral }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
         .catch(err => next(res.json({ status: false, message: err })));
 

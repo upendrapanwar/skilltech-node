@@ -20,6 +20,7 @@ const msg = require("../helpers/messages.json");
 const { User, Subscriptionpayment, Purchasedcourses, Referral } = require('../helpers/db');
 const crypto = require("crypto");
 const { unsubscribe } = require('diagnostics_channel');
+const SibApiV3Sdk = require('sib-api-v3-sdk');
 
 module.exports = {
     agentSubscription,
@@ -45,6 +46,10 @@ module.exports = {
     getPaymentDueToAmbassador,
     getBulkPaymentReport,
     getConsolidatedInformationReport,
+
+    varifyEmailForgotPassword,
+    forgotPassword,
+    
 };
 
 /*****************************************************************************************/
@@ -339,7 +344,7 @@ async function getDefaultedSubscriptionPaymentOfAmbassador(param) {
                 model: User,
                 match: { role: 'ambassador' },
                 select: 'role firstname surname id_number referral_code'
-            });
+            }); 
 
         console.log("Defaulted Subscriptions Payments of Ambassador", defaultAmbassador);
         const result = defaultAmbassador.filter(entry => entry.userid !== null).map(data => ({
@@ -347,7 +352,8 @@ async function getDefaultedSubscriptionPaymentOfAmbassador(param) {
             Ambassador_lastname: data.userid.surname,
             id_number: data.userid.id_number,
             referral_code: data.userid.referral_code,
-            payment_status: data.payment_status
+            payment_status: data.payment_status,
+            last_paid_date: data.last_paid_date || "00-00-0000",
         }));
         if (result && result.length > 0) {
             return result;
@@ -394,7 +400,8 @@ async function getDefaultedSubscriptionPaymentOfSubscribers(param) {
             Subscriber_firstname: data.userid.firstname,
             Subscriber_lastname: data.userid.surname,
             id_number: data.userid.id_number,
-            payment_status: data.payment_status
+            payment_status: data.payment_status,
+            last_paid_date: data.last_paid_date || "00-00-0000",
         }));
 
         if (result) {
@@ -1218,4 +1225,199 @@ async function getConsolidatedInformationReport(param) {
         console.error('An error occurred:', error);
         throw error;
     }
+}
+/**
+ * Function for varify email for forgot password
+ * @param {param}
+ * 
+ * @result null|Object
+ */
+async function varifyEmailForgotPassword(req) {
+    console.log("req.params.id", req.params.id);
+    const emailId = req.params.id;
+  
+    try {
+        const userData = await User.find({ email: emailId }).select('_id firstname surname email');
+        console.log("userData", userData);
+  
+        const firstname = userData[0].firstname;
+        const surname = userData[0].surname;
+        const email = userData[0].email;
+        const id = userData[0]._id;
+        const current_date_time = generateTimestamp();
+        
+        // Generate a JWT token
+        // const payload = {
+        //   id,
+        //   dateTime: current_date_time,
+        // };
+        // const secretKey = '20240805'; // Use a secure key
+        // const token = jwt.sign(payload, secretKey, { expiresIn: '24h' });
+        // console.log("token forgot password", token);
+        // const forgot_password_link = `https://affiliate.skilltechsa.online/forgot-password?var=${token}`
+        
+  
+        //Encode id and date_time
+        const userId = btoa(id);
+        const dateTime = btoa(current_date_time);
+        const forgot_password_link = `https://affiliate.skilltechsa.online/admin/forgot-password?var1=${userId}&var2=${dateTime}`
+  
+        //Brevo email for changing password
+        updateContactAttributeBrevo(email, "", "", forgot_password_link)
+        const variables = {
+          FIRSTNAME: firstname,
+          LASTNAME: surname,
+        }
+        const receiverName = firstname + " " + surname;
+        const receiverEmail = email;
+        sendEmailByBrevo(79, receiverEmail, receiverName, variables);
+  
+        if (userData) {
+            return userData;
+        } else {
+            return false;
+        }
+    } catch (err) {
+        console.error("Error in getting user data:", err);
+        return false;
+    }  
+  };
+
+  function generateTimestamp() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  }
+
+  const updateContactAttributeBrevo = async function updateContactAttributeBrevo(email, subscriber_firstname, subscriber_lastname, token) {
+    try {
+      let defaultClient = SibApiV3Sdk.ApiClient.instance;
+  
+      let apiKey = defaultClient.authentications['api-key'];
+      apiKey.apiKey = process.env.BREVO_KEY;
+      let apiInstance = new SibApiV3Sdk.ContactsApi();
+  
+      let identifier = email; 
+      let updateContact = new SibApiV3Sdk.UpdateContact(); 
+  
+      if(token){
+        updateContact.attributes = {'TOKEN_FORGOT_PASSWORD':token};
+      } else {
+        updateContact.attributes = {'SUBSCRIBER_FIRSTNAME':subscriber_firstname,'SUBSCRIBER_LASTNAME':subscriber_lastname};
+      }
+  
+      apiInstance.updateContact(identifier, updateContact).then(function() {
+      console.log('updateContactAttributeBrevo API called successfully.');
+      }, function(error) {
+        console.error(error);
+      });
+    } catch {
+      console.log("Error in sending Brevo email:", error.message);
+      return null;
+    }
+  };
+
+  const sendEmailByBrevo = async function sendEmailByBrevo(template_id, receiverEmailId, receiverName, variables) {
+    try {
+      console.log('template_id', template_id);
+      console.log('receiverEmailId', receiverEmailId);
+      console.log('receiverName', receiverName);
+      console.log('variables', variables);
+  
+      let defaultClient = SibApiV3Sdk.ApiClient.instance;
+      let apiKey = defaultClient.authentications['api-key'];
+      apiKey.apiKey = process.env.BREVO_KEY;
+  
+      let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+  
+      let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail(); 
+  
+      if(variables){
+        sendSmtpEmail = {
+          to: [{
+            email: receiverEmailId,
+            name: receiverName
+          }],
+          templateId: template_id,
+          params: variables,
+          sender: {
+            email: 'guild@skilltechsa.co.za',
+            name: 'High Vista Guild'
+          }
+        };
+      } else {
+        sendSmtpEmail = {
+          to: [{
+            email: receiverEmailId,
+            name: receiverName
+          }],
+          templateId: template_id,
+          sender: {
+            email: 'guild@skilltechsa.co.za',
+            name: 'High Vista Guild'
+          }
+        };
+      }
+  
+      const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+      console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+      return data;
+  
+    } catch (error) {
+      console.log("Error in sending Brevo email:", error.message);
+      return null;
+    }
+  };
+
+
+  /**
+ * For update the new password of the admin
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+async function forgotPassword(req) {
+    console.log("forgotPassword body", req.body);
+
+    const new_password = req.body.new_password;
+    const var1 = req.body.id;
+    const id = atob(var1);
+    const var2 = req.body.dateTime;
+    const date_time = atob(var2);
+
+    const tokenDate = new Date(date_time);
+    const currentDate = new Date();
+    const expiryDate = new Date(currentDate.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
+    if (tokenDate < expiryDate) {
+        return res.status(400).json({ error: 'Token expired' });
+    }
+
+
+    const whereCondition = { _id: id };
+    try {
+        const updatedData = await User.findOneAndUpdate(
+            whereCondition,
+            {
+                $set: {
+                    password: bcrypt.hashSync(new_password, 10),
+                }
+            },
+            { new: true }
+        );
+
+        if (updatedData) {
+            return updatedData;
+        } else {
+            return false;
+        }
+    } catch (err) {
+        console.error("Error updating user new password:", err);
+        return false;
+    }  
 }

@@ -73,7 +73,7 @@ module.exports = {
   getPaymentDue,
   getReferralsThisMonth,
   getAmbassadorMonthlyPay,
-  varifyEmaiForgotPassword,
+  varifyEmailForgotPassword,
 };
 
 /*****************************************************************************************/
@@ -1883,7 +1883,8 @@ async function getDefaultedSubscriptionPaymentOfSubscribers(req) {
       const result = subscriptions.map(subscription => ({
           Subscriber_firstname: subscription.userid.firstname,
           Subscriber_lastname: subscription.userid.surname,
-          payment_status: subscription.payment_status
+          payment_status: subscription.payment_status,
+          last_paid_date: last_paid_date || "00-00-0000",
       }));
 
       console.log(result);
@@ -2280,7 +2281,7 @@ async function getAmbassadorMonthlyPay(req) {
  * 
  * @returns Object|null
  */
-async function varifyEmaiForgotPassword(req) {
+async function varifyEmailForgotPassword(req) {
   console.log("req.params.id", req.params.id);
   const emailId = req.params.id;
 

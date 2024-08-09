@@ -72,7 +72,7 @@ var uploadCertificate = multer({
 
 router.post("/signup", registerValidation, register);
 router.post("/signin", authenticate);
-router.post('/varify-email-forgot-password/:id', varifyEmaiForgotPassword);
+router.post('/varify-email-forgot-password/:id', varifyEmailForgotPassword);
 router.post("/subscription", subscription); 
 router.post("/ambassador-subscription", ambassadorSubscription); 
 router.post("/complete-registration", completeRegisteration);
@@ -178,8 +178,8 @@ function authenticate(req, res, next) {
  * 
  * @return JSON|null
  */
-function varifyEmaiForgotPassword(req, res, next) {
-  commonService.varifyEmaiForgotPassword(req)
+function varifyEmailForgotPassword(req, res, next) {
+  commonService.varifyEmailForgotPassword(req)
   .then(user => user ? res.status(201).json({ status: true, message: msg.user.forgot_password.success, data: user }) : res.status(400).json({ status: false, message: msg.user.forgot_password.error }))
   .catch(err => next(res.status(400).json({ status: false, message: err })));
 }
