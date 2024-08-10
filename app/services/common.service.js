@@ -790,7 +790,7 @@ async function ambassador_subscription(param) {
             bank_proof: param.bank_proof,
             type_of_account: param.type_of_account,
             account_number: param.account_number,
-            bank_contact_details: param.contact_details,
+            // bank_contact_details: param.contact_details,
             ambassador_date: new Date(),
             referral_code: param.referral_code,
             refer_friend: param.refer_friend,
@@ -832,91 +832,7 @@ async function ambassador_subscription(param) {
     console.error("Error processing ambassador subscription:", error);
     return false;
   }
-}
-
-
-
-// async function ambassador_subscription(param) {
-//   const res = param.certificate;
-//   const base64Data = res.replace(/^data:([A-Za-z-+/]+);base64,/, "");
-//   let certificateName =
-//     "CER-" + Math.floor(Math.random() * 1000000) + "-" + Date.now() + ".pdf";
-//   let certificatePath = path.join(
-//     __dirname,
-//     "../../uploads/certificate/" + certificateName
-//   );
-//   fs.writeFileSync(certificatePath, base64Data, { encoding: "base64" });
-//   param.certificate = "uploads/certificate/" + certificateName;
-
-//   const res_bankproof = param.bank_proof;
-//   const base64DataBankProof = res_bankproof.replace(
-//     /^data:([A-Za-z-+/]+);base64,/,
-//     ""
-//   );
-//   let bankProofName =
-//     "CER-" + Math.floor(Math.random() * 1000000) + "-" + Date.now() + ".pdf";
-//   let bankProofPath = path.join(
-//     __dirname,
-//     "../../uploads/bank_proof/" + bankProofName
-//   );
-//   fs.writeFileSync(bankProofPath, base64DataBankProof, { encoding: "base64" });
-//   param.bank_proof = "uploads/bank_proof/" + bankProofName;
-
-//   var whereCondition = { _id: param.uid };
-//   const test = User.findOne(whereCondition);
-
-//   if (await User.findOne(whereCondition)) {
-//     result = await User.updateMany({ _id: param.uid }, [
-//       {
-//         $set: {
-//           account_holder_name: param.account_holder_name,
-//           bank: param.bank,
-//           branch: param.branch,
-//           branch_code: param.branch_code,
-//           bank_proof: param.bank_proof,
-//           type_of_account: param.type_of_account,
-//           account_number: param.account_number,
-//           bank_contact_details: param.contact_details,
-//           ambassador_date: new Date(),
-//           referral_code: param.referral_code,
-//           refer_friend: param.refer_friend,
-//           certificate: param.certificate,
-//           confirm_details: param.confirm_details,
-//           update_information: param.update_information,
-//           role: "ambassador",
-//         },
-//       },
-//     ]); 
-//     console.log('ambassador=',result);
-
-//     if (result) {
-//       let res = await User.findById(param.uid).select(
-//         "-password -community -social_accounts -reset_password -image_url -phone"
-//       );
-//       addContactInBrevo(res);
-//       const receiverName = res.firstname + " " + res.surname
-//       const variables = {
-//         REFERRAL_CODE: res.referral_code
-//       }
-//       sendEmailByBrevo(24, res.email, receiverName, variables);
-//       console.log('receiverName',receiverName);
-//       console.log('res.referral_code',res.referral_code);
-//       console.log('ambassador details:::::',res);
-
-//       if (res) {
-//         return res;
-//       } else {
-//         return false;
-//       }
-//     } else {
-//       return false;
-//     }
-//   } else {
-//     return false;
-//   }
-
-//   //const data = await user.save();
-// }
+};
 
 /*****************************************************************************************/
 /*****************************************************************************************/
