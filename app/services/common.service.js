@@ -374,13 +374,13 @@ const sendEmailByBrevo = async function sendEmailByBrevo(template_id, receiverEm
       sendSmtpEmail = {
         to: [{
           email: receiverEmailId,
-          name: receiverName
+          // name: receiverName
         }],
         templateId: template_id,
         params: variables,
         sender: {
           email: 'guild@skilltechsa.co.za',
-          name: 'High Vista Guild'
+          // name: 'High Vista Guild'
         }
       };
     } else {
@@ -645,18 +645,20 @@ async function saveMembershipSubscription(param) {
       }
     );
 
-    const userData = await User.findOneAndUpdate(
-      { _id: param.userid },
-      {
-        $set: {
-          role: "subscriber",
-          subscription_date: new Date(),
+    if(param.payment_status !== 'cancel'){
+      const userData = await User.findOneAndUpdate(
+        { _id: param.userid },
+        {
+          $set: {
+            role: "subscriber",
+            subscription_date: new Date(),
+          },
         },
-      },
-      {
-        new: true
-      }
-    );
+        {
+          new: true
+        }
+      );
+    };
 
     console.log('subscriberdata=',data);
     if (param.id) {
@@ -1336,8 +1338,9 @@ async function saveQuery(param) {
     console.log("saveQuery Param", param);
     const firstname = param.first_name;
     const surname = param.surname;
-    const mobile_number = param.mobile_number;
+    const contact_number = param.mobile_number;
     const email = param.email;
+    const query = param.query;
 
     const queryData = await Userquery.create({
       first_name: param.first_name,
@@ -1351,30 +1354,27 @@ async function saveQuery(param) {
     console.log(userQueryData);
 
     //For Brevo email for user query
-    const userData = {
-      firstname: firstname,
-      surname: surname,
-      mobile_number: mobile_number,
-      // query: param.query
-      email: email
-    }
-
     const queryEmailExisted = await Userquery.find({
       email: param.email,
     });
+
     if(!queryEmailExisted){
-      addContactInBrevoForQuery(userData);
+      addContactInBrevoForQuery(email, firstname, surname, contact_number, query);
+    } else {
+      updateContactAttributeBrevoForQuery(email, firstname, surname, contact_number, query);
     };
 
     const variables = {
-      FIRSTNAME: firstname,
-      LASTNAME: surname,
-      CONTACT_NUMBER: mobile_number,
-      // QUERY: param.query
+      SUBSCRIBER_FIRSTNAME: firstname,
+      SUBSCRIBER_LASTNAME: surname,
+      CONTACT_NUMBER: contact_number,
+      QUERY: query
     }
     const receiverName = firstname + " " + surname;
     const receiverEmail = email;
     sendEmailByBrevo(77, receiverEmail, receiverName, variables);
+
+    sendEmailByBrevo(80, 'eynoashish@gmail.com', 'High Vista Guild', variables);
 
     return userQueryData;
   } catch (error) {
@@ -1383,7 +1383,7 @@ async function saveQuery(param) {
   }
 };
 
-const addContactInBrevoForQuery = async function addContactInBrevoForQuery(userData) {
+const addContactInBrevoForQuery = async function addContactInBrevoForQuery(email, firstname, surname, contact_number, query) {
   try {
     console.log("addContactInBrevoForQuery userData", userData);
     let defaultClient = SibApiV3Sdk.ApiClient.instance;
@@ -1393,16 +1393,42 @@ const addContactInBrevoForQuery = async function addContactInBrevoForQuery(userD
 
     let createContact = new SibApiV3Sdk.CreateContact();
 
-    createContact.email = userData.email;
+    createContact.email = email;
     createContact.listIds = [9];
     createContact.attributes = {
-      FIRSTNAME: userData.firstname,
-      LASTNAME: userData.surname,
-      CONTACT_NUMBER: userData.mobile_number,
-      // QUERY: userData.query
+      FIRSTNAME: firstname,
+      LASTNAME: surname,
+      CONTACT_NUMBER: contact_number,
+      SUBSCRIBER_FIRSTNAME: firstname,
+      SUBSCRIBER_LASTNAME: surname,
+      QUERY: query
     };
     apiInstance.createContact(createContact).then(function(data) {
       console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+    }, function(error) {
+      console.error(error);
+    });
+  } catch {
+    console.log("Error in sending Brevo email:", error.message);
+    return null;
+  }
+};
+
+const updateContactAttributeBrevoForQuery = async function updateContactAttributeBrevoForQuery(email, firstname, surname, contact_number, query) {
+  try {
+    let defaultClient = SibApiV3Sdk.ApiClient.instance;
+
+    let apiKey = defaultClient.authentications['api-key'];
+    apiKey.apiKey = process.env.BREVO_KEY;
+    let apiInstance = new SibApiV3Sdk.ContactsApi();
+
+    let identifier = email; 
+    let updateContact = new SibApiV3Sdk.UpdateContact(); 
+
+    updateContact.attributes = {'SUBSCRIBER_FIRSTNAME':firstname, 'SUBSCRIBER_LASTNAME':surname, 'CONTACT_NUMBER':contact_number, 'QUERY': query};
+
+    apiInstance.updateContact(identifier, updateContact).then(function() {
+    console.log('updateContactAttributeBrevo API called successfully.');
     }, function(error) {
       console.error(error);
     });

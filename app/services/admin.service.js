@@ -1181,7 +1181,7 @@ async function getConsolidatedInformationReport(param) {
           .exec();
         
         // Filter out the user with email 'admin@gmail.com'
-        const filteredUserData = userData.filter(data => data.email !== 'admin@gmail.com');
+        const filteredUserData = userData.filter(data => data.role !== 'admin');
 
         const formatDate = (dateString) => {
             console.log("dateString", dateString)
@@ -1388,14 +1388,17 @@ async function forgotPassword(req) {
     const new_password = req.body.new_password;
     const var1 = req.body.id;
     const id = atob(var1);
-    const var2 = req.body.dateTime;
+    const var2 = req.body.dateTime; 
     const date_time = atob(var2);
+
+    console.log("id", id);
+    console.log("date_time", date_time);
 
     const tokenDate = new Date(date_time);
     const currentDate = new Date();
-    const expiryDate = new Date(currentDate.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
+    const expiryDate = new Date(currentDate.getTime() - 24 * 60 * 60 * 1000);
     if (tokenDate < expiryDate) {
-        return res.status(400).json({ error: 'Token expired' });
+        return;
     }
 
 

@@ -76,13 +76,15 @@ async function forgotPassword(req) {
     const var2 = req.body.dateTime;
     const date_time = atob(var2);
 
+    console.log("id", id);
+    console.log("date_time", date_time);
+
     const tokenDate = new Date(date_time);
     const currentDate = new Date();
-    const expiryDate = new Date(currentDate.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
+    const expiryDate = new Date(currentDate.getTime() - 24 * 60 * 60 * 1000);
     if (tokenDate < expiryDate) {
-        return res.status(400).json({ error: 'Token expired' });
-    }
-
+        return
+    };
 
     const whereCondition = { _id: id };
     try {
@@ -227,18 +229,18 @@ async function updateAmbassadorProfileDetails(param, data) {
                     account_number: data.account_number,
                     account_holder_name: data.account_holder_name,
                     type_of_account: data.type_of_account,
-                    bank_contact_details: {
-                        email: data.contact_details.email,
-                        mobile_number: data.contact_details.mobile_number,
-                        alternate_mobile_number: data.contact_details.alternate_mobile_number,
-                        street: data.contact_details.street,
-                        street_name: data.contact_details.street_name,
-                        complex_n_unit: data.contact_details.complex_n_unit,
-                        suburb_district: data.contact_details.suburb_district,
-                        town_city: data.contact_details.town_city,
-                        province: data.contact_details.province,
-                        postal_code: data.contact_details.postal_code,
-                    },
+                    // bank_contact_details: {
+                    //     email: data.contact_details.email,
+                    //     mobile_number: data.contact_details.mobile_number,
+                    //     alternate_mobile_number: data.contact_details.alternate_mobile_number,
+                    //     street: data.contact_details.street,
+                    //     street_name: data.contact_details.street_name,
+                    //     complex_n_unit: data.contact_details.complex_n_unit,
+                    //     suburb_district: data.contact_details.suburb_district,
+                    //     town_city: data.contact_details.town_city,
+                    //     province: data.contact_details.province,
+                    //     postal_code: data.contact_details.postal_code,
+                    // },
                     bank_proof: data.bank_proof,
                     certificate: data.certificate,
                 }
@@ -455,6 +457,7 @@ async function getCartItem(req) {
 async function deleteCartItem(req) {
     try {
         const userId = req.params.id;
+        console.log("deleteCartItem userID:::::::::", userId);
 
         const whereCondition = { _id: userId };
         const updatedData = await User.findOneAndUpdate(
