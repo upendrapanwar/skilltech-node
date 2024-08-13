@@ -1342,6 +1342,11 @@ async function saveQuery(param) {
     const email = param.email;
     const query = param.query;
 
+    const queryEmailExisted = await Userquery.find({
+      email: param.email,
+    });
+    console.log('queryEmailExisted', queryEmailExisted);
+
     const queryData = await Userquery.create({
       first_name: param.first_name,
       surname: param.surname,
@@ -1353,12 +1358,14 @@ async function saveQuery(param) {
     const userQueryData = await queryData.save();
     console.log(userQueryData);
 
-    //For Brevo email for user query
-    const queryEmailExisted = await Userquery.find({
+    const emailExistedInBrevo = await User.find({
       email: param.email,
+      role: { $in: ['subscriber', 'ambassador'] },
     });
-
-    if(!queryEmailExisted){
+    console.log('emailExistedInBrevo', emailExistedInBrevo);
+    
+    //For Brevo email for user query
+    if(!queryEmailExisted || !emailExistedInBrevo){
       addContactInBrevoForQuery(email, firstname, surname, contact_number, query);
     } else {
       updateContactAttributeBrevoForQuery(email, firstname, surname, contact_number, query);
@@ -1374,7 +1381,8 @@ async function saveQuery(param) {
     const receiverEmail = email;
     sendEmailByBrevo(77, receiverEmail, receiverName, variables);
 
-    sendEmailByBrevo(80, 'eynoashish@gmail.com', 'High Vista Guild', variables);
+    updateContactAttributeBrevoForQuery('guild@skilltechsa.co.za', firstname, surname, contact_number, query);
+    sendEmailByBrevo(80, 'guild@skilltechsa.co.za', 'High Vista Guild', variables);
 
     return userQueryData;
   } catch (error) {
