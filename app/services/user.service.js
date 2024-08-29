@@ -14,6 +14,7 @@ module.exports = {
     updateAmbassadorProfileDetails,
     getProfileDetails,
     checkSouthAfricanId,
+    checkResetPasswordEmailId,
     saveMoodleLoginId,
     saveCartItem,
     getCartItem,
@@ -71,10 +72,14 @@ async function forgotPassword(req) {
     console.log("forgotPassword body", req.body);
 
     const new_password = req.body.new_password;
-    const var1 = req.body.id;
-    const id = atob(var1);
-    const var2 = req.body.dateTime;
-    const date_time = atob(var2);
+    const reset_token = req.body.reset_token;
+    const decodedString = atob(reset_token); // Decode the Base64 string back to JSON string
+    const decodedToken = JSON.parse(decodedString); // Parse the JSON string back into an object
+
+    console.log("decodedToken", decodedToken);
+
+    const id = decodedToken.id;
+    const date_time = decodedToken.current_date_time;
 
     console.log("id", id);
     console.log("date_time", date_time);
@@ -92,6 +97,7 @@ async function forgotPassword(req) {
             whereCondition,
             {
                 $set: {
+                    is_pass_reset: true,
                     password: bcrypt.hashSync(new_password, 10),
                 }
             },
@@ -183,7 +189,7 @@ async function updateAmbassadorProfileDetails(param, data) {
         function saveBase64File(base64String, uploadDir) {
             const matches = base64String.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
             if (!matches || matches.length !== 3) {
-                throw new Error("Invalid base64 string");
+                throw new Error("Invalid base64 string"); 
             }
 
             const mimeType = matches[1];
@@ -207,7 +213,7 @@ async function updateAmbassadorProfileDetails(param, data) {
             if (userData.certificate && fs.existsSync(path.join(__dirname, "../../", userData.certificate))) {
                 fs.unlinkSync(path.join(__dirname, "../../", userData.certificate));
             }
-        }
+        };
 
         if (data.bank_proof && !/^uploads\/bank_proof\/CER-\d+-\d+\.\w+$/.test(data.bank_proof)) {
             data.bank_proof = saveBase64File(data.bank_proof, "bank_proof");
@@ -216,7 +222,14 @@ async function updateAmbassadorProfileDetails(param, data) {
             if (userData.bank_proof && fs.existsSync(path.join(__dirname, "../../", userData.bank_proof))) {
                 fs.unlinkSync(path.join(__dirname, "../../", userData.bank_proof));
             }
-        }
+        };
+
+        // if (data.certificate) {
+        //     data.certificate = saveBase64File(data.certificate, "certificate");
+        // }
+        // if (data.bank_proof) {
+        //     data.bank_proof = saveBase64File(data.bank_proof, "bank_proof");
+        // }
 
         // Update data in the database
         const updatedData = await User.findOneAndUpdate(
@@ -325,7 +338,25 @@ async function checkSouthAfricanId(req) {
         console.error('Error fetching profile data:', error);
         return null;
     }
-}
+};
+
+async function checkResetPasswordEmailId(req) {
+    try {
+        const emailId = req.params.id; 
+        console.log("checkResetPasswordEmailId emailId", emailId);
+    
+        const existingEmailId = await User.findOne({ email: emailId}).select('email');
+        console.log("existingEmailId", existingEmailId);
+        if (existingEmailId) {
+          return existingEmailId;
+        } else {
+            return;
+        }
+    } catch (error) {
+        console.error('Error fetching profile data:', error);
+        return null;
+    }
+};
 
 /*****************************************************************************************/
 /*****************************************************************************************/

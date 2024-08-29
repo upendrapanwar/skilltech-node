@@ -74,6 +74,15 @@ module.exports = {
   getReferralsThisMonth,
   getAmbassadorMonthlyPay,
   varifyEmailForgotPassword,
+
+  //Brevo email functions
+  sendEmailByBrevo,
+  sendUpdatedContactEmailByBrevo,
+  addContactInBrevo,
+  updateContactAttributeBrevo,
+  deleteContactBrevo,
+  createAndSendEmailCampaign,
+  sendUpdatedSuspendedContactEmail,
 };
 
 /*****************************************************************************************/
@@ -355,7 +364,7 @@ async function subscription(param) {
  *
  * @returns Object|null
  */
-const sendEmailByBrevo = async function sendEmailByBrevo(template_id, receiverEmailId, receiverName, variables) {
+async function sendEmailByBrevo(template_id, receiverEmailId, receiverName, variables) {
   try {
     console.log('template_id', template_id);
     console.log('receiverEmailId', receiverEmailId);
@@ -407,7 +416,78 @@ const sendEmailByBrevo = async function sendEmailByBrevo(template_id, receiverEm
   }
 };
 
-const sendUpdatedContactEmailByBrevo = async function sendUpdatedContactEmailByBrevo(template_id, receiverEmailId, receiverName, variables, subscriber_firstname, subscriber_lastname) {
+
+async function sendUpdatedSuspendedContactEmail(template_id, receiverEmailId, receiverName, variables, bank, branch, type_of_account, account_number, branch_code) {
+  try {
+    console.log('template_id', template_id);
+    console.log('receiverEmailId', receiverEmailId);
+    console.log('receiverName', receiverName);
+    console.log('variables', variables);
+
+    updateSuspendedContactAttribute(receiverEmailId, bank, branch, type_of_account, account_number, branch_code);
+    
+    let defaultClient = SibApiV3Sdk.ApiClient.instance;
+    let apiKey = defaultClient.authentications['api-key'];
+    apiKey.apiKey = process.env.BREVO_KEY;
+
+    let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+
+    let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail(); 
+
+      sendSmtpEmail = {
+        to: [{
+          email: receiverEmailId,
+          name: receiverName
+        }],
+        templateId: template_id,
+        params: variables,
+        sender: {
+          email: 'guild@skilltechsa.co.za',
+          name: 'High Vista Guild'
+        }
+    };
+
+    const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+    return data;
+
+  } catch (error) {
+    console.log("Error in sending Brevo email:", error.message);
+    return null;
+  }
+};
+async function updateSuspendedContactAttribute(email, bank, branch, type_of_account, account_number, branch_code) {
+  try {
+    let defaultClient = SibApiV3Sdk.ApiClient.instance;
+
+    let apiKey = defaultClient.authentications['api-key'];
+    apiKey.apiKey = process.env.BREVO_KEY;
+    let apiInstance = new SibApiV3Sdk.ContactsApi();
+
+    let identifier = email; 
+    let updateContact = new SibApiV3Sdk.UpdateContact(); 
+
+      updateContact.attributes = {
+        'BANK': bank,
+        'BRANCH' : branch,
+        'TYPE_OF_ACCOUNT' : type_of_account,
+        'ACCOUNT_NUMBER' : account_number,
+        'BRANCH_CODE' : branch_code,
+      };
+
+    apiInstance.updateContact(identifier, updateContact).then(function() {
+    console.log('updateContactAttribute API called successfully.');
+    }, function(error) {
+      console.error(error);
+    });
+  } catch {
+    console.log("Error in sending Brevo email:", error.message);
+    return null;
+  }
+};
+
+
+async function sendUpdatedContactEmailByBrevo(template_id, receiverEmailId, receiverName, variables, subscriber_firstname, subscriber_lastname) {
   try {
     console.log('template_id', template_id);
     console.log('receiverEmailId', receiverEmailId);
@@ -486,7 +566,7 @@ cron.schedule('0 1 1 * *', () => {
   
 
 //For adding contacts in the list in Brevo
-const addContactInBrevo = async function addContactInBrevo(ambassadorData) {
+async function addContactInBrevo(ambassadorData) {
   try {
     let defaultClient = SibApiV3Sdk.ApiClient.instance;
     let apiKey = defaultClient.authentications['api-key'];
@@ -517,7 +597,35 @@ const addContactInBrevo = async function addContactInBrevo(ambassadorData) {
   }
 };
 
-const updateContactAttributeBrevo = async function updateContactAttributeBrevo(email, subscriber_firstname, subscriber_lastname, token) {
+async function addSubscriberContactInBrevo(email, subscriber_firstname, subscriber_lastname, token) {
+  try {
+    let defaultClient = SibApiV3Sdk.ApiClient.instance;
+    let apiKey = defaultClient.authentications['api-key'];
+    apiKey.apiKey = process.env.BREVO_KEY;
+    let apiInstance = new SibApiV3Sdk.ContactsApi();
+
+    let createContact = new SibApiV3Sdk.CreateContact();
+    createContact.email = email;
+    createContact.listIds = [10];
+    createContact.attributes = {
+      FIRSTNAME: subscriber_firstname,
+      LASTNAME: subscriber_lastname,
+      SUBSCRIBER_FIRSTNAME: subscriber_firstname,
+      SUBSCRIBER_LASTNAME: subscriber_lastname,
+      TOKEN_FORGOT_PASSWORD: token
+    };
+    apiInstance.createContact(createContact).then(function(data) {
+      console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+    }, function(error) {
+      console.error(error);
+    });
+  } catch {
+    console.log("Error in sending Brevo email:", error.message);
+    return null;
+  }
+};
+
+async function updateContactAttributeBrevo(email, subscriber_firstname, subscriber_lastname, token) {
   try {
     let defaultClient = SibApiV3Sdk.ApiClient.instance;
 
@@ -546,7 +654,7 @@ const updateContactAttributeBrevo = async function updateContactAttributeBrevo(e
 };
 
 
-const deleteContactBrevo = async function deleteContactBrevo(email) {
+async function deleteContactBrevo(email) {
   try {
     let defaultClient = SibApiV3Sdk.ApiClient.instance;
 
@@ -567,7 +675,7 @@ const deleteContactBrevo = async function deleteContactBrevo(email) {
 };
 
 
-const createAndSendEmailCampaign = async function createAndSendEmailCampaign() {
+async function createAndSendEmailCampaign() {
   try {
     let defaultClient = SibApiV3Sdk.ApiClient.instance;
     let apiKey = defaultClient.authentications['api-key'];
@@ -671,7 +779,7 @@ async function saveMembershipSubscription(param) {
         if (courseDatas && param.payment_status === 'success') {
           for (var i = 0; i < Object.keys(courseDatas).length; i++) {
             const purchasedcourses = new Purchasedcourses({
-              courseid: courseDatas[i].id,
+              courseid: courseDatas[i].id, 
               orderid: data._id,
               quantity: courseDatas[i].quantity,
               userId: param.userid,
@@ -769,15 +877,12 @@ const saveBase64File = (base64String, uploadDir) => {
 
 async function ambassador_subscription(param) {
   try {
-    if (param.certificate) {
-      param.certificate = saveBase64File(param.certificate, "certificate");
-    }
-    if (param.bank_proof) {
-      param.bank_proof = saveBase64File(param.bank_proof, "bank_proof");
-    }
-
-    console.log('param.certificate=', param.certificate);
-    console.log('param.bank_proof=', param.bank_proof);
+    // if (param.certificate) {
+    //   param.certificate = saveBase64File(param.certificate, "certificate");
+    // }
+    // if (param.bank_proof) {
+    //   param.bank_proof = saveBase64File(param.bank_proof, "bank_proof");
+    // }
 
     const whereCondition = { _id: param.uid };
 
@@ -1045,7 +1150,7 @@ async function payFastNotify(param, spayId) {
  */
 async function getSubscriptionId(req) { 
   const reqData = req.body; 
-  console.log("reqData", reqData)
+  console.log("reqData", reqData);
   const subscriptionPayment = new Subscriptionpayment({
     userid: reqData.userid,
     // payment_status: reqData.payment_status,
@@ -1308,30 +1413,6 @@ async function fetchAmbassadorCode(param) {
  * @param {param}
  * @returns {Object|null}
  */
-// async function saveQuery(param) {
-//   try {
-//     if (!param) {
-//       console.log("Param is missing here.");
-//       return null;
-//     }
-
-//     const queryData = await Userquery.create({
-//       first_name: param.first_name,
-//       surname: param.surname,
-//       email: param.email,
-//       mobile_number: param.mobile_number,
-//       query: param.query,
-//     });
-
-//     const userQueryData = await queryData.save(); 
-//     console.log(userQueryData);
-
-//     return userQueryData;
-//   } catch (error) {
-//     console.log("Error in creating or saving query:", error.message);
-//     return null;
-//   }
-// }
 
 async function saveQuery(param) {
   try {
@@ -1375,14 +1456,15 @@ async function saveQuery(param) {
       SUBSCRIBER_FIRSTNAME: firstname,
       SUBSCRIBER_LASTNAME: surname,
       CONTACT_NUMBER: contact_number,
-      QUERY: query
+      QUERY: query,
+      QUERY_EMAIL: email
     }
     const receiverName = firstname + " " + surname;
     const receiverEmail = email;
     sendEmailByBrevo(77, receiverEmail, receiverName, variables);
 
-    updateContactAttributeBrevoForQuery('guild@skilltechsa.co.za', firstname, surname, contact_number, query);
-    sendEmailByBrevo(80, 'guild@skilltechsa.co.za', 'High Vista Guild', variables);
+    await updateContactAttributeBrevoForQuery('eynoashish@gmail.com', firstname, surname, contact_number, query, email);
+    sendEmailByBrevo(80, 'eynoashish@gmail.com', 'High Vista Guild', variables);
 
     return userQueryData;
   } catch (error) {
@@ -1422,7 +1504,7 @@ const addContactInBrevoForQuery = async function addContactInBrevoForQuery(email
   }
 };
 
-const updateContactAttributeBrevoForQuery = async function updateContactAttributeBrevoForQuery(email, firstname, surname, contact_number, query) {
+const updateContactAttributeBrevoForQuery = async function updateContactAttributeBrevoForQuery(email, firstname, surname, contact_number, query, query_email) {
   try {
     let defaultClient = SibApiV3Sdk.ApiClient.instance;
 
@@ -1433,7 +1515,7 @@ const updateContactAttributeBrevoForQuery = async function updateContactAttribut
     let identifier = email; 
     let updateContact = new SibApiV3Sdk.UpdateContact(); 
 
-    updateContact.attributes = {'SUBSCRIBER_FIRSTNAME':firstname, 'SUBSCRIBER_LASTNAME':surname, 'CONTACT_NUMBER':contact_number, 'QUERY': query};
+    updateContact.attributes = {'SUBSCRIBER_FIRSTNAME':firstname, 'SUBSCRIBER_LASTNAME':surname, 'CONTACT_NUMBER':contact_number, 'QUERY': query, 'QUERY_EMAIL': query_email};
 
     apiInstance.updateContact(identifier, updateContact).then(function() {
     console.log('updateContactAttributeBrevo API called successfully.');
@@ -1725,12 +1807,19 @@ async function cancelCourseByUser(req) {
     if (!removedCourse) {
       console.log("Course not found for id:", orderId);
       return null;
-    }
+    };
+
+    const updateCourseStatus = await Subscriptionpayment.findOneAndUpdate(
+      { _id: removedCourse.orderid },
+      {is_active: false},
+      { new: true }
+    );
+    console.log("updateCourseStatus", updateCourseStatus);
 
     //For blocking the user on unsubscription
     const userBlocked = await User.findOneAndUpdate(
       { _id: userId },
-      {is_active: false, subscription_cancellation_date: new Date()},
+      {is_active: false, subscription_cancellation_date: new Date(), subscription_stopped_payment_date: new Date()},
       { new: true }
     );
     console.log("userBlocked successfully:", userBlocked);
@@ -1802,46 +1891,61 @@ console.log("Subscription UuID:", subscriptionUuId);
  */
 async function getDefaultedSubscriptionPaymentOfSubscribers(req) {
   try {
-       let param = req.params;
-        let id = req.body.userId;
-        let query = {};
+    let param = req.params;
+    let id = req.body.userId;
+    let query = {};
 
-        if (param && param.start_date && param.end_date) {
-            query.createdAt = {
-                $gte: new Date(param.start_date),
-                $lte: new Date(param.end_date)
-            };
-        }
-        
-      const ambassador = await User.findById(id);
-      query.referral_code = ambassador.referral_code;
+    if (param && param.start_date && param.end_date) {
+      query.subscription_stopped_payment_date = {
+        $gte: new Date(param.start_date),
+        $lte: new Date(param.end_date),
+      };
+    }
 
-      const referrals = await Referral.find(query)
+    const ambassador = await User.findById(id);
+    const referrals = await Referral.find({ referral_code: ambassador.referral_code });
+    const userIds = referrals.map(referral => referral.userId);
 
-      const userIds = referrals.map(referral => referral.userId);
+    query.role = 'subscriber';
+    query.is_active = false;
 
-      const subscriptions = await Subscriptionpayment.find({
-        userid: { $in: userIds },
-        payment_status: 'cancel'
-      }).populate({
-          path: 'userid',
-          model: User,
-          select: 'firstname surname'
-      }).exec();
+    const subscriptionData = [];
 
-      console.log("subscriptions", subscriptions);
-      const result = subscriptions.map(subscription => ({
-          Subscriber_firstname: subscription.userid.firstname,
-          Subscriber_lastname: subscription.userid.surname,
-          payment_status: subscription.payment_status,
-          last_paid_date: last_paid_date || "00-00-0000",
+    const formatDate = (dateString) => {
+      if (!dateString) return "none";
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}-${month}-${year}`;
+    };
+
+    for (const userId of userIds) {
+      const subscriptions = await User.find({
+        ...query,
+        _id: userId,
+      })
+        .select('firstname surname subscription_stopped_payment_date is_active')
+        .exec();
+
+      console.log("subscriptions:::::::::::", subscriptions);
+
+      const result = subscriptions.map(data => ({
+        Subscriber_firstname: data.firstname,
+        Subscriber_lastname: data.surname,
+        payment_status: 'Insufficient funds',
+        last_paid_date: formatDate(data.subscription_stopped_payment_date),
       }));
 
-      console.log(result);
-      return result;
+      subscriptionData.push(...result);
+    }
+
+    console.log("subscriptions", subscriptionData);
+
+    return subscriptionData;
   } catch (error) {
-      console.error('An error occurred:', error);
-      throw error;
+    console.error('An error occurred:', error);
+    throw error;
   }
 }
 /*****************************************************************************************/
@@ -1881,9 +1985,9 @@ async function getActiveReferral(req) {
     .exec();
 
     console.log("activeReferral", activeReferral);
-    
+     
     if (activeReferral.length > 0) {
-        const result = activeReferral.map(data => {
+        const result = activeReferral.filter(data => data.userId !== null).map(data => {
           const formatDate = (dateString) => {
             const date = new Date(dateString);
             const day = String(date.getDate()).padStart(2, '0');
@@ -1924,7 +2028,7 @@ async function getInactiveReferral(req) {
     let query = {
       purchagedcourseId: { $ne: null },
       is_active: false
-    };
+    }; 
 
     if (param && param.start_date && param.end_date) {
         query.createdAt = {
@@ -1944,10 +2048,10 @@ async function getInactiveReferral(req) {
     })
     .exec();
 
-    console.log("activeReferral", inactiveReferral);
+    console.log("inactiveReferral", inactiveReferral);
     
     if (inactiveReferral.length > 0) {
-        const result = inactiveReferral.map(data => {
+        const result = inactiveReferral.filter(data => data.userId !== null).map(data => {
             const formatDate = (dateString) => {
               const date = new Date(dateString);
               const day = String(date.getDate()).padStart(2, '0');
@@ -2028,6 +2132,7 @@ async function getSubscriptionCancelledbySubscriber(param) {
     ];
 
     const cancellationRecords = await Purchasedcourses.aggregate(pipeline);
+    
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         const day = String(date.getDate()).padStart(2, '0');
@@ -2236,8 +2341,12 @@ async function varifyEmailForgotPassword(req) {
   const emailId = req.params.id;
 
   try {
-      const userData = await User.find({ email: emailId }).select('_id firstname surname email');
+      const userData = await User.find({ email: emailId }).select('_id firstname surname email role is_pass_reset');
       console.log("userData", userData);
+
+      if(!userData){
+        return
+      }
 
       const firstname = userData[0].firstname;
       const surname = userData[0].surname;
@@ -2257,25 +2366,35 @@ async function varifyEmailForgotPassword(req) {
       
 
       //Encode id and date_time
-      const userId = btoa(id);
-      const dateTime = btoa(current_date_time);
-      const forgot_password_link = `https://affiliate.skilltechsa.online/forgot-password?var1=${userId}&var2=${dateTime}`
+      const reset_token = { id: id, current_date_time: current_date_time };
+      const tokenString = JSON.stringify(reset_token); // Convert object to JSON string
+      const tokenData = btoa(tokenString); // Encode the JSON string to Base64
+
+      // const userId = btoa(id);
+      // const dateTime = btoa(current_date_time);
+      // const forgot_password_link = `https://affiliate.skilltechsa.online/forgot-password?var1=${userId}&var2=${dateTime}`
+      const forgot_password_link = `https://affiliate.skilltechsa.online/forgot-password?reset-token=${tokenData}`
 
       //Brevo email for changing password
-      updateContactAttributeBrevo(email, "", "", forgot_password_link)
+      if(userData[0].role === 'subscriber' && userData[0].is_pass_reset === false){
+        console.log("addSubscriberContactInBrevo is working");
+        addSubscriberContactInBrevo(email, firstname, surname, forgot_password_link)
+      } else {
+        console.log("updateContactAttributeBrevo is working");
+        updateContactAttributeBrevo(email, "", "", forgot_password_link)
+      };
+
       const variables = {
         FIRSTNAME: firstname,
         LASTNAME: surname,
+        TOKEN_FORGOT_PASSWORD: forgot_password_link,
       }
       const receiverName = firstname + " " + surname;
       const receiverEmail = email;
       sendEmailByBrevo(79, receiverEmail, receiverName, variables);
 
-      if (userData) {
-          return userData;
-      } else {
-          return false;
-      }
+      return userData;
+      
   } catch (err) {
       console.error("Error in getting user data:", err);
       return false;

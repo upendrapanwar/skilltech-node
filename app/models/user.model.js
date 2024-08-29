@@ -113,6 +113,7 @@ const schema = new Schema({
         code_valid_at: { type: Date, required: false, default: null },
         is_pass_req: { type: Boolean, required: false, default: false }
     },
+    is_pass_reset: { type: Boolean, required: false, default: false },
     subscription_date:{ type:Date, required:false, default:null },
     subscription_cancellation_date:{type:Date, required:false, default:null},
     subscription_stopped_payment_date:{type:Date, required:false, default:null},

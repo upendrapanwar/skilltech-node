@@ -7,6 +7,7 @@
  */
 
 const config = require('../config/index'); 
+const commonService = require("../services/common.service");
 const mongoose = require('mongoose');
 mongoose.connect(process.env.MONGODB_URI || config.connectionString, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.Promise = global.Promise;
@@ -21,6 +22,8 @@ const { User, Subscriptionpayment, Purchasedcourses, Referral } = require('../he
 const crypto = require("crypto");
 const { unsubscribe } = require('diagnostics_channel');
 const SibApiV3Sdk = require('sib-api-v3-sdk');
+const cron = require('node-cron');
+const axios = require('axios');
 
 module.exports = {
     agentSubscription,
@@ -48,8 +51,7 @@ module.exports = {
     getConsolidatedInformationReport,
 
     varifyEmailForgotPassword,
-    forgotPassword,
-    
+    forgotPassword, 
 };
 
 /*****************************************************************************************/
@@ -323,38 +325,43 @@ async function getAllActiveSubscriptionSubscriber(param) {
 async function getDefaultedSubscriptionPaymentOfAmbassador(param) {
     try {
         console.log("param", param)
-        let query = { 
-            payment_status: 'cancel' 
+        let query = {
+            role: 'ambassador',
+            is_active: false
         };
 
         if (param && param.start_date && param.end_date) {
-            query.createdAt = { $gte: new Date(param.start_date), $lte: new Date(param.end_date) };
+            query.subscription_stopped_payment_date = { $gte: new Date(param.start_date), $lte: new Date(param.end_date) };
         }
 
-        let defaultAmbassador = await Subscriptionpayment.find(
+        let defaultAmbassador = await User.find(
             query,
             {
-                is_active: 1,   
-                payment_status: 1,
-                userid: 1
+                role: 1,   
+                firstname: 1,
+                surname: 1,
+                id_number: 1,
+                referral_code: 1,
+                subscription_stopped_payment_date: 1,
             }
-        ).sort({ createdAt: -1 })
-        .populate({
-                path: 'userid',
-                model: User,
-                match: { role: 'ambassador' },
-                select: 'role firstname surname id_number referral_code'
-            }); 
+        ).sort({ createdAt: -1 });
 
-        console.log("Defaulted Subscriptions Payments of Ambassador", defaultAmbassador);
-        const result = defaultAmbassador.filter(entry => entry.userid !== null).map(data => ({
-            Ambassador_firstname: data.userid.firstname,
-            Ambassador_lastname: data.userid.surname,
-            id_number: data.userid.id_number,
-            referral_code: data.userid.referral_code,
-            payment_status: data.payment_status,
-            last_paid_date: data.last_paid_date || "00-00-0000",
+        const formatDate = (dateString) => {
+            const date = new Date(dateString);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+        };
+        const result = defaultAmbassador.filter(entry => entry.subscription_stopped_payment_date !== null).map(data => ({
+            Ambassador_firstname: data.firstname,
+            Ambassador_lastname: data.surname,
+            id_number: data.id_number,
+            referral_code: data.referral_code,
+            payment_status: 'Insufficient funds',
+            last_paid_date: formatDate(data.subscription_stopped_payment_date) || "none",
         }));
+        console.log("Defaulted Subscriptions Ambassador************", result);
         if (result && result.length > 0) {
             return result;
         } else {
@@ -364,55 +371,58 @@ async function getDefaultedSubscriptionPaymentOfAmbassador(param) {
         console.error('An error occurred:', error);
         throw error;
     }
-}
+};
 
 
 async function getDefaultedSubscriptionPaymentOfSubscribers(param) {
     try {
         console.log("param", param)
-        console.log("getDefaultedSubscriptionPaymentOfSubscribers")
         let query = {
-            payment_status: 'cancel'
+            role: 'subscriber',
+            is_active: false
         };
 
         if (param && param.start_date && param.end_date) {
-            query.createdAt = { $gte: new Date(param.start_date), $lte: new Date(param.end_date) };
+            query.subscription_stopped_payment_date = { $gte: new Date(param.start_date), $lte: new Date(param.end_date) };
         }
 
-        let defaultSubscribers = await Subscriptionpayment.find(
+        let defaultAmbassador = await User.find(
             query,
             {
-                is_active: 1,
-                payment_status: 1,
-                userid: 1
+                role: 1,   
+                firstname: 1,
+                surname: 1,
+                id_number: 1,
+                referral_code: 1,
+                subscription_stopped_payment_date: 1,
             }
-        ).sort({ createdAt: -1 })
-        .populate({
-                path: 'userid',
-                model: User,
-                match: { role: 'subscriber' },
-                select: 'role firstname surname id_number'
-            });
+        ).sort({ createdAt: -1 });
 
-        console.log("Defaulted Subscriptions Payments of Subscriber", defaultSubscribers)
-        
-        const result = defaultSubscribers.filter(entry => entry.userid !== null).map(data => ({
-            Subscriber_firstname: data.userid.firstname,
-            Subscriber_lastname: data.userid.surname,
-            id_number: data.userid.id_number,
-            payment_status: data.payment_status,
-            last_paid_date: data.last_paid_date || "00-00-0000",
+        const formatDate = (dateString) => {
+            const date = new Date(dateString);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+        };
+        const result = defaultAmbassador.filter(entry => entry.subscription_stopped_payment_date !== null).map(data => ({
+            Subscriber_firstname: data.firstname,
+            Subscriber_lastname: data.surname,
+            id_number: data.id_number,
+            referral_code: data.referral_code,
+            payment_status: 'Insufficient funds',
+            last_paid_date: formatDate(data.subscription_stopped_payment_date) || "none",
         }));
-
-        if (result) {
+        console.log("Defaulted Subscriptions Ambassador", result);
+        if (result && result.length > 0) {
             return result;
         } else {
-            return null;
+            return [];
         }
     } catch (error) {
         console.error('An error occurred:', error);
         throw error;
-}
+    }
 }
 
 
@@ -549,6 +559,7 @@ async function getSubscriptionCancelledBySubscriber(param) {
         ];
 
         const cancellationRecords = await Purchasedcourses.aggregate(pipeline);
+
         const formatDate = (dateString) => {
             const date = new Date(dateString);
             const day = String(date.getDate()).padStart(2, '0');
@@ -566,7 +577,7 @@ async function getSubscriptionCancelledBySubscriber(param) {
         console.error("Error in getSubscriptionCancelledBySubscriber:", error);
         throw error; // Rethrow the error to be caught by the caller
     } 
-}
+};
 
 
 /**
@@ -919,6 +930,8 @@ async function getAllInactiveReferralAmbassador(param) {
         { $sort: { "createdAt": 1 } }
     ]).exec();
 
+    console.log("getAllInactiveReferralAmbassador referralData", referralData)
+
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         const day = String(date.getDate()).padStart(2, '0');
@@ -1175,10 +1188,11 @@ async function getConsolidatedInformationReport(param) {
                 $lte: new Date(param.end_date)
             };
         }
-
         const userData = await User.find(query)
-          .select("firstname surname id_number email mobile_number alternate_mobile_number province race gender bank account_number account_holder_name type_of_account bank_proof certificate role is_active referral_code subscription_cancellation_date subscription_stopped_payment_date")
+          .select("firstname surname id_number email mobile_number alternate_mobile_number province race gender bank account_number account_holder_name type_of_account bank_proof certificate role is_active referral_code subscription_date subscription_cancellation_date subscription_stopped_payment_date")
           .exec();
+          console.log("userData", userData);
+
         
         // Filter out the user with email 'admin@gmail.com'
         const filteredUserData = userData.filter(data => data.role !== 'admin');
@@ -1213,19 +1227,374 @@ async function getConsolidatedInformationReport(param) {
             role: data.role === 'ambassador' ? 'Ambassador' : 'Subscriber',
             is_active: data.is_active ? 'Active' : 'Inactive',
             referral_code: data.referral_code || 'none',
-            unsubscribe_status: data.is_active ? 'Y' : 'N',
+            unsubscribe_status: data.is_active ? 'N' : 'Y',
             unsubscribed_date: formatDate(data.subscription_cancellation_date) || 'none',
-            stopped_payment_status: 'N',
+            stopped_payment_status: data.subscription_stopped_payment_date ? 'Y' : 'N',
             stopped_payment_date: formatDate(data.subscription_stopped_payment_date) || 'none',
         }));
 
-        console.log(result);
+        // console.log(result);
         return result;
     } catch (error) {
         console.error('An error occurred:', error);
         throw error;
     }
-}
+};
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function for get daily subscription data update and accordingly change database
+ * @param {param}
+ * 
+ * @result null|Object
+ */
+// cron.schedule('0 0 * * *', () => {
+//     getRegularSubscriptionDataUpdate();
+//     console.log('Successfully triggered');
+// });
+
+// cron.schedule('*/1 * * * *', () => {
+//     getRegularSubscriptionDataUpdate();
+//   console.log('Successfully triggered');
+// });
+async function getRegularSubscriptionDataUpdate() {
+    try {
+        const paymentData = await Subscriptionpayment.find({is_active: true})
+          .select("userid merchantData")
+          .exec();
+
+        const subscriptionData = [];
+        for (const payment of paymentData) {
+            try {
+                const parsedMerchantData = JSON.parse(payment.merchantData);
+                const userId = payment.userid;
+                const orderId = payment._id;
+                const token = parsedMerchantData.token;
+                const subscription_object = await getSubscriptionObject(token);
+                const subscription_data = subscription_object;
+                // console.log("subscription_object", subscription_object);
+
+                let current_date = new Date();
+                current_date.setHours(0, 0, 0, 0);
+                let due_date = new Date(subscription_data.run_date);
+                due_date.setHours(0, 0, 0, 0);
+
+                let payment_status
+                if(current_date > due_date) {
+                    payment_status = `Payment Not Done on ${due_date}`
+                    // cancelPayfastSubscription(token, userId, orderId, due_date);
+                } else {
+                    payment_status = `Payment Due Date is ${due_date}`
+                };
+
+                const userSubscriptionData = {
+                    user_id: userId,
+                    order_id: orderId.toString(),
+                    due_date: subscription_data.run_date,
+                    payment_status: payment_status
+                };
+                subscriptionData.push(userSubscriptionData);
+            } catch (error) {
+                console.error("Error parsing merchantData for User ID:", payment.userid, error);
+            }
+        }
+    
+    } catch (error) {
+        console.error('An error occurred:', error);
+        throw error;
+    }
+};
+
+async function getSubscriptionObject(subscription_token) {
+      
+    function generateTimestamp() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const timezoneOffset = now.getTimezoneOffset();
+      const offsetHours = String(Math.floor(Math.abs(timezoneOffset) / 60)).padStart(2, '0');
+      const offsetMinutes = String(Math.abs(timezoneOffset) % 60).padStart(2, '0');
+      const offsetSign = timezoneOffset < 0 ? '+' : '-';
+      const formattedOffset = `${offsetSign}${offsetHours}:${offsetMinutes}`;
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${formattedOffset}`;
+    }
+  
+    function generateSignature() {
+      const data = {
+        'date': new Date(),
+        'merchant-id': process.env.PAYFAST_MERCHANT_ID,
+        'passphrase': process.env.PAYFAST_PASSPHRASE,
+        'timestamp': generateTimestamp(),
+        'version': 'v1'
+      };
+  
+      const orderedKeys = ['merchant-id', 'passphrase', 'timestamp', 'version'];
+      let pfOutput = orderedKeys.map(key => `${key}=${encodeURIComponent(data[key]).replace(/%20/g, "+")}`).join('&');
+    //   console.log("signature String", pfOutput);
+  
+      const signature = crypto.createHash("md5").update(pfOutput).digest("hex");
+    //   console.log("signature", signature);
+      return signature;
+    }
+  
+    try {
+        const token = subscription_token;
+        const merchantId = process.env.PAYFAST_MERCHANT_ID;
+        const signature = generateSignature();
+        const timestamp = generateTimestamp();
+    
+        // console.log("Merchant ID:", merchantId);
+        // console.log("Signature:", signature);
+        // console.log("Timestamp:", timestamp);
+    
+        const url = `https://api.payfast.co.za/subscriptions/${token}/fetch?testing=true`;
+    
+        const options = {
+            headers: {
+                'merchant-id': merchantId,
+                'version': 'v1',
+                'timestamp': timestamp,
+                'signature': signature
+            }
+        };
+    
+        // console.log("Request URL:", url);
+        // console.log("Request Options:", options);
+    
+        const response = await axios.get(url, options);
+        // console.log("Request response:", response.data.data.response);
+  
+        return response.data.data.response;
+    } catch (err) {
+        if (err.response) {
+            console.error("Response data:", err.response.data);
+            console.error("Response status:", err.response.status);
+            console.error("Response headers:", err.response.headers);
+        } else if (err.request) {
+            console.error("Request data:", err.request);
+        } else {
+            console.error("Error message:", err.message);
+        }
+        console.error("Config:", err.config);
+        throw err;
+    }
+  };
+
+  async function cancelPayfastSubscription(token, userId, orderId, due_date) {
+    console.error("cancelPayfastSubscription is working");
+    console.error("token", token);
+    console.error("userId", userId);
+    console.error("orderId", orderId);
+    const token_generated = token; 
+      
+    function generateTimestamp() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const timezoneOffset = now.getTimezoneOffset();
+      const offsetHours = String(Math.floor(Math.abs(timezoneOffset) / 60)).padStart(2, '0');
+      const offsetMinutes = String(Math.abs(timezoneOffset) % 60).padStart(2, '0');
+      const offsetSign = timezoneOffset < 0 ? '+' : '-';
+      const formattedOffset = `${offsetSign}${offsetHours}:${offsetMinutes}`;
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${formattedOffset}`;
+    }
+  
+    function generateSignature() {
+      const data = {
+          'merchant-id': process.env.PAYFAST_MERCHANT_ID,
+          'passphrase': process.env.PAYFAST_PASSPHRASE,
+          'timestamp': generateTimestamp(),
+          'version': 'v1'
+      };
+  
+      const orderedKeys = ['merchant-id', 'passphrase', 'timestamp', 'version'];
+      let pfOutput = orderedKeys.map(key => `${key}=${encodeURIComponent(data[key]).replace(/%20/g, "+")}`).join('&');
+      console.log("signature String", pfOutput);
+  
+      const signature = crypto.createHash("md5").update(pfOutput).digest("hex");
+      console.log("signature", signature);
+      return signature;
+    }
+  
+    try {
+        const token = token_generated;
+        const merchantId = process.env.PAYFAST_MERCHANT_ID;
+        const signature = generateSignature();
+        const timestamp = generateTimestamp();
+    
+        console.log("Merchant ID:", merchantId);
+        console.log("Signature:", signature);
+        console.log("Timestamp:", timestamp);
+    
+        const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+        const version = 'v1';
+    
+        const options = {
+            headers: {
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+                'merchant-id': merchantId,
+                'version': version,
+                'timestamp': timestamp,
+                'signature': signature
+            }
+        };
+    
+        console.log("Request URL:", url);
+        console.log("Request Options:", options);
+    
+        const response = await axios.put(url, null, options);
+        console.log("Request response:", response);
+  
+        if (response.status === 200) {
+            console.log("Cancellation successful.");
+            cancelCourseByUser(userId, orderId, due_date);
+        } else {
+            console.error("Cancellation failed:", response.data);
+        }
+    } catch (err) {
+        if (err.response) {
+            console.error("Response data:", err.response.data);
+            console.error("Response status:", err.response.status);
+            console.error("Response headers:", err.response.headers);
+        } else if (err.request) {
+            console.error("Request data:", err.request);
+        } else {
+            console.error("Error message:", err.message);
+        }
+        console.error("Config:", err.config);
+        throw err;
+    }
+  };
+
+  async function handleMoodleUserSuspension (moodle_login_id) {
+    const MOODLE_URL = process.env.MOODLE_COURSES_URL;
+    const MOODLE_TOKEN = process.env.MOODLE_TOKEN;
+    const MOODLE_GET_FUNCTION = 'core_user_update_users';
+
+    console.log('MOODLE_URL', MOODLE_URL);
+    console.log('MOODLE_TOKEN', MOODLE_TOKEN);
+    console.log('moodle_login_id', moodle_login_id);
+  
+    try {
+      const response = await axios.post(MOODLE_URL, null, {
+        params: { 
+          wstoken: MOODLE_TOKEN,
+          moodlewsrestformat: 'json',
+          wsfunction: MOODLE_GET_FUNCTION,
+          users: [
+            {
+              id: moodle_login_id,
+              suspended: 1,    // 1 to suspend, 0 to not suspend (active)
+            },
+          ],
+        },
+      });
+  
+      console.log('User data:', response.data);
+    } catch (error) {
+      console.error('Error suspending user:', error.response ? error.response.data : error.message);
+    }
+  };
+
+  async function cancelCourseByUser(user_id, order_id, due_date) {
+    console.error("cancelCourseByUser is working");
+    console.log("userId", user_id);  
+    console.log("order_id", order_id);  
+    try {
+      const orderId = order_id;
+      const userId = user_id;
+
+    // Update subcription(Course) status the user on stopped payment by Subscriber
+      const updateCourseStatus = await Subscriptionpayment.findOneAndUpdate(
+        { _id: orderId },
+        {is_active: false},
+        { new: true }
+      );
+
+      //For blocking the user on stopped payment by Subscriber
+      const userBlocked = await User.findOneAndUpdate(
+        { _id: userId },
+        {is_active: false, subscription_stopped_payment_date: due_date},
+        { new: true }
+      );
+      console.log("userBlocked successfully:", userBlocked);
+  
+      //For Changing status of Referral code used on stopped payment by Subscriber
+      const courseData = await Purchasedcourses.find({ orderid: orderId }).exec();
+      const isCourseExisted = await Referral.find({ purchagedcourseId: courseData[0]._id }).exec();
+      if(isCourseExisted ){
+          const referralStatus = await Referral.findOneAndUpdate(
+              { purchagedcourseId: courseData[0]._id },
+              {is_active: false},
+              { new: true }
+              );
+        console.log("referral status changed successfully:", referralStatus);
+      };
+
+      handleMoodleUserSuspension(userBlocked.moodle_login_id);
+  
+      //For Brevo email to SUBSCIBER, when stopped payment by Subscriber
+      const receiverName = `${userBlocked.firstname} ${userBlocked.surname}`;
+      const receiverEmail = userBlocked.email;
+    //   const bank = userBlocked.bank;
+    //   const branch = userBlocked.branch;
+    //   const type_of_account = userBlocked.type_of_account;
+    //   const account_number = userBlocked.account_number;
+    //   const branch_code = userBlocked.branch_code;
+
+    //   const variables = {
+    //     BANK: bank,
+    //     BRANCH : branch,
+    //     TYPE_OF_ACCOUNT : type_of_account,
+    //     ACCOUNT_NUMBER : account_number,
+    //     BRANCH_CODE : branch_code,
+    //   }
+    //   commonService.sendUpdatedSuspendedContactEmail(49, receiverEmail, receiverName, variables, bank, branch, type_of_account, account_number, branch_code);
+      commonService.sendEmailByBrevo(49, receiverEmail, receiverName);
+      if(userBlocked.role === "ambassador"){
+        commonService.deleteContactBrevo(receiverEmail);
+      };
+  
+      //For Brevo email to AMBASSADOR, when stopped payment by Subscriber
+      if(userBlocked.role !== "ambassador"){
+        const existingReferral = await Referral.findOne({ userId: userId });
+        console.log("existingReferral", existingReferral);
+        if (existingReferral) {
+          const referralCode = existingReferral.referral_code;
+          const ambassadorData = await User.find({ referral_code: referralCode }).select("email firstname surname");
+          console.log("ambassadorData", ambassadorData);
+            
+          const subscriber_firstname = userBlocked.firstname;
+          const subscriber_lastname = userBlocked.surname;
+          const variables = {
+            SUBSCRIBER_FIRSTNAME: subscriber_firstname,
+            SUBSCRIBER_LASTNAME: subscriber_lastname
+          }
+          const ambassadorName = ambassadorData[0].firstname + " " + ambassadorData[0].surname;
+          const receiverEmail = ambassadorData[0].email;
+          commonService.sendUpdatedContactEmailByBrevo(38, receiverEmail, ambassadorName, variables, subscriber_firstname, subscriber_lastname);
+        };  
+      }
+  
+    } catch (err) {
+      console.log("Error:", err);
+      throw err;
+    }
+  };
+
+
+
+/*****************************************************************************************/
+/*****************************************************************************************/
 /**
  * Function for varify email for forgot password
  * @param {param}
@@ -1263,14 +1632,14 @@ async function varifyEmailForgotPassword(req) {
         const forgot_password_link = `https://affiliate.skilltechsa.online/admin/forgot-password?var1=${userId}&var2=${dateTime}`
   
         //Brevo email for changing password
-        updateContactAttributeBrevo(email, "", "", forgot_password_link)
+        commonService.updateContactAttributeBrevo(email, "", "", forgot_password_link)
         const variables = {
           FIRSTNAME: firstname,
           LASTNAME: surname,
         }
         const receiverName = firstname + " " + surname;
         const receiverEmail = email;
-        sendEmailByBrevo(79, receiverEmail, receiverName, variables);
+        commonService.sendEmailByBrevo(79, receiverEmail, receiverName, variables);
   
         if (userData) {
             return userData;
@@ -1294,87 +1663,8 @@ async function varifyEmailForgotPassword(req) {
     return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
   }
 
-  const updateContactAttributeBrevo = async function updateContactAttributeBrevo(email, subscriber_firstname, subscriber_lastname, token) {
-    try {
-      let defaultClient = SibApiV3Sdk.ApiClient.instance;
-  
-      let apiKey = defaultClient.authentications['api-key'];
-      apiKey.apiKey = process.env.BREVO_KEY;
-      let apiInstance = new SibApiV3Sdk.ContactsApi();
-  
-      let identifier = email; 
-      let updateContact = new SibApiV3Sdk.UpdateContact(); 
-  
-      if(token){
-        updateContact.attributes = {'TOKEN_FORGOT_PASSWORD':token};
-      } else {
-        updateContact.attributes = {'SUBSCRIBER_FIRSTNAME':subscriber_firstname,'SUBSCRIBER_LASTNAME':subscriber_lastname};
-      }
-  
-      apiInstance.updateContact(identifier, updateContact).then(function() {
-      console.log('updateContactAttributeBrevo API called successfully.');
-      }, function(error) {
-        console.error(error);
-      });
-    } catch {
-      console.log("Error in sending Brevo email:", error.message);
-      return null;
-    }
-  };
-
-  const sendEmailByBrevo = async function sendEmailByBrevo(template_id, receiverEmailId, receiverName, variables) {
-    try {
-      console.log('template_id', template_id);
-      console.log('receiverEmailId', receiverEmailId);
-      console.log('receiverName', receiverName);
-      console.log('variables', variables);
-  
-      let defaultClient = SibApiV3Sdk.ApiClient.instance;
-      let apiKey = defaultClient.authentications['api-key'];
-      apiKey.apiKey = process.env.BREVO_KEY;
-  
-      let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-  
-      let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail(); 
-  
-      if(variables){
-        sendSmtpEmail = {
-          to: [{
-            email: receiverEmailId,
-            name: receiverName
-          }],
-          templateId: template_id,
-          params: variables,
-          sender: {
-            email: 'guild@skilltechsa.co.za',
-            name: 'High Vista Guild'
-          }
-        };
-      } else {
-        sendSmtpEmail = {
-          to: [{
-            email: receiverEmailId,
-            name: receiverName
-          }],
-          templateId: template_id,
-          sender: {
-            email: 'guild@skilltechsa.co.za',
-            name: 'High Vista Guild'
-          }
-        };
-      }
-  
-      const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
-      console.log('API called successfully. Returned data: ' + JSON.stringify(data));
-      return data;
-  
-    } catch (error) {
-      console.log("Error in sending Brevo email:", error.message);
-      return null;
-    }
-  };
-
-
+/*****************************************************************************************/
+/*****************************************************************************************/
   /**
  * For update the new password of the admin
  *  
@@ -1390,7 +1680,7 @@ async function forgotPassword(req) {
     const id = atob(var1);
     const var2 = req.body.dateTime; 
     const date_time = atob(var2);
-
+ 
     console.log("id", id);
     console.log("date_time", date_time);
 
