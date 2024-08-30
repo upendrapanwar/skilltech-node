@@ -1463,8 +1463,8 @@ async function saveQuery(param) {
     const receiverEmail = email;
     sendEmailByBrevo(77, receiverEmail, receiverName, variables);
 
-    await updateContactAttributeBrevoForQuery('eynoashish@gmail.com', firstname, surname, contact_number, query, email);
-    sendEmailByBrevo(80, 'eynoashish@gmail.com', 'High Vista Guild', variables);
+    await updateContactAttributeBrevoForQuery('guild@skilltechsa.co.za', firstname, surname, contact_number, query, email);
+    sendEmailByBrevo(80, 'guild@skilltechsa.co.za', 'High Vista Guild', variables);
 
     return userQueryData;
   } catch (error) {
