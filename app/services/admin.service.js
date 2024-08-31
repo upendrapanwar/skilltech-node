@@ -49,9 +49,6 @@ module.exports = {
     getPaymentDueToAmbassador,
     getBulkPaymentReport,
     getConsolidatedInformationReport,
-
-    varifyEmailForgotPassword,
-    forgotPassword, 
 };
 
 /*****************************************************************************************/
@@ -1592,125 +1589,6 @@ async function getSubscriptionObject(subscription_token) {
   };
 
 
-
 /*****************************************************************************************/
 /*****************************************************************************************/
-/**
- * Function for varify email for forgot password
- * @param {param}
- * 
- * @result null|Object
- */
-async function varifyEmailForgotPassword(req) {
-    console.log("req.params.id", req.params.id);
-    const emailId = req.params.id;
-  
-    try {
-        const userData = await User.find({ email: emailId }).select('_id firstname surname email');
-        console.log("userData", userData);
-  
-        const firstname = userData[0].firstname;
-        const surname = userData[0].surname;
-        const email = userData[0].email;
-        const id = userData[0]._id;
-        const current_date_time = generateTimestamp();
-        
-        // Generate a JWT token
-        // const payload = {
-        //   id,
-        //   dateTime: current_date_time,
-        // };
-        // const secretKey = '20240805'; // Use a secure key
-        // const token = jwt.sign(payload, secretKey, { expiresIn: '24h' });
-        // console.log("token forgot password", token);
-        // const forgot_password_link = `https://affiliate.skilltechsa.online/forgot-password?var=${token}`
-        
-  
-        //Encode id and date_time
-        const userId = btoa(id);
-        const dateTime = btoa(current_date_time);
-        const forgot_password_link = `https://affiliate.skilltechsa.online/admin/forgot-password?var1=${userId}&var2=${dateTime}`
-  
-        //Brevo email for changing password
-        commonService.updateContactAttributeBrevo(email, "", "", forgot_password_link)
-        const variables = {
-          FIRSTNAME: firstname,
-          LASTNAME: surname,
-        }
-        const receiverName = firstname + " " + surname;
-        const receiverEmail = email;
-        commonService.sendEmailByBrevo(79, receiverEmail, receiverName, variables);
-  
-        if (userData) {
-            return userData;
-        } else {
-            return false;
-        }
-    } catch (err) {
-        console.error("Error in getting user data:", err);
-        return false;
-    }  
-  };
 
-  function generateTimestamp() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-  }
-
-/*****************************************************************************************/
-/*****************************************************************************************/
-  /**
- * For update the new password of the admin
- *  
- * @param {param}
- * 
- * @returns Object|null
- */
-async function forgotPassword(req) {
-    console.log("forgotPassword body", req.body);
-
-    const new_password = req.body.new_password;
-    const var1 = req.body.id;
-    const id = atob(var1);
-    const var2 = req.body.dateTime; 
-    const date_time = atob(var2);
- 
-    console.log("id", id);
-    console.log("date_time", date_time);
-
-    const tokenDate = new Date(date_time);
-    const currentDate = new Date();
-    const expiryDate = new Date(currentDate.getTime() - 24 * 60 * 60 * 1000);
-    if (tokenDate < expiryDate) {
-        return;
-    }
-
-
-    const whereCondition = { _id: id };
-    try {
-        const updatedData = await User.findOneAndUpdate(
-            whereCondition,
-            {
-                $set: {
-                    password: bcrypt.hashSync(new_password, 10),
-                }
-            },
-            { new: true }
-        );
-
-        if (updatedData) {
-            return updatedData;
-        } else {
-            return false;
-        }
-    } catch (err) {
-        console.error("Error updating user new password:", err);
-        return false;
-    }  
-}

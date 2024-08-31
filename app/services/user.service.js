@@ -242,18 +242,16 @@ async function updateAmbassadorProfileDetails(param, data) {
                     account_number: data.account_number,
                     account_holder_name: data.account_holder_name,
                     type_of_account: data.type_of_account,
-                    // bank_contact_details: {
-                    //     email: data.contact_details.email,
-                    //     mobile_number: data.contact_details.mobile_number,
-                    //     alternate_mobile_number: data.contact_details.alternate_mobile_number,
-                    //     street: data.contact_details.street,
-                    //     street_name: data.contact_details.street_name,
-                    //     complex_n_unit: data.contact_details.complex_n_unit,
-                    //     suburb_district: data.contact_details.suburb_district,
-                    //     town_city: data.contact_details.town_city,
-                    //     province: data.contact_details.province,
-                    //     postal_code: data.contact_details.postal_code,
-                    // },
+                    // email: data.contact_details.email,
+                    mobile_number: data.mobile_number,
+                    alternate_mobile_number: data.alternate_mobile_number,
+                    street: data.street,
+                    street_name: data.street_name,
+                    complex_n_unit: data.complex_n_unit,
+                    suburb_district: data.suburb_district,
+                    town_city: data.town_city,
+                    province: data.province,
+                    postal_code: data.postal_code,
                     bank_proof: data.bank_proof,
                     certificate: data.certificate,
                 }
@@ -340,13 +338,15 @@ async function checkSouthAfricanId(req) {
     }
 };
 
+
 async function checkResetPasswordEmailId(req) {
     try {
         const emailId = req.params.id; 
         console.log("checkResetPasswordEmailId emailId", emailId);
     
-        const existingEmailId = await User.findOne({ email: emailId}).select('email');
+        const existingEmailId = await User.findOne({ email: emailId}).select('email role');
         console.log("existingEmailId", existingEmailId);
+        
         if (existingEmailId) {
           return existingEmailId;
         } else {

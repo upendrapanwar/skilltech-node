@@ -552,15 +552,13 @@ cron.schedule('0 1 1 * *', () => {
 
 
 // cron.schedule('*/1 * * * *', () => {
-//   const subscriber_firstname = 'John';
-//   const subscriber_lastname = 'Doe';
-//   const variables = {
-//     SUBSCRIBER_FIRSTNAME: subscriber_firstname,
-//     SUBSCRIBER_LASTNAME: subscriber_lastname
-//   }
-//   const receiverName = 'Abc Xyz';
-//   const receiverEmail = 'userdev174@gmail.com';
-//   sendUpdatedContactEmailByBrevo(38, receiverEmail, receiverName, variables, subscriber_firstname, subscriber_lastname);
+//   const firstname = 'John';
+//   const surname = 'Doe';
+//   const forgot_password_link = `https://affiliate.skilltechsa.online/admin/forgot-password?reset-token=abcd`;
+ 
+//   const email = 'eynoashish@gmail.com';
+// //   commonService.sendEmailByBrevo(79, email, firstname);
+//   addSubscriberContactInBrevo(email, firstname, surname, forgot_password_link)
 //   console.log('Successfully triggered');
 //   });
   
@@ -597,7 +595,7 @@ async function addContactInBrevo(ambassadorData) {
   }
 };
 
-async function addSubscriberContactInBrevo(email, subscriber_firstname, subscriber_lastname, token) {
+async function addSubscriberContactInBrevo(email, subscriber_firstname, subscriber_lastname, token, userId) {
   try {
     let defaultClient = SibApiV3Sdk.ApiClient.instance;
     let apiKey = defaultClient.authentications['api-key'];
@@ -616,6 +614,7 @@ async function addSubscriberContactInBrevo(email, subscriber_firstname, subscrib
     };
     apiInstance.createContact(createContact).then(function(data) {
       console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+      updateDataforResetPassword(userId)
     }, function(error) {
       console.error(error);
     });
@@ -709,6 +708,31 @@ async function createAndSendEmailCampaign() {
     console.error(error);
   }
 };
+
+async function updateDataforResetPassword(userId) {
+
+  const whereCondition = { _id: userId };
+  try {
+      const updatedData = await User.findOneAndUpdate(
+          whereCondition,
+          {
+              $set: {
+                  is_pass_reset: true,
+              }
+          },
+          { new: true }
+      );
+
+      if (updatedData) {
+          return updatedData;
+      } else {
+          return false;
+      }
+  } catch (err) {
+      console.error("Error udating is_reset_pass in database:", err);
+      return false;
+  }  
+}
 
 
 /*****************************************************************************************/
@@ -1819,7 +1843,7 @@ async function cancelCourseByUser(req) {
     //For blocking the user on unsubscription
     const userBlocked = await User.findOneAndUpdate(
       { _id: userId },
-      {is_active: false, subscription_cancellation_date: new Date(), subscription_stopped_payment_date: new Date()},
+      {is_active: false, subscription_cancellation_date: new Date()},
       { new: true }
     );
     console.log("userBlocked successfully:", userBlocked);
@@ -1835,7 +1859,7 @@ async function cancelCourseByUser(req) {
     //For Brevo email to SUBSCIBER, when user unsubscribe the subscription
     const subscriberName = `${userBlocked.firstname} ${userBlocked.surname}`
     console.log("subscriberName", subscriberName);
-    sendEmailByBrevo(14, userBlocked.email, subscriberName);
+    sendEmailByBrevo(14, userBlocked.email, subscriberName); 
     deleteContactBrevo(userBlocked.email);
 
     //For Brevo email to AMBASSADOR, when user unsubscribe the subscription
@@ -2348,6 +2372,7 @@ async function varifyEmailForgotPassword(req) {
         return
       }
 
+      const userId = userData[0]._id;
       const firstname = userData[0].firstname;
       const surname = userData[0].surname;
       const email = userData[0].email;
@@ -2376,9 +2401,9 @@ async function varifyEmailForgotPassword(req) {
       const forgot_password_link = `https://affiliate.skilltechsa.online/forgot-password?reset-token=${tokenData}`
 
       //Brevo email for changing password
-      if(userData[0].role === 'subscriber' && userData[0].is_pass_reset === false){
+      if(userData[0].role !== 'ambassador' && userData[0].is_pass_reset === false){
         console.log("addSubscriberContactInBrevo is working");
-        addSubscriberContactInBrevo(email, firstname, surname, forgot_password_link)
+        addSubscriberContactInBrevo(email, firstname, surname, forgot_password_link, userId)
       } else {
         console.log("updateContactAttributeBrevo is working");
         updateContactAttributeBrevo(email, "", "", forgot_password_link)
