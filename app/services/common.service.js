@@ -595,7 +595,7 @@ async function addContactInBrevo(ambassadorData) {
   }
 };
 
-async function addSubscriberContactInBrevo(email, subscriber_firstname, subscriber_lastname, token, userId) {
+async function addSubscriberContactInBrevo(email, subscriber_firstname, subscriber_lastname, token) {
   try {
     let defaultClient = SibApiV3Sdk.ApiClient.instance;
     let apiKey = defaultClient.authentications['api-key'];
@@ -612,12 +612,10 @@ async function addSubscriberContactInBrevo(email, subscriber_firstname, subscrib
       SUBSCRIBER_LASTNAME: subscriber_lastname,
       TOKEN_FORGOT_PASSWORD: token
     };
-    apiInstance.createContact(createContact).then(function(data) {
-      console.log('API called successfully. Returned data: ' + JSON.stringify(data));
-      updateDataforResetPassword(userId)
-    }, function(error) {
-      console.error(error);
-    });
+    const data = await apiInstance.createContact(createContact);
+    console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+    return data;
+    
   } catch {
     console.log("Error in sending Brevo email:", error.message);
     return null;
@@ -641,11 +639,10 @@ async function updateContactAttributeBrevo(email, subscriber_firstname, subscrib
       updateContact.attributes = {'SUBSCRIBER_FIRSTNAME':subscriber_firstname,'SUBSCRIBER_LASTNAME':subscriber_lastname};
     }
 
-    apiInstance.updateContact(identifier, updateContact).then(function() {
-    console.log('updateContactAttributeBrevo API called successfully.');
-    }, function(error) {
-      console.error(error);
-    });
+    const data = await apiInstance.updateContact(identifier, updateContact);
+    console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+    return 'Updated';
+   
   } catch {
     console.log("Error in sending Brevo email:", error.message);
     return null;
@@ -732,7 +729,7 @@ async function updateDataforResetPassword(userId) {
       console.error("Error udating is_reset_pass in database:", err);
       return false;
   }  
-}
+};
 
 
 /*****************************************************************************************/
@@ -1447,11 +1444,6 @@ async function saveQuery(param) {
     const email = param.email;
     const query = param.query;
 
-    const queryEmailExisted = await Userquery.find({
-      email: param.email,
-    });
-    console.log('queryEmailExisted', queryEmailExisted);
-
     const queryData = await Userquery.create({
       first_name: param.first_name,
       surname: param.surname,
@@ -1461,34 +1453,51 @@ async function saveQuery(param) {
     });
 
     const userQueryData = await queryData.save();
-    console.log(userQueryData);
+    console.log("userQueryData", userQueryData);
 
-    const emailExistedInBrevo = await User.find({
-      email: param.email,
-      role: { $in: ['subscriber', 'ambassador'] },
+    const emailExisted = await User.find({
+      email: email,
     });
-    console.log('emailExistedInBrevo', emailExistedInBrevo);
+    console.log("emailExisted", emailExisted);
     
     //For Brevo email for user query
-    if(!queryEmailExisted || !emailExistedInBrevo){
-      addContactInBrevoForQuery(email, firstname, surname, contact_number, query);
+    let updateContact;
+    let addContact;
+    if(emailExisted.length > 0 && emailExisted[0].role === 'ambassador' ){
+      updateContact = await updateContactAttributeBrevoForQuery(email, firstname, surname, contact_number, query, email)
     } else {
-      updateContactAttributeBrevoForQuery(email, firstname, surname, contact_number, query);
+      addContact = await addContactInBrevoForQuery(email, firstname, surname, contact_number, query);
     };
 
-    const variables = {
+    const variables1 = {
+      SUBSCRIBER_FIRSTNAME: firstname,
+      SUBSCRIBER_LASTNAME: surname,
+    }
+    const receiverName = firstname + " " + surname;
+    const receiverEmail = email;
+    let sendEmail
+    if(updateContact || addContact){
+      sendEmail = await sendEmailByBrevo(77, receiverEmail, receiverName, variables1);
+    }
+
+    if(emailExisted.length === 0 || emailExisted[0].role !== 'ambassador'){
+      console.log("deleteContactBrevo condition is working");
+      console.log("deleteContactBrevo receiverEmail", receiverEmail);
+      if(sendEmail){
+        await deleteContactBrevo(receiverEmail);
+      }
+    };
+
+    const variables2 = {
       SUBSCRIBER_FIRSTNAME: firstname,
       SUBSCRIBER_LASTNAME: surname,
       CONTACT_NUMBER: contact_number,
       QUERY: query,
       QUERY_EMAIL: email
     }
-    const receiverName = firstname + " " + surname;
-    const receiverEmail = email;
-    sendEmailByBrevo(77, receiverEmail, receiverName, variables);
-
-    await updateContactAttributeBrevoForQuery('guild@skilltechsa.co.za', firstname, surname, contact_number, query, email);
-    sendEmailByBrevo(80, 'guild@skilltechsa.co.za', 'High Vista Guild', variables);
+    //guild@skilltechsa.co.za
+    await updateContactAttributeBrevoForQuery('eynoashish@gmail.com', firstname, surname, contact_number, query, email);
+    await sendEmailByBrevo(80, 'eynoashish@gmail.com', 'High Vista Guild', variables2);
 
     return userQueryData;
   } catch (error) {
@@ -1497,9 +1506,8 @@ async function saveQuery(param) {
   }
 };
 
-const addContactInBrevoForQuery = async function addContactInBrevoForQuery(email, firstname, surname, contact_number, query) {
+async function addContactInBrevoForQuery(email, firstname, surname, contact_number, query) {
   try {
-    console.log("addContactInBrevoForQuery userData", userData);
     let defaultClient = SibApiV3Sdk.ApiClient.instance;
     let apiKey = defaultClient.authentications['api-key'];
     apiKey.apiKey = process.env.BREVO_KEY;
@@ -1517,18 +1525,17 @@ const addContactInBrevoForQuery = async function addContactInBrevoForQuery(email
       SUBSCRIBER_LASTNAME: surname,
       QUERY: query
     };
-    apiInstance.createContact(createContact).then(function(data) {
-      console.log('API called successfully. Returned data: ' + JSON.stringify(data));
-    }, function(error) {
-      console.error(error);
-    });
-  } catch {
-    console.log("Error in sending Brevo email:", error.message);
+    
+    const data = await apiInstance.createContact(createContact);
+    console.log('addContactInBrevoForQuery API called successfully. Returned data: ' + JSON.stringify(data));
+    return data;
+  } catch (error) {
+    console.error("Error in sending Brevo email:", error.message);
     return null;
   }
 };
 
-const updateContactAttributeBrevoForQuery = async function updateContactAttributeBrevoForQuery(email, firstname, surname, contact_number, query, query_email) {
+async function updateContactAttributeBrevoForQuery(email, firstname, surname, contact_number, query, query_email) {
   try {
     let defaultClient = SibApiV3Sdk.ApiClient.instance;
 
@@ -1541,11 +1548,9 @@ const updateContactAttributeBrevoForQuery = async function updateContactAttribut
 
     updateContact.attributes = {'SUBSCRIBER_FIRSTNAME':firstname, 'SUBSCRIBER_LASTNAME':surname, 'CONTACT_NUMBER':contact_number, 'QUERY': query, 'QUERY_EMAIL': query_email};
 
-    apiInstance.updateContact(identifier, updateContact).then(function() {
-    console.log('updateContactAttributeBrevo API called successfully.');
-    }, function(error) {
-      console.error(error);
-    });
+    const data = await apiInstance.updateContact(identifier, updateContact);
+    console.log('updateContactAttributeBrevoForQuery API called successfully. Returned data: ' + JSON.stringify(data));
+    return 'Updated';
   } catch {
     console.log("Error in sending Brevo email:", error.message);
     return null;
@@ -1952,7 +1957,6 @@ async function getDefaultedSubscriptionPaymentOfSubscribers(req) {
         .select('firstname surname subscription_stopped_payment_date is_active')
         .exec();
 
-      console.log("subscriptions:::::::::::", subscriptions);
 
       const result = subscriptions.map(data => ({
         Subscriber_firstname: data.firstname,
@@ -2401,12 +2405,13 @@ async function varifyEmailForgotPassword(req) {
       const forgot_password_link = `https://affiliate.skilltechsa.online/forgot-password?reset-token=${tokenData}`
 
       //Brevo email for changing password
-      if(userData[0].role !== 'ambassador' && userData[0].is_pass_reset === false){
-        console.log("addSubscriberContactInBrevo is working");
-        addSubscriberContactInBrevo(email, firstname, surname, forgot_password_link, userId)
+      let addSubscriber;
+      let updateContact;
+      // if(userData[0].role !== 'ambassador' && userData[0].is_pass_reset === false){
+      if(userData.length > 0 && userData[0].role !== 'ambassador' && userData[0].role !== 'admin'){
+        addSubscriber = await addSubscriberContactInBrevo(email, firstname, surname, forgot_password_link, userId)
       } else {
-        console.log("updateContactAttributeBrevo is working");
-        updateContactAttributeBrevo(email, "", "", forgot_password_link)
+        updateContact = await updateContactAttributeBrevo(email, "", "", forgot_password_link)
       };
 
       const variables = {
@@ -2416,7 +2421,16 @@ async function varifyEmailForgotPassword(req) {
       }
       const receiverName = firstname + " " + surname;
       const receiverEmail = email;
-      sendEmailByBrevo(79, receiverEmail, receiverName, variables);
+      let sendEmail;
+      if(addSubscriber || updateContact){
+        sendEmail = await sendEmailByBrevo(79, receiverEmail, receiverName, variables);
+      };
+
+      if(userData[0].role !== 'ambassador' && userData[0].role !== 'admin'){
+        if(sendEmail){
+          await deleteContactBrevo(email);
+        }
+      };
 
       return userData;
       

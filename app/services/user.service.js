@@ -236,6 +236,9 @@ async function updateAmbassadorProfileDetails(param, data) {
             whereCondition,
             {
                 $set: {
+                    firstname: data.firstname,
+                    surname: data.surname,
+                    id_number: data.id_number,
                     bank: data.bank,
                     branch: data.branch,
                     branch_code: data.branch_code,

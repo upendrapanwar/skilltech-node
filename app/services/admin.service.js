@@ -1364,7 +1364,7 @@ async function getSubscriptionObject(subscription_token) {
         // console.log("Request Options:", options);
     
         const response = await axios.get(url, options);
-        // console.log("Request response:", response.data.data.response);
+        console.log("Request response:", response.data.data.response);
   
         return response.data.data.response;
     } catch (err) {
