@@ -1613,13 +1613,11 @@ async function cancelPayfastPayment(req) {
       console.log("Signature:", signature);
       console.log("Timestamp:", timestamp);
   
-      // const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
-      const url = `https://api.payfast.co.za/subscriptions/${token}/cancel`;
+      const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
       const version = 'v1';
   
       const options = {
           headers: {
-              // 'Content-Type': 'application/x-www-form-urlencoded',
               'merchant-id': merchantId,
               'version': version,
               'timestamp': timestamp,
