@@ -1251,7 +1251,7 @@ async function getConsolidatedInformationReport(param) {
 //     console.log('Successfully triggered');
 // });
 
-// cron.schedule('*/1 * * * *', () => {
+// cron.schedule('*/2 * * * *', () => {
 //     getRegularSubscriptionDataUpdate();
 //   console.log('Successfully triggered');
 // });
@@ -1280,7 +1280,7 @@ async function getRegularSubscriptionDataUpdate() {
                 let payment_status
                 if(current_date > due_date) {
                     payment_status = `Payment Not Done on ${due_date}`
-                    // cancelPayfastSubscription(token, userId, orderId, due_date);
+                    cancelPayfastSubscription(token, userId, orderId, due_date);
                 } else {
                     payment_status = `Payment Due Date is ${due_date}`
                 };
@@ -1292,6 +1292,7 @@ async function getRegularSubscriptionDataUpdate() {
                     payment_status: payment_status
                 };
                 subscriptionData.push(userSubscriptionData);
+                console.log("userSubscriptionData", userSubscriptionData);
             } catch (error) {
                 console.error("Error parsing merchantData for User ID:", payment.userid, error);
             }
@@ -1364,7 +1365,7 @@ async function getSubscriptionObject(subscription_token) {
         // console.log("Request Options:", options);
     
         const response = await axios.get(url, options);
-        console.log("Request response:", response.data.data.response);
+        // console.log("Request response:", response.data.data.response);
   
         return response.data.data.response;
     } catch (err) {
@@ -1556,9 +1557,12 @@ async function getSubscriptionObject(subscription_token) {
     //     BRANCH_CODE : branch_code,
     //   }
     //   commonService.sendUpdatedSuspendedContactEmail(49, receiverEmail, receiverName, variables, bank, branch, type_of_account, account_number, branch_code);
-      commonService.sendEmailByBrevo(49, receiverEmail, receiverName);
+    let sendEmail;
+    sendEmail = await commonService.sendEmailByBrevo(49, receiverEmail, receiverName);
       if(userBlocked.role === "ambassador"){
-        commonService.deleteContactBrevo(receiverEmail);
+        if(sendEmail){
+            await commonService.deleteContactBrevo(receiverEmail);
+        }
       };
   
       //For Brevo email to AMBASSADOR, when stopped payment by Subscriber
@@ -1578,7 +1582,7 @@ async function getSubscriptionObject(subscription_token) {
           }
           const ambassadorName = ambassadorData[0].firstname + " " + ambassadorData[0].surname;
           const receiverEmail = ambassadorData[0].email;
-          commonService.sendUpdatedContactEmailByBrevo(38, receiverEmail, ambassadorName, variables, subscriber_firstname, subscriber_lastname);
+          await commonService.sendUpdatedContactEmailByBrevo(38, receiverEmail, ambassadorName, variables, subscriber_firstname, subscriber_lastname);
         };  
       }
   
@@ -1587,6 +1591,22 @@ async function getSubscriptionObject(subscription_token) {
       throw err;
     }
   };
+
+//   cron.schedule('*/1 * * * *', () => {
+//     (async () => {
+//         try {
+//             let sendEmail;
+//             sendEmail = await commonService.sendEmailByBrevo(49, 'eynoashish@gmail.com', 'ashish');
+//             if(sendEmail){
+//                 await commonService.deleteContactBrevo('eynoashish@gmail.com');
+//             }
+//             console.log("sendEmail", sendEmail);
+//         } catch (error) {
+//           console.error("Error:", error);
+//         }
+//       })();
+//   console.log('Successfully triggered');
+// });
 
 
 /*****************************************************************************************/

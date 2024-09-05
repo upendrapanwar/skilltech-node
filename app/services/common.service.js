@@ -1863,8 +1863,11 @@ async function cancelCourseByUser(req) {
     //For Brevo email to SUBSCIBER, when user unsubscribe the subscription
     const subscriberName = `${userBlocked.firstname} ${userBlocked.surname}`
     console.log("subscriberName", subscriberName);
-    sendEmailByBrevo(14, userBlocked.email, subscriberName); 
-    deleteContactBrevo(userBlocked.email);
+    let sendEmail;
+    sendEmail = await sendEmailByBrevo(14, userBlocked.email, subscriberName); 
+    if(sendEmail){
+      await deleteContactBrevo(userBlocked.email);
+    };
 
     //For Brevo email to AMBASSADOR, when user unsubscribe the subscription
     if(userBlocked.role !== "ambassador"){
@@ -1883,7 +1886,7 @@ async function cancelCourseByUser(req) {
         }
         const ambassadorName = ambassadorData[0].firstname + " " + ambassadorData[0].surname;
         const receiverEmail = ambassadorData[0].email;
-        sendUpdatedContactEmailByBrevo(38, receiverEmail, ambassadorName, variables, subscriber_firstname, subscriber_lastname);
+        await sendUpdatedContactEmailByBrevo(38, receiverEmail, ambassadorName, variables, subscriber_firstname, subscriber_lastname);
       };
     }
 
