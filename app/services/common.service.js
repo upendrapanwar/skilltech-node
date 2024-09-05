@@ -1613,7 +1613,8 @@ async function cancelPayfastPayment(req) {
       console.log("Signature:", signature);
       console.log("Timestamp:", timestamp);
   
-      const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+      // const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+      const url = `https://api.payfast.co.za/subscriptions/${token}/cancel`;
       const version = 'v1';
   
       const options = {
@@ -1825,7 +1826,7 @@ async function cancelCourseByUser(req) {
       is_active: false,
       cancellation_date: new Date(),
     };
-    console.log("statusData====>", statusData); 
+    console.log("statusData====>", statusData);
 
     const removedCourse = await Purchasedcourses.findOneAndUpdate(
       { _id: orderId },
