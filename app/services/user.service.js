@@ -149,9 +149,9 @@ async function updateProfileDetails(param, data) {
                     postal_code: data.postal_code,
                     // method_of_communication:data.method_of_communication, 
                     // opt_in_promotional: data.opt_in_promotional,
-                    race: data.race,
-                    gender: data.gender,
-                    qualification: data.qualification,
+                    // race: data.race,
+                    // gender: data.gender,
+                    // qualification: data.qualification,
                 }
             },
             { new: true }

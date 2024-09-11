@@ -1124,7 +1124,8 @@ async function getBulkPaymentReport(param) {
             acc.push({
                 recipient_name: `${data.firstname} ${data.surname}`,
                 recipient_account: data.account_number || 'N/A',
-                recipient_acount_type: data.type_of_account || 'N/A',
+                // recipient_acount_type: data.type_of_account || 'N/A',
+                recipient_acount_type: '1',
                 branch_code: data.branch_code || 'N/A',
                 amount: amountDue ? amountDue : '0',
                 own_reference: data.referral_code || 'N/A',
@@ -1180,7 +1181,7 @@ async function getConsolidatedInformationReport(param) {
     try {
         let query = {};
         if (param && param.start_date && param.end_date) {
-            query.createdAt = {
+            query.subscription_date = {
                 $gte: new Date(param.start_date),
                 $lte: new Date(param.end_date)
             };
@@ -1224,6 +1225,7 @@ async function getConsolidatedInformationReport(param) {
             role: data.role === 'ambassador' ? 'Ambassador' : 'Subscriber',
             is_active: data.is_active ? 'Active' : 'Inactive',
             referral_code: data.referral_code || 'none',
+            date_of_subscription: formatDate(data.subscription_date) || 'none',
             unsubscribe_status: data.is_active ? 'N' : 'Y',
             unsubscribed_date: formatDate(data.subscription_cancellation_date) || 'none',
             stopped_payment_status: data.subscription_stopped_payment_date ? 'Y' : 'N',
