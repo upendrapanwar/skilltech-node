@@ -14,6 +14,7 @@ module.exports = {
     updateAmbassadorProfileDetails,
     getProfileDetails,
     checkSouthAfricanId,
+    checkEmailId,
     checkResetPasswordEmailId,
     saveMoodleLoginId,
     saveCartItem,
@@ -332,6 +333,23 @@ async function checkSouthAfricanId(req) {
         console.log("existingSouthAfricanId", existingSouthAfricanId);
         if (existingSouthAfricanId !== null) {
           return existingSouthAfricanId;
+        } else {
+            return;
+        }
+    } catch (error) {
+        console.error('Error fetching profile data:', error);
+        return null;
+    }
+};
+async function checkEmailId(req) {
+    try {
+        const emailId = req.params.id; 
+        console.log("emailId", emailId);
+    
+        const existingEamilId = await User.findOne({ email: emailId}).select('email');
+        console.log("existingEamilId", existingEamilId);
+        if (existingEamilId !== null) {
+          return existingEamilId;
         } else {
             return;
         }

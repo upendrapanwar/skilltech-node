@@ -14,6 +14,7 @@ router.put('/update-profile-details/:id', updateProfileDetails);
 router.put('/update-ambassador-profile-details/:id', updateAmbassadorProfileDetails);
 router.get('/get-profile-details/:id', getProfileDetails);
 router.get('/check-southafrican-id/:id', checkSouthAfricanId);
+router.get('/check-email-id/:id', checkEmailId);
 router.get('/check-reset-password-email/:id', checkResetPasswordEmailId);
 router.post('/save-moodle-id/:id', saveMoodleLoginId);
 router.post('/save-cart-item/:id', saveCartItem);
@@ -120,6 +121,22 @@ function getProfileDetails(req, res, next) {
  */
 function checkSouthAfricanId(req, res, next) {
     userService.checkSouthAfricanId(req)
+    .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
+    .catch(err => next(res.json({ status: false, message: err })));
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function to check Email Id existed
+ *
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * 
+ * @return JSON|null
+ */
+function checkEmailId(req, res, next) {
+    userService.checkEmailId(req)
     .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: [] }))
     .catch(err => next(res.json({ status: false, message: err })));
 }

@@ -383,13 +383,13 @@ async function sendEmailByBrevo(template_id, receiverEmailId, receiverName, vari
       sendSmtpEmail = {
         to: [{
           email: receiverEmailId,
-          // name: receiverName
+          name: receiverName
         }],
         templateId: template_id,
         params: variables,
         sender: {
           email: 'guild@skilltechsa.co.za',
-          // name: 'High Vista Guild'
+          name: 'High Vista Guild'
         }
       };
     } else {
@@ -1463,6 +1463,7 @@ async function saveQuery(param) {
     //For Brevo email for user query
     let updateContact;
     let addContact;
+      //Email for user
     if(emailExisted.length > 0 && emailExisted[0].role === 'ambassador' ){
       updateContact = await updateContactAttributeBrevoForQuery(email, firstname, surname, contact_number, query, email)
     } else {
@@ -1495,13 +1496,14 @@ async function saveQuery(param) {
       QUERY: query,
       QUERY_EMAIL: email
     }
+    //Email for Guild Admin
     //guild@skilltechsa.co.za
-    await updateContactAttributeBrevoForQuery('eynoashish@gmail.com', firstname, surname, contact_number, query, email);
-    await sendEmailByBrevo(80, 'eynoashish@gmail.com', 'High Vista Guild', variables2);
+    await updateContactAttributeBrevoForQuery('guild@skilltechsa.co.za', firstname, surname, contact_number, query, email);
+    await sendEmailByBrevo(80, 'guild@skilltechsa.co.za', 'High Vista Guild', variables2);
 
     return userQueryData;
   } catch (error) {
-    console.log("Error in creating or saving query:", error.message);
+    console.log("Error in creating or saving query:", error);
     return null;
   }
 };
