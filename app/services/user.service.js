@@ -20,6 +20,7 @@ module.exports = {
     saveCartItem,
     getCartItem,
     deleteCartItem,
+    unsubscribedDueToDeleteItem,
 };
 
 
@@ -431,7 +432,7 @@ async function saveMoodleLoginId(req) {
 
 async function saveCartItem(req) {
     try {
-        const userId = req.params.id;
+        const userId = req.params.id; 
         const cartItems = req.body;
 
         if (!cartItems || !Array.isArray(cartItems)) {
@@ -529,6 +530,44 @@ async function deleteCartItem(req) {
         }
     } catch (error) {
         console.error('Error in deleting cart items:', error);
+        return null;
+    }
+}
+
+
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Manages to unsubscribe due to delete cart items
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+
+async function unsubscribedDueToDeleteItem(req) {
+    try {
+        const userId = req.params.id;
+        const whereCondition = { _id: userId };
+        const updatedData = await User.findOneAndUpdate(
+            whereCondition,
+            {
+                $set: {
+                    is_active: false,
+                    cart_items: [],
+                }
+            },
+            { new: true }
+        );
+
+        if (updatedData) {
+            return updatedData;
+        } else {
+            return false;
+        }
+    } catch (error) {
+        console.error('Error in changing status in database:', error);
         return null;
     }
 }

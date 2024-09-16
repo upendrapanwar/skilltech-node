@@ -1253,7 +1253,7 @@ async function getConsolidatedInformationReport(param) {
 //     console.log('Successfully triggered');
 // });
 
-// cron.schedule('*/2 * * * *', () => {
+// cron.schedule('*/1 * * * *', () => {
 //     getRegularSubscriptionDataUpdate();
 //   console.log('Successfully triggered');
 // });
@@ -1279,8 +1279,12 @@ async function getRegularSubscriptionDataUpdate() {
                 let due_date = new Date(subscription_data.run_date);
                 due_date.setHours(0, 0, 0, 0);
 
+                //Extra testing condition
+                let userToken = subscription_data.token;
+
                 let payment_status
-                if(current_date > due_date) {
+                // if(current_date > due_date) {
+                if(userToken === '477d1603-0e75-4ae0-b858-f8a3ca041eca') {
                     payment_status = `Payment Not Done on ${due_date}`
                     cancelPayfastSubscription(token, userId, orderId, due_date);
                 } else {
@@ -1367,7 +1371,7 @@ async function getSubscriptionObject(subscription_token) {
         // console.log("Request Options:", options);
     
         const response = await axios.get(url, options);
-        // console.log("Request response:", response.data.data.response);
+        console.log("Request response:", response.data.data.response);
   
         return response.data.data.response;
     } catch (err) {

@@ -2305,10 +2305,6 @@ async function getAmbassadorMonthlyPay(req) {
     const userId = req.params.id;
     console.log("getAmbassadorMonthlyPay referralCode", req.params);
 
-    const ambassadorData = await User.findById(userId).select('referral_code');
-    const referralCode = ambassadorData.referral_code;
-    console.log("getAmbassadorMonthlyPay referralCode", referralCode);
-
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
@@ -2327,6 +2323,10 @@ async function getAmbassadorMonthlyPay(req) {
       const startDate = new Date(year, month, 1);
       const endDate = new Date(year, month + 1, 0); // Last day of the month
 
+      const ambassadorData = await User.findById(userId).select('referral_code');
+      const referralCode = ambassadorData.referral_code;
+      console.log("getAmbassadorMonthlyPay referralCode", referralCode);
+
       let query = {
         referral_code: referralCode,
         purchagedcourseId: { $ne: null },
@@ -2338,9 +2338,10 @@ async function getAmbassadorMonthlyPay(req) {
       };
 
       const subscribers = await Referral.find(query);
+      console.log("getAmbassadorMonthlyPay subscribers: ", subscribers);
+      
       const referralCount = subscribers.filter(referral => referral.referral_code === referralCode).length;
       const monthlyPay = referralCount * 5;
-      console.log("getAmbassadorMonthlyPay subscribers: ", subscribers);
 
       lastFourMonthsData.push({
         month: startDate.toLocaleString('default', { month: 'long' }),
