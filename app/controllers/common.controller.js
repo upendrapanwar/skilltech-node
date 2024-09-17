@@ -665,7 +665,7 @@ function getInactiveReferral(req, res, next) {
  *                  
  */
 function getAllSubscriptionCancelledbySubscriber(req, res, next) {
-  commonService.getSubscriptionCancelledbySubscriber(req.params)
+  commonService.getSubscriptionCancelledbySubscriber(req)
       .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
       .catch(err => next(res.json({ status: false, message: err })))
 }
@@ -679,7 +679,7 @@ function getAllSubscriptionCancelledbySubscriber(req, res, next) {
  *                  
  */
 function getSubscriptionCancelledbySubscriber(req, res, next) {
-  commonService.getSubscriptionCancelledbySubscriber(req.params)
+  commonService.getSubscriptionCancelledbySubscriber(req)
       .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
       .catch(err => next(res.json({ status: false, message: err })))
 }

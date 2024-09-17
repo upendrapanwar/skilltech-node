@@ -1937,6 +1937,7 @@ async function getDefaultedSubscriptionPaymentOfSubscribers(req) {
 
     query.role = 'subscriber';
     query.is_active = false;
+    query.subscription_cancellation_date = null;
 
     const subscriptionData = [];
 
@@ -2113,72 +2114,131 @@ async function getInactiveReferral(req) {
  *
  * @returns Object|null
  */ 
-async function getSubscriptionCancelledbySubscriber(param) {
+async function getSubscriptionCancelledbySubscriber(req) {
   try {
-    const startDate = param && param.start_date ? new Date(param.start_date) : new Date(0);
-    const endDate = param && param.end_date ? new Date(param.end_date) : new Date();
-    const pipeline = [
-        {
-            $match: {
-                is_active: false,
-                cancellation_date: {
-                    $gte: new Date(startDate),
-                    $lte: new Date(endDate)
-                }
-            }
-        },
-        {
-            $lookup: {
-                from: "users",
-                localField: "userId",
-                foreignField: "_id",
-                as: "user"
-            }
-        },
-        {
-            $unwind: "$user"
-        },
-        {
-            $match: {
-                "user.role": "subscriber"
-            }
-        },
-        {
-            $project: {
-                _id: 0,
-                Subscriber_firstname: "$user.firstname",
-                Subscriber_lastname: "$user.surname",
-                referral_code: "$user.referral_code",
-                cancellation_date: 1
-            }
-        },
-        {
-            $sort: {
-                cancellation_date: -1
-            }
-        }
-    ];
-
-    const cancellationRecords = await Purchasedcourses.aggregate(pipeline);
+    let param = req.params;
+    let id = req.body.userId;
     
+    const ambassador = await User.findById(id);
+    const referrals = await Referral.find({ referral_code: ambassador.referral_code });
+    const userIds = referrals.map(referral => referral.userId);
+
+    console.log("Ambassador userID numbetrs: ", userIds.length);
+
+    let query = {};
+    if (param && param.start_date && param.end_date) {
+      query.cancellation_date = {
+        $gte: new Date(param.start_date),
+        $lte: new Date(param.end_date),
+      };
+    }
+    query.is_active = false;
+    query.subscription_stopped_payment_date = null;
+    query.role = 'subscriber';
+
+    const subscriptionData = [];
+
     const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}-${month}-${year}`;
+      if (!dateString) return "none";
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}-${month}-${year}`;
     };
-    const formattedRecords = cancellationRecords.map(record => ({
-        ...record,
-        cancellation_date: formatDate(record.cancellation_date)
-    }));
-    console.log("getSubscriptionCancelledBySubscriber.......", cancellationRecords);
-    return formattedRecords;
-} catch (error) {
-    console.error("Error in getSubscriptionCancelledBySubscriber:", error);
+
+    for (const userId of userIds) {
+      const subscriptions = await User.find({
+        ...query,
+        _id: userId,
+      })
+        .select('firstname surname subscription_cancellation_date')
+        .exec();
+        console.log("subscriptions data", subscriptions);
+
+      const result = subscriptions.map(data => ({
+        Subscriber_firstname: data.firstname,
+        Subscriber_lastname: data.surname,
+        cancellation_date: formatDate(data.subscription_cancellation_date),
+      }));
+
+      subscriptionData.push(...result);
+    }
+
+    console.log("subscriptions", subscriptionData);
+
+    return subscriptionData;
+  } catch (error) {
+    console.error('An error occurred:', error);
     throw error;
+  }
 }
-}
+// async function getSubscriptionCancelledbySubscriber(param) {
+//   try {
+//     const startDate = param && param.start_date ? new Date(param.start_date) : new Date(0);
+//     const endDate = param && param.end_date ? new Date(param.end_date) : new Date();
+//     const pipeline = [
+//         {
+//             $match: {
+//                 is_active: false,
+//                 cancellation_date: {
+//                     $gte: new Date(startDate),
+//                     $lte: new Date(endDate)
+//                 }
+//             }
+//         },
+//         {
+//             $lookup: {
+//                 from: "users",
+//                 localField: "userId",
+//                 foreignField: "_id",
+//                 as: "user"
+//             }
+//         },
+//         {
+//             $unwind: "$user"
+//         },
+//         {
+//             $match: {
+//                 "user.role": "subscriber"
+//             }
+//         },
+//         {
+//             $project: {
+//                 _id: 0,
+//                 Subscriber_firstname: "$user.firstname",
+//                 Subscriber_lastname: "$user.surname",
+//                 referral_code: "$user.referral_code",
+//                 cancellation_date: 1
+//             }
+//         },
+//         {
+//             $sort: {
+//                 cancellation_date: -1
+//             }
+//         }
+//     ];
+
+//     const cancellationRecords = await Purchasedcourses.aggregate(pipeline);
+    
+//     const formatDate = (dateString) => {
+//         const date = new Date(dateString);
+//         const day = String(date.getDate()).padStart(2, '0');
+//         const month = String(date.getMonth() + 1).padStart(2, '0');
+//         const year = date.getFullYear();
+//         return `${day}-${month}-${year}`;
+//     };
+//     const formattedRecords = cancellationRecords.map(record => ({
+//         ...record,
+//         cancellation_date: formatDate(record.cancellation_date)
+//     }));
+//     console.log("getSubscriptionCancelledBySubscriber.......", cancellationRecords);
+//     return formattedRecords;
+// } catch (error) {
+//     console.error("Error in getSubscriptionCancelledBySubscriber:", error);
+//     throw error;
+// }
+// }
 /*****************************************************************************************/
 /*****************************************************************************************/
 /**
