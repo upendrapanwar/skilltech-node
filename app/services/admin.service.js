@@ -1248,12 +1248,13 @@ async function getConsolidatedInformationReport(param) {
  * 
  * @result null|Object
  */
-// cron.schedule('0 0 * * *', () => {
-//     getRegularSubscriptionDataUpdate();
-//     console.log('Successfully triggered');
-// });
+//This crone is to run every mid-night at 12:00 AM
+cron.schedule('0 0 * * *', () => {
+    getRegularSubscriptionDataUpdate();
+    console.log('Successfully triggered');
+});
 
-// cron.schedule('*/1 * * * *', () => {
+// cron.schedule('*/2 * * * *', () => {
 //     getRegularSubscriptionDataUpdate();
 //   console.log('Successfully triggered');
 // });
@@ -1280,11 +1281,11 @@ async function getRegularSubscriptionDataUpdate() {
                 due_date.setHours(0, 0, 0, 0);
 
                 //Extra testing condition
-                let userToken = subscription_data.token;
+                // let userToken = subscription_data.token;
 
                 let payment_status
-                // if(current_date > due_date) {
-                if(userToken === '477d1603-0e75-4ae0-b858-f8a3ca041eca') {
+                if(current_date > due_date) {
+                // if(userToken === '1e4f49fd-58b8-4750-aaa8-ea6c779a53ae') {
                     payment_status = `Payment Not Done on ${due_date}`
                     cancelPayfastSubscription(token, userId, orderId, due_date);
                 } else {
@@ -1298,7 +1299,7 @@ async function getRegularSubscriptionDataUpdate() {
                     payment_status: payment_status
                 };
                 subscriptionData.push(userSubscriptionData);
-                console.log("userSubscriptionData", userSubscriptionData);
+                // console.log("userSubscriptionData", userSubscriptionData);
             } catch (error) {
                 console.error("Error parsing merchantData for User ID:", payment.userid, error);
             }
@@ -1356,7 +1357,8 @@ async function getSubscriptionObject(subscription_token) {
         // console.log("Signature:", signature);
         // console.log("Timestamp:", timestamp);
     
-        const url = `https://api.payfast.co.za/subscriptions/${token}/fetch?testing=true`;
+        // const url = `https://api.payfast.co.za/subscriptions/${token}/fetch?testing=true`;
+        const url = `https://api.payfast.co.za/subscriptions/${token}/fetch`;
     
         const options = {
             headers: {
@@ -1371,7 +1373,7 @@ async function getSubscriptionObject(subscription_token) {
         // console.log("Request Options:", options);
     
         const response = await axios.get(url, options);
-        console.log("Request response:", response.data.data.response);
+        // console.log("Request response:", response.data.data.response);
   
         return response.data.data.response;
     } catch (err) {

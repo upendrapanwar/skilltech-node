@@ -1615,7 +1615,8 @@ async function cancelPayfastPayment(req) {
       console.log("Signature:", signature);
       console.log("Timestamp:", timestamp);
   
-      const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+      // const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+      const url = `https://api.payfast.co.za/subscriptions/${token}/cancel`;
       const version = 'v1';
   
       const options = {
@@ -1935,7 +1936,7 @@ async function getDefaultedSubscriptionPaymentOfSubscribers(req) {
     const referrals = await Referral.find({ referral_code: ambassador.referral_code });
     const userIds = referrals.map(referral => referral.userId);
 
-    query.role = 'subscriber';
+    // query.role = 'subscriber';
     query.is_active = false;
     query.subscription_cancellation_date = null;
 
@@ -2134,7 +2135,7 @@ async function getSubscriptionCancelledbySubscriber(req) {
     }
     query.is_active = false;
     query.subscription_stopped_payment_date = null;
-    query.role = 'subscriber';
+    // query.role = 'subscriber';
 
     const subscriptionData = [];
 
