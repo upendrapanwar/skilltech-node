@@ -443,6 +443,11 @@ async function getSubscriptionCancelledByAmbassador(param) {
                 }
             },
             {
+                $match: {
+                    cancellation_date: { $ne: null } // Ensure cancellation_date is not null
+                }
+            },
+            {
                 $lookup: {
                     from: "users",
                     localField: "userId",
@@ -517,9 +522,12 @@ async function getSubscriptionCancelledBySubscriber(param) {
                     cancellation_date: {
                         $gte: new Date(startDate),
                         $lte: new Date(endDate)
-                        // $gte: new Date(param.start_date),
-                        // $lte: new Date(param.end_date)
                     }
+                }
+            },
+            {
+                $match: {
+                    cancellation_date: { $ne: null }
                 }
             },
             {
@@ -638,6 +646,7 @@ async function getAllActiveAndInactiveReferralPerAmbassador(param) {
         },
         { $sort: { "createdAt": 1 } }
     ]).exec();
+    console.log("referralData for getAllActiveAndInactiveReferralPerAmbassador", referralData)
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -1177,6 +1186,7 @@ async function getBulkPaymentReport(param) {
  * 
  * @result null|Object
  */
+
 async function getConsolidatedInformationReport(param) {
     try {
         let query = {};
@@ -1186,25 +1196,43 @@ async function getConsolidatedInformationReport(param) {
                 $lte: new Date(param.end_date)
             };
         }
+
         const userData = await User.find(query)
-          .select("firstname surname id_number email mobile_number alternate_mobile_number province race gender bank account_number account_holder_name type_of_account bank_proof certificate role is_active referral_code subscription_date subscription_cancellation_date subscription_stopped_payment_date")
-          .exec();
-          console.log("userData", userData);
+            .select("firstname surname id_number email mobile_number alternate_mobile_number province race gender bank account_number account_holder_name type_of_account bank_proof certificate role is_active referral_code subscription_date subscription_cancellation_date subscription_stopped_payment_date")
+            .exec();
 
-        
-        // Filter out the user with email 'admin@gmail.com'
-        const filteredUserData = userData.filter(data => data.role !== 'admin');
+        console.log("userData", userData);
 
+        // Filter out admin users
+        const filteredData = userData.filter(data => data.role !== 'admin');
+
+        // Use Promise.all to handle async operations inside map
+        const filteredUserData = await Promise.all(filteredData.map(async data => {
+            // Fetch referral data for linked ambassador
+            const referralData = await Referral.find({ userId: data._id }).select("referral_code").exec();
+            console.log("referralData for linked referral", referralData);
+            
+            // Add linked ambassador referral if found
+            if (referralData && referralData.length > 0) {
+                data.linked_ambassador_referral = referralData[0].referral_code;
+            } else {
+                data.linked_ambassador_referral = 'none';
+            }
+            return data;
+        }));
+
+        // Helper function to format dates
         const formatDate = (dateString) => {
-            console.log("dateString", dateString)
-            if(dateString !== null) {
+            if (dateString !== null) {
                 const date = new Date(dateString);
                 const day = String(date.getDate()).padStart(2, '0');
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const year = date.getFullYear();
                 return `${day}-${month}-${year}`;
             }
+            return 'none';
         };
+
         // Map the user data to the required format
         const result = filteredUserData.map(data => ({
             firstname: data.firstname || 'none',
@@ -1225,14 +1253,15 @@ async function getConsolidatedInformationReport(param) {
             role: data.role === 'ambassador' ? 'Ambassador' : 'Subscriber',
             is_active: data.is_active ? 'Active' : 'Inactive',
             referral_code: data.referral_code || 'none',
-            date_of_subscription: formatDate(data.subscription_date) || 'none',
+            linked_to_ambassador_status: data.linked_ambassador_referral !== 'none' ? 'Y' : 'N',
+            linked_ambassador_referral: data.linked_ambassador_referral || 'none',
+            date_of_subscription: formatDate(data.subscription_date),
             unsubscribe_status: data.is_active ? 'N' : 'Y',
-            unsubscribed_date: formatDate(data.subscription_cancellation_date) || 'none',
+            unsubscribed_date: formatDate(data.subscription_cancellation_date),
             stopped_payment_status: data.subscription_stopped_payment_date ? 'Y' : 'N',
-            stopped_payment_date: formatDate(data.subscription_stopped_payment_date) || 'none',
+            stopped_payment_date: formatDate(data.subscription_stopped_payment_date),
         }));
 
-        // console.log(result);
         return result;
     } catch (error) {
         console.error('An error occurred:', error);
@@ -1254,7 +1283,7 @@ cron.schedule('0 0 * * *', () => {
     console.log('Successfully triggered');
 });
 
-// cron.schedule('*/2 * * * *', () => {
+// cron.schedule('*/3 * * * *', () => {
 //     getRegularSubscriptionDataUpdate();
 //   console.log('Successfully triggered');
 // });
@@ -1280,25 +1309,27 @@ async function getRegularSubscriptionDataUpdate() {
                 let due_date = new Date(subscription_data.run_date);
                 due_date.setHours(0, 0, 0, 0);
 
-                //Extra testing condition
-                // let userToken = subscription_data.token;
-
-                let payment_status
                 if(current_date > due_date) {
-                // if(userToken === '1e4f49fd-58b8-4750-aaa8-ea6c779a53ae') {
-                    payment_status = `Payment Not Done on ${due_date}`
                     cancelPayfastSubscription(token, userId, orderId, due_date);
-                } else {
-                    payment_status = `Payment Due Date is ${due_date}`
-                };
+                }
 
-                const userSubscriptionData = {
-                    user_id: userId,
-                    order_id: orderId.toString(),
-                    due_date: subscription_data.run_date,
-                    payment_status: payment_status
-                };
-                subscriptionData.push(userSubscriptionData);
+                // Extra testing condition
+                // let userToken = subscription_data.token;
+                // let payment_status
+                // if(userToken === '4fd12f56-df29-45c6-bf10-1d96bfc756d8') {
+                //     payment_status = `Payment Not Done on ${due_date}`
+                //     cancelPayfastSubscription(token, userId, orderId, due_date);
+                // } else {
+                //     payment_status = `Payment Due Date is ${due_date}`
+                // };
+
+                // const userSubscriptionData = {
+                //     user_id: userId,
+                //     order_id: orderId.toString(),
+                //     due_date: subscription_data.run_date,
+                //     payment_status: payment_status
+                // };
+                // subscriptionData.push(userSubscriptionData);
                 // console.log("userSubscriptionData", userSubscriptionData);
             } catch (error) {
                 console.error("Error parsing merchantData for User ID:", payment.userid, error);
@@ -1441,12 +1472,12 @@ async function getSubscriptionObject(subscription_token) {
         console.log("Signature:", signature);
         console.log("Timestamp:", timestamp);
     
-        const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+        // const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+        const url = `https://api.payfast.co.za/subscriptions/${token}/cancel`;
         const version = 'v1';
     
         const options = {
             headers: {
-                // 'Content-Type': 'application/x-www-form-urlencoded',
                 'merchant-id': merchantId,
                 'version': version,
                 'timestamp': timestamp,
@@ -1462,7 +1493,7 @@ async function getSubscriptionObject(subscription_token) {
   
         if (response.status === 200) {
             console.log("Cancellation successful.");
-            cancelCourseByUser(userId, orderId, due_date);
+            cancelSubscription(userId, orderId, due_date);
         } else {
             console.error("Cancellation failed:", response.data);
         }
@@ -1481,37 +1512,32 @@ async function getSubscriptionObject(subscription_token) {
     }
   };
 
-  async function handleMoodleUserSuspension (moodle_login_id) {
+  async function handleMoodleUserDeletion(moodle_login_id) {
     const MOODLE_URL = process.env.MOODLE_COURSES_URL;
     const MOODLE_TOKEN = process.env.MOODLE_TOKEN;
-    const MOODLE_GET_FUNCTION = 'core_user_update_users';
-
+    const MOODLE_DELETE_FUNCTION = 'core_user_delete_users';
+  
     console.log('MOODLE_URL', MOODLE_URL);
     console.log('MOODLE_TOKEN', MOODLE_TOKEN);
     console.log('moodle_login_id', moodle_login_id);
   
     try {
       const response = await axios.post(MOODLE_URL, null, {
-        params: { 
+        params: {
           wstoken: MOODLE_TOKEN,
           moodlewsrestformat: 'json',
-          wsfunction: MOODLE_GET_FUNCTION,
-          users: [
-            {
-              id: moodle_login_id,
-              suspended: 1,    // 1 to suspend, 0 to not suspend (active)
-            },
-          ],
+          wsfunction: MOODLE_DELETE_FUNCTION,
+          userids: [moodle_login_id],
         },
       });
   
-      console.log('User data:', response.data);
+      console.log('User deleted successfully:', response.data);
     } catch (error) {
-      console.error('Error suspending user:', error.response ? error.response.data : error.message);
+      console.error('Error deleting user:', error.response ? error.response.data : error.message);
     }
   };
-
-  async function cancelCourseByUser(user_id, order_id, due_date) {
+  
+  async function cancelSubscription(user_id, order_id, due_date) {
     console.error("cancelCourseByUser is working");
     console.log("userId", user_id);  
     console.log("order_id", order_id);  
@@ -1526,27 +1552,34 @@ async function getSubscriptionObject(subscription_token) {
         { new: true }
       );
 
-      //For blocking the user on stopped payment by Subscriber
+      //Update User status on stopped payment by Subscriber
       const userBlocked = await User.findOneAndUpdate(
         { _id: userId },
         {is_active: false, subscription_stopped_payment_date: due_date},
         { new: true }
       );
       console.log("userBlocked successfully:", userBlocked);
+
+      //Update Purchasedcourses status on stopped payment by Subscriber
+      const courseData = await Purchasedcourses.findOneAndUpdate(
+        { orderid: orderId },
+        {is_active: false},
+        { new: true }
+      );
+      console.log("updatePurchagedCourses successfully:", courseData);
   
       //For Changing status of Referral code used on stopped payment by Subscriber
-      const courseData = await Purchasedcourses.find({ orderid: orderId }).exec();
-      const isCourseExisted = await Referral.find({ purchagedcourseId: courseData[0]._id }).exec();
+      const isCourseExisted = await Referral.find({ purchagedcourseId: courseData._id }).exec();
       if(isCourseExisted ){
           const referralStatus = await Referral.findOneAndUpdate(
-              { purchagedcourseId: courseData[0]._id },
+              { purchagedcourseId: courseData._id },
               {is_active: false},
               { new: true }
               );
         console.log("referral status changed successfully:", referralStatus);
       };
 
-      handleMoodleUserSuspension(userBlocked.moodle_login_id);
+      handleMoodleUserDeletion(userBlocked.moodle_login_id);
   
       //For Brevo email to SUBSCIBER, when stopped payment by Subscriber
       const receiverName = `${userBlocked.firstname} ${userBlocked.surname}`;
@@ -1619,4 +1652,3 @@ async function getSubscriptionObject(subscription_token) {
 
 /*****************************************************************************************/
 /*****************************************************************************************/
-

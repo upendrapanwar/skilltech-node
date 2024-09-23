@@ -2128,7 +2128,7 @@ async function getSubscriptionCancelledbySubscriber(req) {
 
     let query = {};
     if (param && param.start_date && param.end_date) {
-      query.cancellation_date = {
+      query.subscription_cancellation_date = {
         $gte: new Date(param.start_date),
         $lte: new Date(param.end_date),
       };
