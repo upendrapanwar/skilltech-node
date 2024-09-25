@@ -386,7 +386,7 @@ async function getDefaultedSubscriptionPaymentOfSubscribers(param) {
         let defaultAmbassador = await User.find(
             query,
             {
-                role: 1,   
+                role: 1,
                 firstname: 1,
                 surname: 1,
                 id_number: 1,

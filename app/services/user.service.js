@@ -6,6 +6,8 @@ const { User } = require('../helpers/db');
 const fs = require('fs');
 const path = require('path');
 const mime = require("mime-types");
+const cron = require('node-cron');
+const axios = require('axios');
 
 module.exports = {
     create,
@@ -106,6 +108,11 @@ async function forgotPassword(req) {
             { new: true }
         );
 
+        if(updatedData.role !== 'admin'){
+            let email = updatedData.email;
+            await handleMoodleUserPasswordUpdate(email, new_password);
+        }
+
         if (updatedData) {
             return updatedData;
         } else {
@@ -115,7 +122,50 @@ async function forgotPassword(req) {
         console.error("Error updating user new password:", err);
         return false;
     }  
-}
+};
+
+const handleMoodleUserPasswordUpdate = async (email, newPassword) => {
+    const MOODLE_URL = process.env.MOODLE_COURSES_URL;
+    const MOODLE_TOKEN = process.env.MOODLE_TOKEN;
+    const MOODLE_UPDATE_FUNCTION = 'core_user_update_users';
+
+    try {
+        // Fetch the Moodle user ID based on the email
+        const fetchUserResponse = await axios.post(MOODLE_URL, null, {
+            params: { 
+                wstoken: MOODLE_TOKEN,
+                moodlewsrestformat: 'json',
+                wsfunction: 'core_user_get_users',
+                criteria: [{ key: 'email', value: email }],
+            },
+        });
+        console.log(' fetchUserResponse', fetchUserResponse);
+        const users = fetchUserResponse.data.users;
+        if (users.length === 0) {
+            throw new Error('User not found for the provided email.');
+        }
+
+        const moodleUserId = users[0].id;
+
+        // Update the password
+        const response = await axios.post(MOODLE_URL, null, {
+            params: { 
+                wstoken: MOODLE_TOKEN,
+                moodlewsrestformat: 'json',
+                wsfunction: MOODLE_UPDATE_FUNCTION,
+                users: [{
+                    id: moodleUserId,
+                    password: newPassword,
+                }],
+            },
+        });
+
+        console.log('Password updated successfully on Moodle:', response.data);
+    } catch (error) {
+        console.error('Error updating password on Moodle:', error.response ? error.response.data : error.message);
+    }
+};
+
 
 /*****************************************************************************************/
 /*****************************************************************************************/

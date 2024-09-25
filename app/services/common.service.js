@@ -494,7 +494,7 @@ async function sendUpdatedContactEmailByBrevo(template_id, receiverEmailId, rece
     console.log('receiverName', receiverName);
     console.log('variables', variables);
 
-    updateContactAttributeBrevo(receiverEmailId, subscriber_firstname, subscriber_lastname);
+    await updateContactAttributeBrevo(receiverEmailId, subscriber_firstname, subscriber_lastname);
     
     let defaultClient = SibApiV3Sdk.ApiClient.instance;
     let apiKey = defaultClient.authentications['api-key'];
@@ -1054,35 +1054,85 @@ async function generateSignature(param) {
  *
  * @returns Object|null
  */
-async function getReferralCode() {
-  const currentYear = new Date().getFullYear();
+  async function getReferralCode() {
+    const currentYear = new Date().getFullYear();
   
-  const pipeline = [
-    {
-      $match: {
-        role: "ambassador",
-        $expr: {
-          $eq: [{ $year: "$ambassador_date" }, currentYear]
+    // Step 1: Fetch the latest referral code for the current year
+    const pipeline = [
+      {
+        $match: {
+          role: "ambassador",
+          referral_code: { $regex: `^HG${currentYear.toString().substr(-2)}` } // Match codes starting with HG + YY
         }
+      },
+      {
+        $addFields: {
+          sequenceNumber: {
+            $toInt: { $substr: ["$referral_code", 4, -1] } // Extract sequence number part from the code
+          }
+        }
+      },
+      {
+        $sort: { sequenceNumber: -1 } // Sort by the extracted sequence number in descending order
+      },
+      {
+        $limit: 1 // Get the latest referral code
       }
-    },
-    {
-      $count: "countReferral"
+    ];
+  
+    try {
+      const result = await User.aggregate(pipeline);
+      console.log("Referral code result:", result);
+      let sequenceNumber = 1; // Start from 1 if no referral codes exist for the year
+      const currentDate = new Date();
+      const year = currentDate.getFullYear().toString().substr(-2);
+      let referralCodePrefix = `HG${year}`;
+  
+      // Step 2: If a referral code exists, extract the sequence number and increment it
+      if (result.length > 0) {
+        sequenceNumber = result[0].sequenceNumber + 1; // Increment the sequence number
+      }
+  
+      // Step 3: Generate the new referral code
+      let referralCode = referralCodePrefix + sequenceNumber;
+      console.log("Referral code generated:", referralCode);
+  
+      return referralCode;
+    } catch (error) {
+      console.error("Error:", error);
+      throw error;
     }
-  ];
+  };
+  
+// async function getReferralCode() {
+//   const currentYear = new Date().getFullYear();
+  
+//   const pipeline = [
+//     {
+//       $match: {
+//         role: "ambassador",
+//         $expr: {
+//           $eq: [{ $year: "$ambassador_date" }, currentYear]
+//         }
+//       }
+//     },
+//     {
+//       $count: "countReferral"
+//     }
+//   ];
 
-  try {
-    const result = await User.aggregate(pipeline);
-    if (result.length > 0) {
-      return result[0].countReferral;
-    } else {
-      return "0";
-    }
-  } catch (error) {
-    console.error("Error:", error);
-    throw error;
-  }
-}
+//   try {
+//     const result = await User.aggregate(pipeline);
+//     if (result.length > 0) {
+//       return result[0].countReferral;
+//     } else {
+//       return "0";
+//     }
+//   } catch (error) {
+//     console.error("Error:", error);
+//     throw error;
+//   }
+// }
 
 /*****************************************************************************************/
 /*****************************************************************************************/
@@ -1255,7 +1305,7 @@ async function checkReferralCode(req) {
       };
       const receiverName = ambassadorData[0].firstname + " " + ambassadorData[0].surname;
       const receiverEmail = ambassadorData[0].email;
-      sendUpdatedContactEmailByBrevo(25, receiverEmail, receiverName, variables, subscriber_firstname, subscriber_lastname);
+      await sendUpdatedContactEmailByBrevo(25, receiverEmail, receiverName, variables, subscriber_firstname, subscriber_lastname);
     };
 
     return data;
