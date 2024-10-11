@@ -2,7 +2,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 module.exports = {
-  app_env: process.env.APP_ENV,
+  app_env: process.env.APP_ENV, 
   local_port: process.env.LOCAL_PORT,
   dev_port: process.env.DEV_PORT,
   local_url: process.env.LOCAL_URL,

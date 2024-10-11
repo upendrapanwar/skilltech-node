@@ -70,7 +70,7 @@ var uploadCertificate = multer({
   { name: "bank_proof", maxCount: 1 },
 ]); 
 
-router.post("/signup", registerValidation, register);
+router.post("/signup", registerValidation, register); 
 router.post("/signin", authenticate);
 router.post('/varify-email-forgot-password/:id', varifyEmailForgotPassword);
 router.post("/subscription", subscription); 
@@ -80,7 +80,7 @@ router.post("/generate-signature", generateSignature);
 router.post("/save-subscription", saveMembershipSubscription);
 router.get("/get-referral-code", getReferralCode); 
 router.post("/fetch-ambassador-code", fetchAmbassadorCode);
-router.get("/check-referral-code/:code", checkReferralCode);
+router.post("/check-referral-code/:id", checkReferralCode);
 router.get("/get-my-courses/:id", getMyCourses);
 router.get("/get-user-courses/:id", getUserCourses);
 router.post("/save-query", saveQuery);

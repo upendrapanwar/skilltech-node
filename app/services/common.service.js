@@ -57,7 +57,7 @@ module.exports = {
   saveMembershipSubscription,
   getReferralCode,
   fetchAmbassadorCode,
-  checkReferralCode,
+  checkReferralCode, 
   getMyCourses,
   getUserCourses,
   saveQuery,
@@ -774,8 +774,9 @@ async function saveMembershipSubscription(param) {
       }
     );
 
+    let userData = '';
     if(param.payment_status !== 'cancel'){
-      const userData = await User.findOneAndUpdate(
+      userData = await User.findOneAndUpdate(
         { _id: param.userid },
         {
           $set: {
@@ -787,6 +788,7 @@ async function saveMembershipSubscription(param) {
           new: true
         }
       );
+      console.log('userData=', userData);
     };
 
     console.log('subscriberdata=',data);
@@ -818,23 +820,23 @@ async function saveMembershipSubscription(param) {
 
             //Set purchagedcourseId in Referral document in database
             if(referralCode){
-            const updateReferral = await Referral.findOneAndUpdate(
-              { referral_code: referralCode, userId: param.userid},
-              { $set: { purchagedcourseId:  purchagedcourseId} },
-              { new: true }
-              );
-              console.log("updateReferral", updateReferral)
-            }
+              await emailToAmbassadorForReferralCode(param.userid, referralCode, purchagedcourseId);
+            };
           }
         }else{
           console.log(" Payment is Cancelled")
         }
-        return res;
+
+        const result = {
+          data: res,
+          userData: userData
+        }
+        return result;
       } else {
         return false;
       }
     } else {
-      console.log("error in res ")
+      console.log("Error in res ")
       return false;
     }
   } catch (err) {
@@ -1250,22 +1252,47 @@ async function getSubscriptionId(req) {
  */
 async function checkReferralCode(req) {
   try {
-    const {code} = req.params; 
-    const referralCode = code;
-    const { userId, userName } = req.query;
-    console.log("UserID", userId);
-    console.log("referralCode", referralCode);
-    console.log("userName", userName);
+    const userId = req.params.id; 
+    const referralCode = req.body.referralCode;
 
     // Check if referral code is already used
-    const existingReferral = await Referral.findOne({ referral_code: referralCode, userId: userId });
+    const existingReferral = await Referral.findOne({
+      referral_code: referralCode,
+      userId: userId,
+      purchagedcourseId: { $ne: null }
+    });
+    
     if (existingReferral) {
-      return; 
-    }
+      return;
+    };
 
-    // Referral code not used, proceed with creation
-    const countReferral = await User.find({ referral_code: referralCode }).count();
-    console.log("countReferral", countReferral);
+    const referralData = await Referral.create({
+      referral_code: referralCode,
+      userId: userId,
+      is_active: true,
+    });
+
+    const createdReferralData = await referralData.save();
+    console.log("newReferralData", createdReferralData);
+
+    return createdReferralData;
+
+  } catch (error) {
+    console.error("Error:", error);
+    return { status: 500, error: "Internal Server Error" };
+  }
+};
+
+
+async function emailToAmbassadorForReferralCode(userId, referralCode, purchagedcourseId) {
+  try {
+    console.log("UserID", userId);
+    console.log("referralCode", referralCode);
+
+    const subscriberData = await User.find({_id:userId}).select("firstname surname");
+    console.log("subscriberData", subscriberData);
+    const subscriber_firstname = subscriberData[0].firstname;
+    const subscriber_surname = subscriberData[0].surname;
 
     let query = { 
       referral_code: referralCode,
@@ -1277,39 +1304,27 @@ async function checkReferralCode(req) {
      // Check if ambassadorData is an empty array
     if (!ambassadorData.length) {
       return ;
-    }
+    };
 
-    const referralData = await Referral.create({
-      referral_code: referralCode,
-      userId: userId,
-      is_active: true,
-    });
+    const updateReferral = await Referral.findOneAndUpdate(
+      { referral_code: referralCode, userId: userId},
+      { $set: { purchagedcourseId:  purchagedcourseId} },
+      { 
+        new: true, // return the updated document
+        sort: { _id: -1 } // sort by _id in descending order to get the latest document
+      }
+    );
+    console.log("updateReferral", updateReferral);
 
-    const newReferralData = await referralData.save();
-    console.log("newReferralData", newReferralData);
-
-    const data = {
-      countReferral: countReferral,
-      referralData: newReferralData,
-    }
-
-    //For Brevo Email to AMBASSADOR 
-    if(newReferralData){
-      const nameParts = userName.split(' ');
-      const subscriber_firstname = nameParts[0];
-      const subscriber_lastname = nameParts.slice(1).join(' ');
-
+    //For Brevo Email to AMBASSADOR       
       const variables = {
         SUBSCRIBER_FIRSTNAME: subscriber_firstname,
-        SUBSCRIBER_LASTNAME: subscriber_lastname
+        SUBSCRIBER_LASTNAME: subscriber_surname
       };
       const receiverName = ambassadorData[0].firstname + " " + ambassadorData[0].surname;
       const receiverEmail = ambassadorData[0].email;
-      await sendUpdatedContactEmailByBrevo(25, receiverEmail, receiverName, variables, subscriber_firstname, subscriber_lastname);
-    };
-
-    return data;
-
+      await sendUpdatedContactEmailByBrevo(25, receiverEmail, receiverName, variables, subscriber_firstname, subscriber_surname);
+    
   } catch (error) {
     console.error("Error:", error);
     return { status: 500, error: "Internal Server Error" }; // Error response
@@ -1713,44 +1728,44 @@ async function cancelPayfastPayment(req) {
 //   getpayfastTransactionHistory();
 //   console.log('Successfully triggered');
 //   });
-async function getpayfastTransactionHistory() {
-  function generateTimestamp() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    const timezoneOffset = now.getTimezoneOffset();
-    const offsetHours = String(Math.floor(Math.abs(timezoneOffset) / 60)).padStart(2, '0');
-    const offsetMinutes = String(Math.abs(timezoneOffset) % 60).padStart(2, '0');
-    const offsetSign = timezoneOffset < 0 ? '+' : '-';
-    const formattedOffset = `${offsetSign}${offsetHours}:${offsetMinutes}`;
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${formattedOffset}`;
-  }
+// async function getpayfastTransactionHistory() {
+//   function generateTimestamp() {
+//     const now = new Date();
+//     const year = now.getFullYear();
+//     const month = String(now.getMonth() + 1).padStart(2, '0');
+//     const day = String(now.getDate()).padStart(2, '0');
+//     const hours = String(now.getHours()).padStart(2, '0');
+//     const minutes = String(now.getMinutes()).padStart(2, '0');
+//     const seconds = String(now.getSeconds()).padStart(2, '0');
+//     const timezoneOffset = now.getTimezoneOffset();
+//     const offsetHours = String(Math.floor(Math.abs(timezoneOffset) / 60)).padStart(2, '0');
+//     const offsetMinutes = String(Math.abs(timezoneOffset) % 60).padStart(2, '0');
+//     const offsetSign = timezoneOffset < 0 ? '+' : '-';
+//     const formattedOffset = `${offsetSign}${offsetHours}:${offsetMinutes}`;
+//     return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${formattedOffset}`;
+//   }
 
-  function generateSignature() {
-    let timestamp = generateTimestamp();
-    console.log("Timestamp: ", timestamp);
-    const data = {
-        'date': '2024-07-24',
-        'merchant-id': process.env.PAYFAST_MERCHANT_ID,
-        'passphrase': process.env.PAYFAST_PASSPHRASE,
-        'timestamp': timestamp,
-        'version': 'v1'
-    };
+//   function generateSignature() {
+//     let timestamp = generateTimestamp();
+//     console.log("Timestamp: ", timestamp);
+//     const data = {
+//         'date': '2024-07-24',
+//         'merchant-id': process.env.PAYFAST_MERCHANT_ID,
+//         'passphrase': process.env.PAYFAST_PASSPHRASE,
+//         'timestamp': timestamp,
+//         'version': 'v1'
+//     };
 
-    const orderedKeys = ['date', 'merchant-id', 'passphrase', 'timestamp', 'version'];
-    let pfOutput = orderedKeys.map(key => `${key}=${encodeURIComponent(data[key]).replace(/%20/g, "+")}`).join('&');
-    console.log("signature String", pfOutput);
+//     const orderedKeys = ['date', 'merchant-id', 'passphrase', 'timestamp', 'version'];
+//     let pfOutput = orderedKeys.map(key => `${key}=${encodeURIComponent(data[key]).replace(/%20/g, "+")}`).join('&');
+//     console.log("signature String", pfOutput);
 
-    const signature = crypto.createHash("md5").update(pfOutput).digest("hex");
-    return signature;
-  }
-  let signature = generateSignature();
-  console.log("Signature: ", signature);
-}
+//     const signature = crypto.createHash("md5").update(pfOutput).digest("hex");
+//     return signature;
+//   }
+//   let signature = generateSignature();
+//   console.log("Signature: ", signature);
+// }
 
 
 /*****************************************************************************************/
@@ -1767,95 +1782,95 @@ async function getpayfastTransactionHistory() {
 //   console.log('Successfully triggered');
 // });
 
-async function getPayfastPaymentStatus(req) {
-  // const token_generated = req.body.token;
+// async function getPayfastPaymentStatus(req) {
+//   // const token_generated = req.body.token;
   
-  function generateTimestamp() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    const timezoneOffset = now.getTimezoneOffset();
-    const offsetHours = String(Math.floor(Math.abs(timezoneOffset) / 60)).padStart(2, '0');
-    const offsetMinutes = String(Math.abs(timezoneOffset) % 60).padStart(2, '0');
-    const offsetSign = timezoneOffset < 0 ? '+' : '-';
-    const formattedOffset = `${offsetSign}${offsetHours}:${offsetMinutes}`;
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${formattedOffset}`;
-  }
+//   function generateTimestamp() {
+//     const now = new Date();
+//     const year = now.getFullYear();
+//     const month = String(now.getMonth() + 1).padStart(2, '0');
+//     const day = String(now.getDate()).padStart(2, '0');
+//     const hours = String(now.getHours()).padStart(2, '0');
+//     const minutes = String(now.getMinutes()).padStart(2, '0');
+//     const seconds = String(now.getSeconds()).padStart(2, '0');
+//     const timezoneOffset = now.getTimezoneOffset();
+//     const offsetHours = String(Math.floor(Math.abs(timezoneOffset) / 60)).padStart(2, '0');
+//     const offsetMinutes = String(Math.abs(timezoneOffset) % 60).padStart(2, '0');
+//     const offsetSign = timezoneOffset < 0 ? '+' : '-';
+//     const formattedOffset = `${offsetSign}${offsetHours}:${offsetMinutes}`;
+//     return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${formattedOffset}`;
+//   }
 
-  function generateSignature() {
-    const data = {
-        'merchant-id': process.env.PAYFAST_MERCHANT_ID,
-        'passphrase': process.env.PAYFAST_PASSPHRASE,
-        'timestamp': generateTimestamp(),
-        'version': 'v1'
-    };
+//   function generateSignature() {
+//     const data = {
+//         'merchant-id': process.env.PAYFAST_MERCHANT_ID,
+//         'passphrase': process.env.PAYFAST_PASSPHRASE,
+//         'timestamp': generateTimestamp(),
+//         'version': 'v1'
+//     };
 
-    const orderedKeys = ['merchant-id', 'passphrase', 'timestamp', 'version'];
-    let pfOutput = orderedKeys.map(key => `${key}=${encodeURIComponent(data[key]).replace(/%20/g, "+")}`).join('&');
-    console.log("signature String", pfOutput);
+//     const orderedKeys = ['merchant-id', 'passphrase', 'timestamp', 'version'];
+//     let pfOutput = orderedKeys.map(key => `${key}=${encodeURIComponent(data[key]).replace(/%20/g, "+")}`).join('&');
+//     console.log("signature String", pfOutput);
 
-    const signature = crypto.createHash("md5").update(pfOutput).digest("hex");
-    console.log("signature", signature);
-    return signature;
-  }
+//     const signature = crypto.createHash("md5").update(pfOutput).digest("hex");
+//     console.log("signature", signature);
+//     return signature;
+//   }
 
-  try {
-      const token = '6cdd65ec-f079-4df9-985b-86805f50ea09';
-      // const token = token_generated;
-      const merchantId = process.env.PAYFAST_MERCHANT_ID;
-      const signature = generateSignature();
-      const timestamp = generateTimestamp();
+//   try {
+//       const token = '6cdd65ec-f079-4df9-985b-86805f50ea09';
+//       // const token = token_generated;
+//       const merchantId = process.env.PAYFAST_MERCHANT_ID;
+//       const signature = generateSignature();
+//       const timestamp = generateTimestamp();
   
-      console.log("Merchant ID:", merchantId);
-      console.log("Signature:", signature);
-      console.log("Timestamp:", timestamp);
+//       console.log("Merchant ID:", merchantId);
+//       console.log("Signature:", signature);
+//       console.log("Timestamp:", timestamp);
   
-      const url = `https://api.payfast.co.za/subscriptions/${token}/fetch?testing=true`;
-      const version = 'v1';
+//       const url = `https://api.payfast.co.za/subscriptions/${token}/fetch?testing=true`;
+//       const version = 'v1';
   
-      const options = {
-          headers: {
-              'merchant-id': merchantId,
-              'version': version,
-              'timestamp': timestamp,
-              'signature': signature
-          }
-      };
+//       const options = {
+//           headers: {
+//               'merchant-id': merchantId,
+//               'version': version,
+//               'timestamp': timestamp,
+//               'signature': signature
+//           }
+//       };
   
-      console.log("Request URL:", url);
-      console.log("Request Options:", options);
+//       console.log("Request URL:", url);
+//       console.log("Request Options:", options);
   
-      const response = await axios.put(url, null, options);
-      console.log("Request response:", response);
+//       const response = await axios.put(url, null, options);
+//       console.log("Request response:", response);
 
-      if (response.status === 200) {
-          console.log("Data found successful.");
-          return response.data;
-      } else {
-          console.error("Data not found:", response.data);
-          return response.data;
-      }
-  } catch (err) {
-      if (err.response) {
-          // The request was made and the server responded with a status code
-          console.error("Response data:", err.response.data);
-          console.error("Response status:", err.response.status);
-          console.error("Response headers:", err.response.headers);
-      } else if (err.request) {
-          // The request was made but no response was received
-          console.error("Request data:", err.request);
-      } else {
-          // Something happened in setting up the request that triggered an Error
-          console.error("Error message:", err.message);
-      }
-      console.error("Config:", err.config);
-      throw err;
-  }
-};
+//       if (response.status === 200) {
+//           console.log("Data found successful.");
+//           return response.data;
+//       } else {
+//           console.error("Data not found:", response.data);
+//           return response.data;
+//       }
+//   } catch (err) {
+//       if (err.response) {
+//           // The request was made and the server responded with a status code
+//           console.error("Response data:", err.response.data);
+//           console.error("Response status:", err.response.status);
+//           console.error("Response headers:", err.response.headers);
+//       } else if (err.request) {
+//           // The request was made but no response was received
+//           console.error("Request data:", err.request);
+//       } else {
+//           // Something happened in setting up the request that triggered an Error
+//           console.error("Error message:", err.message);
+//       }
+//       console.error("Config:", err.config);
+//       throw err;
+//   }
+// };
 
 
 /*****************************************************************************************/
