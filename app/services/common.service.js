@@ -1680,8 +1680,8 @@ async function cancelPayfastPayment(req) {
       console.log("Signature:", signature);
       console.log("Timestamp:", timestamp);
   
-      const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
-      // const url = `https://api.payfast.co.za/subscriptions/${token}/cancel`;
+      // const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+      const url = `https://api.payfast.co.za/subscriptions/${token}/cancel`;
       const version = 'v1';
   
       const options = {
@@ -2533,8 +2533,8 @@ async function varifyEmailForgotPassword(req) {
       const tokenString = JSON.stringify(reset_token); // Convert object to JSON string
       const tokenData = btoa(tokenString); // Encode the JSON string to Base64
 
-      const forgot_password_link = `https://affiliate.skilltechsa.online/forgot-password?reset-token=${tokenData}`
-      // const forgot_password_link = `https://highvista.co.za/forgot-password?reset-token=${tokenData}`
+      // const forgot_password_link = `https://affiliate.skilltechsa.online/forgot-password?reset-token=${tokenData}`
+      const forgot_password_link = `https://highvista.co.za/forgot-password?reset-token=${tokenData}`
 
       //Brevo email for changing password
       let addSubscriber;
