@@ -1139,7 +1139,8 @@ async function getBulkPaymentReport(param) {
                 amount: amountDue ? amountDue : '0',
                 own_reference: data.referral_code || 'N/A',
                 recipient_reference: 'High Vista Guild',
-                email_1_notify: `${data.firstname} ${data.surname}`,
+                // email_1_notify: `${data.firstname} ${data.surname}`,
+                email_1_notify: "Yes",
                 email_1_address: data.email,
                 email_1_subject: "You've received a payment from High Vista Guild",
                 email_2_notify: '',
@@ -1209,7 +1210,7 @@ async function getConsolidatedInformationReport(param) {
         // Use Promise.all to handle async operations inside map
         const filteredUserData = await Promise.all(filteredData.map(async data => {
             // Fetch referral data for linked ambassador
-            const referralData = await Referral.find({ userId: data._id }).select("referral_code").exec();
+            const referralData = await Referral.find({ userId: data._id, purchagedcourseId: { $ne: null } }).select("referral_code").exec();
             console.log("referralData for linked referral", referralData);
             
             // Add linked ambassador referral if found
@@ -1283,7 +1284,7 @@ cron.schedule('1 0 * * *', () => {
     console.log('Successfully triggered');
 });
 
-// cron.schedule('*/2 * * * *', () => {
+// cron.schedule('*/1 * * * *', () => {
 //     // getRegularSubscriptionDataUpdate();
 //     getTestingOneRegularSubscriptionDataUpdate();
 //   console.log('Successfully triggered');
@@ -1292,9 +1293,9 @@ cron.schedule('1 0 * * *', () => {
 //For Stopping payment of one user
 async function getTestingOneRegularSubscriptionDataUpdate() {
     try {
-        const userId = "66fd13afb343a6ddff255930";
-        const orderId = "66fd27e72132357f29361229";
-        const token = "00cb7c64-cb22-46dc-9327-89e8b8be3f09";
+        const userId = "670ce3c027683aed4807ca9c";
+        const orderId = "670ce41027683aed4807caaf";
+        const token = "46729618-0afe-437e-8bcb-491dc293c497";
         const current_date = new Date();
 
         cancelPayfastSubscription(token, userId, orderId, current_date);
@@ -1390,8 +1391,8 @@ async function getSubscriptionObject(subscription_token) {
         // console.log("Signature:", signature);
         // console.log("Timestamp:", timestamp);
     
-        // const url = `https://api.payfast.co.za/subscriptions/${token}/fetch?testing=true`;
-        const url = `https://api.payfast.co.za/subscriptions/${token}/fetch`;
+        const url = `https://api.payfast.co.za/subscriptions/${token}/fetch?testing=true`;
+        // const url = `https://api.payfast.co.za/subscriptions/${token}/fetch`;
     
         const options = {
             headers: {
@@ -1474,8 +1475,8 @@ async function getSubscriptionObject(subscription_token) {
         console.log("Signature:", signature);
         console.log("Timestamp:", timestamp);
     
-        // const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
-        const url = `https://api.payfast.co.za/subscriptions/${token}/cancel`;
+        const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+        // const url = `https://api.payfast.co.za/subscriptions/${token}/cancel`;
         const version = 'v1';
     
         const options = {
@@ -1623,23 +1624,6 @@ async function getSubscriptionObject(subscription_token) {
       throw err;
     }
   };
-
-//   cron.schedule('*/1 * * * *', () => {
-//     (async () => {
-//         try {
-//             let sendEmail;
-//             sendEmail = await commonService.sendEmailByBrevo(49, 'eynoashish@gmail.com', 'ashish');
-//             if(sendEmail){
-//                 await commonService.deleteContactBrevo('eynoashish@gmail.com');
-//             }
-//             console.log("sendEmail", sendEmail);
-//         } catch (error) {
-//           console.error("Error:", error);
-//         }
-//       })();
-//   console.log('Successfully triggered');
-// });
-
 
 /*****************************************************************************************/
 /*****************************************************************************************/
