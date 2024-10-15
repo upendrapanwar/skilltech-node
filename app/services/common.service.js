@@ -1931,11 +1931,12 @@ async function cancelCourseByUser(req) {
     //For Brevo email to SUBSCIBER, when user unsubscribe the subscription
     const subscriberName = `${userBlocked.firstname} ${userBlocked.surname}`
     console.log("subscriberName", subscriberName);
+    const receiverEmail = userBlocked.email;
     let sendEmail;
     sendEmail = await sendEmailByBrevo(14, userBlocked.email, subscriberName);
     if(userBlocked.role === "ambassador"){
       if(sendEmail){
-          await commonService.deleteContactBrevo(receiverEmail);
+          await deleteContactBrevo(receiverEmail);
       }
     };
 
