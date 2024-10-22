@@ -89,6 +89,7 @@ router.post("/cancel-payfast-payment", cancelPayfastPayment);
 router.post("/send-email-subscriber/:id", sendSubscriptionEmail); 
 router.post("/notify/:id", payFastNotify);
 router.post("/getSubscriptionId",getSubscriptionId);
+router.get("/get-ambassador-details/:id",getAmbassadorDetails);
 
 router.post('/defaulted-subscription-paymentof-subscriber', getAllDefaultedSubscriptionPaymentOfSubscribers);
 router.post('/my-active-referral', getAllActiveReferral);
@@ -561,6 +562,29 @@ function payFastNotify(req, res, next) {
 function getSubscriptionId(req, res, next) {
   commonService
     .getSubscriptionId(req)
+    .then((response) =>
+      response
+        ? res.status(200).json({ status: true, data: response })
+        : res
+            .status(400)
+            .json({ status: false, message: msg.common.no_data_err, data: [] })
+    )
+    .catch((err) => next(res.json({ status: false, message: err })));  
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function to get Ambassador details
+ *
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
+ *
+ * @return JSON|null
+ */
+function getAmbassadorDetails(req, res, next) {
+  commonService
+    .getAmbassadorDetails(req)
     .then((response) =>
       response
         ? res.status(200).json({ status: true, data: response })

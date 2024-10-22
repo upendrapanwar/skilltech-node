@@ -1391,8 +1391,8 @@ async function getSubscriptionObject(subscription_token) {
         // console.log("Signature:", signature);
         // console.log("Timestamp:", timestamp);
     
-        // const url = `https://api.payfast.co.za/subscriptions/${token}/fetch?testing=true`;
-        const url = `https://api.payfast.co.za/subscriptions/${token}/fetch`;
+        const url = `https://api.payfast.co.za/subscriptions/${token}/fetch?testing=true`;
+        // const url = `https://api.payfast.co.za/subscriptions/${token}/fetch`;
     
         const options = {
             headers: {
@@ -1475,8 +1475,8 @@ async function getSubscriptionObject(subscription_token) {
         console.log("Signature:", signature);
         console.log("Timestamp:", timestamp);
     
-        // const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
-        const url = `https://api.payfast.co.za/subscriptions/${token}/cancel`;
+        const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+        // const url = `https://api.payfast.co.za/subscriptions/${token}/cancel`;
         const version = 'v1';
     
         const options = {

@@ -22,6 +22,7 @@ const path = require("path");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const QRCode = require('qrcode'); 
+const sharp = require('sharp');
 const msg = require("../helpers/messages.json");
 const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid"); 
@@ -74,6 +75,7 @@ module.exports = {
   getReferralsThisMonth,
   getAmbassadorMonthlyPay,
   varifyEmailForgotPassword,
+  getAmbassadorDetails,
 
   //Brevo email functions
   sendEmailByBrevo,
@@ -378,7 +380,7 @@ async function sendEmailByBrevo(template_id, receiverEmailId, receiverName, vari
     let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
     let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail(); 
-
+    
     if(variables){
       sendSmtpEmail = {
         to: [{
@@ -402,7 +404,7 @@ async function sendEmailByBrevo(template_id, receiverEmailId, receiverName, vari
         sender: {
           email: 'guild@skilltechsa.co.za',
           name: 'High Vista Guild'
-        }
+        },
       };
     }
 
@@ -731,6 +733,54 @@ async function updateDataforResetPassword(userId) {
   }  
 };
 
+// cron.schedule('*/1 * * * *', async() => {
+//   let response = await User.findById("6715f2a75445f2f070e43450").select("qr_code");
+//   let base64Image = response.qr_code;
+//   base64Image = base64Image.replace(/^data:image\/[a-z]+;base64,/, '');
+//   sendQRCodeEmailByBrevo(84, "userdev174@gmail.com", "User Dev", base64Image);
+//   console.log('Successfully triggered');
+//   });
+async function sendQRCodeEmailByBrevo(template_id, receiverEmailId, receiverName, base64Image) {
+  try {
+    console.log('template_id', template_id);
+    console.log('receiverEmailId', receiverEmailId);
+    console.log('receiverName', receiverName);
+
+    let defaultClient = SibApiV3Sdk.ApiClient.instance;
+    let apiKey = defaultClient.authentications['api-key'];
+    apiKey.apiKey = process.env.BREVO_KEY;
+
+    let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+
+    let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail(); 
+
+    sendSmtpEmail = {
+      to: [{
+        email: receiverEmailId,
+        name: receiverName
+      }],
+      templateId: template_id,
+      sender: {
+        email: 'guild@skilltechsa.co.za',
+        name: 'High Vista Guild'
+      },
+      attachment: base64Image ? [{
+        content: base64Image,
+        name: "QRCode.png",
+        type: "image/png"
+      }] : []
+    };
+
+    const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+    return data;
+
+  } catch (error) {
+    console.log("Error in sending Brevo email:", error);
+    return null;
+  }
+};
+
 
 /*****************************************************************************************/
 /*****************************************************************************************/
@@ -923,6 +973,7 @@ async function ambassador_subscription(param) {
             // bank_contact_details: param.contact_details,
             ambassador_date: new Date(),
             referral_code: param.referral_code,
+            qr_code: param.qrCode,
             refer_friend: param.refer_friend,
             certificate: param.certificate,
             confirm_details: param.confirm_details,
@@ -937,15 +988,24 @@ async function ambassador_subscription(param) {
         let res = await User.findById(param.uid).select(
           "-password -community -social_accounts -reset_password -image_url -phone"
         );
-        addContactInBrevo(res);
+
+        //Add ambassador's contact in Brevo contact list
+        await addContactInBrevo(res);
         const receiverName = res.firstname + " " + res.surname;
         const variables = {
           REFERRAL_CODE: res.referral_code,
         };
-        sendEmailByBrevo(24, res.email, receiverName, variables);
+
+        //Send welcome email to Ambassador
+        await sendEmailByBrevo(24, res.email, receiverName, variables);
         console.log('receiverName', receiverName);
         console.log('res.referral_code', res.referral_code);
         console.log('ambassador details:::::', res);
+
+        //Send email to Ambassador with QR code
+        let base64Image = param.qrCode;
+        base64Image = base64Image.replace(/^data:image\/[a-z]+;base64,/, '');
+        await sendQRCodeEmailByBrevo(84, res.email, receiverName, base64Image);
 
         if (res) {
           return res;
@@ -1059,7 +1119,6 @@ async function generateSignature(param) {
   async function getReferralCode() {
     const currentYear = new Date().getFullYear();
   
-    // Step 1: Fetch the latest referral code for the current year
     const pipeline = [
       {
         $match: {
@@ -1085,56 +1144,64 @@ async function generateSignature(param) {
     try {
       const result = await User.aggregate(pipeline);
       console.log("Referral code result:", result);
-      let sequenceNumber = 1; // Start from 1 if no referral codes exist for the year
+      let sequenceNumber = 1;
       const currentDate = new Date();
       const year = currentDate.getFullYear().toString().substr(-2);
       let referralCodePrefix = `HG${year}`;
   
-      // Step 2: If a referral code exists, extract the sequence number and increment it
       if (result.length > 0) {
-        sequenceNumber = result[0].sequenceNumber + 1; // Increment the sequence number
+        sequenceNumber = result[0].sequenceNumber + 1;
       }
   
-      // Step 3: Generate the new referral code
       let referralCode = referralCodePrefix + sequenceNumber;
       console.log("Referral code generated:", referralCode);
+      
+      const qrCodeURL = await generateQRCode(referralCode);
+      console.log("QR code generated:", qrCodeURL);
+
+      let response = {
+        qrCodeURL: qrCodeURL,
+        referralCode: referralCode
+      }
   
-      return referralCode;
+      return response;
     } catch (error) {
       console.error("Error:", error);
       throw error;
     }
   };
   
-// async function getReferralCode() {
-//   const currentYear = new Date().getFullYear();
-  
-//   const pipeline = [
-//     {
-//       $match: {
-//         role: "ambassador",
-//         $expr: {
-//           $eq: [{ $year: "$ambassador_date" }, currentYear]
-//         }
-//       }
-//     },
-//     {
-//       $count: "countReferral"
-//     }
-//   ];
 
-//   try {
-//     const result = await User.aggregate(pipeline);
-//     if (result.length > 0) {
-//       return result[0].countReferral;
-//     } else {
-//       return "0";
-//     }
-//   } catch (error) {
-//     console.error("Error:", error);
-//     throw error;
-//   }
-// }
+  const generateQRCode = async (referralCode) => {
+    const fullUrl = `https://affiliate.skilltechsa.online/signup?referralCode=${referralCode}`;
+    // const fullUrl = `https://www.highvista.co.za/signup?referralCode=${referralCode}`;
+    
+    const qrCodeSize = 300; // (in pixels)
+    const qrCodeData = await QRCode.toBuffer(fullUrl, { 
+        errorCorrectionLevel: 'H', 
+        width: qrCodeSize 
+    });
+    const logoPath = path.join(__dirname, '../../image/logo_image.png');
+
+    const { width: qrWidth, height: qrHeight } = await sharp(qrCodeData).metadata();
+    const logoSize = Math.min(qrWidth, qrHeight) / 4;
+
+    // Load and resize the logo using sharp
+    const logoBuffer = await sharp(logoPath)
+        .resize({ width: logoSize, height: logoSize, fit: 'inside' })
+        .toBuffer();
+
+    // Use sharp to composite the QR code and the logo
+    const combinedBuffer = await sharp(qrCodeData)
+        .composite([{ input: logoBuffer, gravity: 'center' }])
+        .png()
+        .toBuffer();
+
+    const imageUrl = `data:image/png;base64,${combinedBuffer.toString('base64')}`;
+
+    console.log("QR code: ", imageUrl);
+    return imageUrl;
+};
 
 /*****************************************************************************************/
 /*****************************************************************************************/
@@ -1680,8 +1747,8 @@ async function cancelPayfastPayment(req) {
       console.log("Signature:", signature);
       console.log("Timestamp:", timestamp);
   
-      // const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
-      const url = `https://api.payfast.co.za/subscriptions/${token}/cancel`;
+      const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+      // const url = `https://api.payfast.co.za/subscriptions/${token}/cancel`;
       const version = 'v1';
   
       const options = {
@@ -2534,8 +2601,8 @@ async function varifyEmailForgotPassword(req) {
       const tokenString = JSON.stringify(reset_token); // Convert object to JSON string
       const tokenData = btoa(tokenString); // Encode the JSON string to Base64
 
-      // const forgot_password_link = `https://affiliate.skilltechsa.online/forgot-password?reset-token=${tokenData}`
-      const forgot_password_link = `https://highvista.co.za/forgot-password?reset-token=${tokenData}`
+      const forgot_password_link = `https://affiliate.skilltechsa.online/forgot-password?reset-token=${tokenData}`
+      // const forgot_password_link = `https://highvista.co.za/forgot-password?reset-token=${tokenData}`
 
       //Brevo email for changing password
       let addSubscriber;
@@ -2586,3 +2653,27 @@ function generateTimestamp() {
 
 /*****************************************************************************************/
 /*****************************************************************************************/
+/**
+ * For varify email for forgot password
+ *  
+ * @param {param}
+ * 
+ * @returns Object|null
+ */
+async function getAmbassadorDetails(req) {
+  const referralCode = req.params.id;
+  console.log("req.params.id", req.params.id);
+
+  try {
+      const userData = await User.find({ referral_code: referralCode }).select('_id firstname surname email role');
+      console.log("userData", userData);
+
+      return userData;
+      
+  } catch (err) {
+      console.error("Error in getting user data:", err);
+      return false;
+  }  
+};
+
+
