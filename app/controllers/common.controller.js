@@ -104,6 +104,11 @@ router.post('/payment-due/:start_date/:end_date', getPaymentDue);
 
 router.get('/get-referrals-this-month/:id', getReferralsThisMonth);
 router.get('/monthly-referral-pay/:id', getAmbassadorMonthlyPay);
+router.post('/save-linked-referral-by-admin', saveLinkedReferralCodeByAdmin);
+router.get('/get-linked-referral-by-admin', getLinkedReferralCodeByAdmin);
+router.post('/edit-linked-referral-by-admin', editLinkedReferralCodeByAdmin);
+router.post('/delete-linked-referral-by-admin', deleteLinkedReferralCodeByAdmin);
+router.post('/submit-linked-referral-by-admin', submitLinkedReferralCodesByAdmin);
 
 module.exports = router;  
 
@@ -761,6 +766,82 @@ function getReferralsThisMonth(req, res, next) {
  */
 function getAmbassadorMonthlyPay(req, res, next) {
   commonService.getAmbassadorMonthlyPay(req)
+      .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+      .catch(err => next(res.json({ status: false, message: err })))
+}
+
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function for linking referral code by admin manually
+ * @param {*} req 
+ * @param {*} res  
+ * @param {*} next
+ *                  
+ */
+function saveLinkedReferralCodeByAdmin(req, res, next) {
+  commonService.saveLinkedReferralCodeByAdmin(req)
+      .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+      .catch(err => next(res.json({ status: false, message: err })))
+};
+
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function for getting linked referral code by Admin
+ * @param {*} req 
+ * @param {*} res  
+ * @param {*} next
+ *                  
+ */
+function getLinkedReferralCodeByAdmin(req, res, next) {
+  commonService.getLinkedReferralCodeByAdmin(req)
+      .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+      .catch(err => next(res.json({ status: false, message: err })))
+};
+
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function to edit linked referral code by Admin
+ * @param {*} req 
+ * @param {*} res  
+ * @param {*} next
+ *                  
+ */
+function editLinkedReferralCodeByAdmin(req, res, next) {
+  commonService.editLinkedReferralCodeByAdmin(req)
+      .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+      .catch(err => next(res.json({ status: false, message: err })))
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function to delete linked referral code by Admin
+ * @param {*} req 
+ * @param {*} res  
+ * @param {*} next
+ *                  
+ */
+function deleteLinkedReferralCodeByAdmin(req, res, next) {
+  commonService.deleteLinkedReferralCodeByAdmin(req)
+      .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+      .catch(err => next(res.json({ status: false, message: err })))
+}
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function to final submit linked referral code by Admin
+ * @param {*} req 
+ * @param {*} res  
+ * @param {*} next
+ *                  
+ */
+function submitLinkedReferralCodesByAdmin(req, res, next) {
+  commonService.submitLinkedReferralCodesByAdmin(req)
       .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
       .catch(err => next(res.json({ status: false, message: err })))
 }

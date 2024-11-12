@@ -17,6 +17,7 @@ const schema = new Schema({
     default: null,
   },
   is_active: { type: Boolean, required: false, default: true },
+  is_linked_by_admin: { type: Boolean, required: false, default: false },
  },
  {
     timestamps:true

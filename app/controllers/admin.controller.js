@@ -42,6 +42,8 @@ router.get('/payment-due-to-ambassador/:start_date/:end_date', getPaymentDueToAm
 router.get('/bulk-payment-report/:start_date/:end_date', getBulkPaymentReport);
 router.get('/consolidated-information-report', getAllConsolidatedInformationReport);
 router.get('/consolidated-information-report/:start_date/:end_date', getConsolidatedInformationReport);
+router.get('/subscriber-manually-linked-report', getAllSubscriberManullyLinkedReport);
+router.get('/subscriber-manually-linked-report/:start_date/:end_date', getSubscriberManullyLinkedReport);
 
 router.post('/varify-email-forgot-password/:id', varifyEmailForgotPassword);
 router.post('/forgot-password', forgotPassword);
@@ -464,6 +466,25 @@ function getAllConsolidatedInformationReport(req, res, next) {
 function getConsolidatedInformationReport(req, res, next) {
     adminService.getConsolidatedInformationReport(req.params)
         .then(inactiveReferral => inactiveReferral ? res.status(200).json({ status: true, data: inactiveReferral }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })));
+
+}
+/**
+ * Function for getting Subscriber linked manually to Ambassador referral code
+ * @param {*} req 
+ * @param {*} res
+ * @param {*} next
+ * 
+ */
+function getAllSubscriberManullyLinkedReport(req, res, next) {
+    adminService.getSubscriberManullyLinkedReport(req.params)
+        .then(responseData => responseData ? res.status(200).json({ status: true, data: responseData }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })));
+
+}
+function getSubscriberManullyLinkedReport(req, res, next) {
+    adminService.getSubscriberManullyLinkedReport(req.params)
+        .then(responseData => responseData ? res.status(200).json({ status: true, data: responseData }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
         .catch(err => next(res.json({ status: false, message: err })));
 
 }

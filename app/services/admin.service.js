@@ -49,6 +49,7 @@ module.exports = {
     getPaymentDueToAmbassador,
     getBulkPaymentReport,
     getConsolidatedInformationReport,
+    getSubscriberManullyLinkedReport,
 };
 
 /*****************************************************************************************/
@@ -1269,6 +1270,94 @@ async function getConsolidatedInformationReport(param) {
         throw error;
     }
 };
+
+
+/**
+ * Function get Manually linked Subscriber to the referrral code by Admin
+ *   
+ * @param {param} 
+ * @result null|Object
+ * 
+ */
+async function getSubscriberManullyLinkedReport(param) {
+    console.log("SubscriberManullyLinked request", param);
+    const query = {
+        purchagedcourseId: { $ne: null },
+        is_linked_by_admin: true
+    };
+
+    if (param.start_date && param.end_date) {
+        query.createdAt = {
+            $gte: new Date(param.start_date),
+            $lte: new Date(param.end_date)
+        };
+    }
+
+    let referralData = await Referral.aggregate([
+        {
+            $match: query
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                as: "subscriber"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "referral_code",
+                foreignField: "referral_code",
+                as: "ambassador"
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                Subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
+                Subscriber_lastname: { $arrayElemAt: ["$subscriber.surname", 0] },
+                subscriber_id_number: { $arrayElemAt: ["$subscriber.id_number", 0] },
+                subscriber_email: { $arrayElemAt: ["$subscriber.email", 0] },
+                subscriber_HVG_Subscription_status: {
+                    $cond: {
+                        if: { $eq: [{ $arrayElemAt: ["$subscriber.is_active", 0] }, true] },
+                        then: "Active",
+                        else: "Inactive"
+                    }
+                },
+                referral_code_used: "$referral_code",
+                Ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
+                Ambassador_lastname: { $arrayElemAt: ["$ambassador.surname", 0] },
+                Date_of_linking_referral_code: "$createdAt",
+                ambassador_HVG_Subscription_status: {
+                    $cond: {
+                        if: { $eq: [{ $arrayElemAt: ["$ambassador.is_active", 0] }, true] },
+                        then: "Active",
+                        else: "Inactive"
+                    }
+                },
+            }
+        },
+        { $sort: { "createdAt": 1 } }
+    ]).exec();
+
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
+    const formattedData = referralData.map(data => ({
+        ...data,
+        Date_of_linking_referral_code: formatDate(data.Date_of_linking_referral_code)
+    }));
+
+    return formattedData;
+}
+
 
 /*****************************************************************************************/
 /*****************************************************************************************/
