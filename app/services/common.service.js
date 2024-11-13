@@ -1304,7 +1304,7 @@ async function generateSignature(param) {
   
 
   const generateQRCode = async (referralCode) => {
-    const fullUrl = `https://affiliate.skilltechsa.online/signup?referralCode=${referralCode}`;
+    const fullUrl = `https://test.highvista.co.za/signup?referralCode=${referralCode}`;
     // const fullUrl = `https://www.highvista.co.za/signup?referralCode=${referralCode}`;
     
     const qrCodeSize = 300; // (in pixels)
@@ -2732,7 +2732,7 @@ async function varifyEmailForgotPassword(req) {
       const tokenString = JSON.stringify(reset_token); // Convert object to JSON string
       const tokenData = btoa(tokenString); // Encode the JSON string to Base64
 
-      const forgot_password_link = `https://affiliate.skilltechsa.online/forgot-password?reset-token=${tokenData}`
+      const forgot_password_link = `https://test.highvista.co.za/forgot-password?reset-token=${tokenData}`
       // const forgot_password_link = `https://highvista.co.za/forgot-password?reset-token=${tokenData}`
 
       //Brevo email for changing password
