@@ -18,8 +18,6 @@ router.get('/active-subscribed-ambassador', getActiveSubcribedAmbassadors);
 router.get('/active-subscribed-subscriber', getActiveSubcribedSubscribers);
 router.get('/active-subscribed-ambassador/:start_date/:end_date', getAllActiveSubcribedAmbassadors);
 router.get('/active-subscribed-subscriber/:start_date/:end_date', getAllActiveSubscriptionSubscriber);
-
-
 router.get('/defaulted-subscription-paymentof-ambassador', getAllDefaultedSubscriptionPaymentOfAmbassador);
 router.get('/defaulted-subscription-paymentof-subscriber', getAllDefaultedSubscriptionPaymentOfSubscribers);
 router.get('/subscription-cancelledby-ambassador', getAllSubscriptionCancelledByAmbassador);
@@ -28,8 +26,6 @@ router.get('/defaulted-subscription-paymentof-ambassador/:start_date/:end_date',
 router.get('/defaulted-subscription-paymentof-subscriber/:start_date/:end_date', getDefaultedSubscriptionPaymentOfSubscribers);
 router.get('/subscription-cancelledby-ambassador/:start_date/:end_date', getSubscriptionCancelledByAmbassador);
 router.get('/subscription-cancelledby-subscriber/:start_date/:end_date', getSubscriptionCancelledBySubscriber);
-
-
 router.get('/active-inactive-referral-per-ambassador', getAllActiveAndInactiveReferralPerAmbassador);
 router.get('/active-referral-per-ambassador', getAllActiveReferralAmbassador);
 router.get('/inactive-referral-per-ambassador', getAllInactiveReferralAmbassador);
@@ -38,7 +34,6 @@ router.get('/active-inactive-referral-per-ambassador/:start_date/:end_date', get
 router.get('/active-referral-per-ambassador/:start_date/:end_date', getActiveReferralAmbassador);
 router.get('/inactive-referral-per-ambassador/:start_date/:end_date', getInactiveReferralAmbassador);
 router.get('/payment-due-to-ambassador/:start_date/:end_date', getPaymentDueToAmbassador);
-
 router.get('/bulk-payment-report/:start_date/:end_date', getBulkPaymentReport);
 router.get('/consolidated-information-report', getAllConsolidatedInformationReport);
 router.get('/consolidated-information-report/:start_date/:end_date', getConsolidatedInformationReport);
@@ -47,6 +42,12 @@ router.get('/subscriber-manually-linked-report/:start_date/:end_date', getSubscr
 
 router.post('/varify-email-forgot-password/:id', varifyEmailForgotPassword);
 router.post('/forgot-password', forgotPassword);
+router.post('/save-linked-referral-by-admin', saveLinkedReferralCodeByAdmin);
+router.get('/get-linked-referral-by-admin', getLinkedReferralCodeByAdmin);
+router.post('/edit-linked-referral-by-admin', editLinkedReferralCodeByAdmin);
+router.post('/delete-linked-referral-by-admin', deleteLinkedReferralCodeByAdmin);
+router.post('/submit-linked-referral-by-admin', submitLinkedReferralCodesByAdmin);
+
 
 module.exports = router;
 
@@ -487,7 +488,9 @@ function getSubscriberManullyLinkedReport(req, res, next) {
         .then(responseData => responseData ? res.status(200).json({ status: true, data: responseData }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
         .catch(err => next(res.json({ status: false, message: err })));
 
-}
+};
+
+
 /**
  * Function for varify email for forgot password
  * @param {*} req 
@@ -514,3 +517,80 @@ function forgotPassword(req, res, next) {
         .catch(err => next(res.json({ status: false, message: err })));
 
 }
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function for linking referral code by admin manually
+ * @param {*} req 
+ * @param {*} res  
+ * @param {*} next
+ *                  
+ */
+function saveLinkedReferralCodeByAdmin(req, res, next) {
+    adminService.saveLinkedReferralCodeByAdmin(req)
+        .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })))
+  };
+  
+  
+  /*****************************************************************************************/
+  /*****************************************************************************************/
+  /**
+   * Function for getting linked referral code by Admin
+   * @param {*} req 
+   * @param {*} res  
+   * @param {*} next
+   *                  
+   */
+  function getLinkedReferralCodeByAdmin(req, res, next) {
+    adminService.getLinkedReferralCodeByAdmin(req)
+        .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })))
+  };
+  
+  
+  /*****************************************************************************************/
+  /*****************************************************************************************/
+  /**
+   * Function to edit linked referral code by Admin
+   * @param {*} req 
+   * @param {*} res  
+   * @param {*} next
+   *                  
+   */
+  function editLinkedReferralCodeByAdmin(req, res, next) {
+    adminService.editLinkedReferralCodeByAdmin(req)
+        .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })))
+  }
+  /*****************************************************************************************/
+  /*****************************************************************************************/
+  /**
+   * Function to delete linked referral code by Admin
+   * @param {*} req 
+   * @param {*} res  
+   * @param {*} next
+   *                  
+   */
+  function deleteLinkedReferralCodeByAdmin(req, res, next) {
+    adminService.deleteLinkedReferralCodeByAdmin(req)
+        .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })))
+  }
+  /*****************************************************************************************/
+  /*****************************************************************************************/
+  /**
+   * Function to final submit linked referral code by Admin
+   * @param {*} req 
+   * @param {*} res  
+   * @param {*} next
+   *                  
+   */
+  function submitLinkedReferralCodesByAdmin(req, res, next) {
+    adminService.submitLinkedReferralCodesByAdmin(req)
+        .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })))
+  }
+  
+

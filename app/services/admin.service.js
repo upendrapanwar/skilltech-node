@@ -34,12 +34,10 @@ module.exports = {
     
     getAllActiveSubcribedAmbassadors,
     getAllActiveSubscriptionSubscriber,
-    
     getDefaultedSubscriptionPaymentOfAmbassador,
     getDefaultedSubscriptionPaymentOfSubscribers,
     getSubscriptionCancelledByAmbassador,
     getSubscriptionCancelledBySubscriber,
-
     getAllActiveAndInactiveReferralPerAmbassador,
     getAllActiveReferralAmbassador,
     getAllInactiveReferralAmbassador,
@@ -50,6 +48,12 @@ module.exports = {
     getBulkPaymentReport,
     getConsolidatedInformationReport,
     getSubscriberManullyLinkedReport,
+
+    saveLinkedReferralCodeByAdmin,
+    getLinkedReferralCodeByAdmin,
+    editLinkedReferralCodeByAdmin,
+    deleteLinkedReferralCodeByAdmin,
+    submitLinkedReferralCodesByAdmin,
 };
 
 /*****************************************************************************************/
@@ -1356,7 +1360,457 @@ async function getSubscriberManullyLinkedReport(param) {
     }));
 
     return formattedData;
-}
+};
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Link referral code by Admin
+ *
+ * @param {param}
+ *
+ * @returns Object|null
+ */
+async function saveLinkedReferralCodeByAdmin(req) {
+    try {
+      console.log('linkReferralCodeByAdmin req.body: ', req.body);
+  
+      const incorrectDataArray = [];
+      const allCreatedReferralData = [];
+  
+      // Loop through each user object in req.body array
+      for (const user of req.body) {
+        const { email, referral_code } = user;
+        const incorrectData = {};
+  
+        // Find user data in the database
+        const userData = await User.findOne({ email: email }).select();
+        const AmbassadorData = await User.findOne({ referral_code: referral_code }).select('is_active');
+        console.log("AmbassadorData", AmbassadorData);
+  
+        // Check for incorrect data and add to incorrectData object
+        if (!userData) {
+          incorrectData.email = email;
+        } 
+        // else {
+          // if (firstname !== userData.firstname) incorrectData.firstname = "Firstname does not match";
+          // if (surname !== userData.surname) incorrectData.surname = "Surname does not match";
+          // if (id_number !== userData.id_number) incorrectData.id_number = "ID number does not match";
+          // if (email !== userData.email) incorrectData.email = "Email does not match";
+        // }
+  
+        if (AmbassadorData && AmbassadorData.is_active === false || AmbassadorData === null) {
+          incorrectData.referral_code = referral_code;
+        }
+  
+        // Only add to incorrectDataArray if there are any incorrect fields
+        if (Object.keys(incorrectData).length > 0) {
+          incorrectDataArray.push(incorrectData );
+          continue;
+        }
+  
+        // Proceed with further steps if no incorrect data found
+        const userId = userData._id;
+  
+        const existingReferral = await Referral.findOne({
+          referral_code: referral_code,
+          userId: userId,
+          purchagedcourseId: { $ne: null }
+        });
+  
+        if (existingReferral) continue;
+  
+        // const purchagedcourseData = await Purchasedcourses.find({ userId: userId }).select();
+        // const purchagedcourseID = purchagedcourseData[0]._id;
+  
+        const referralData = await Referral.create({
+          referral_code: referral_code,
+          userId: userId,
+          is_active: true,
+          is_linked_by_admin: true,
+          // purchagedcourseId: { $ne: null }
+        });
+  
+        const createdReferralData = await referralData.save();
+        allCreatedReferralData.push(createdReferralData);
+        console.log("newReferralData", createdReferralData);
+      }
+  
+      if (incorrectDataArray.length > 0) {
+        return {incorrectData: incorrectDataArray};
+      } else {
+        return allCreatedReferralData;
+      }
+  
+    } catch (error) {
+      console.error("Error:", error);
+      return { status: 500, error: "Internal Server Error" };
+    }
+  }
+  
+  
+  // async function saveLinkedReferralCodeByAdmin(req) {
+  //   try {
+  //     console.log('linkReferralCodeByAdmin req.body: ', req.body);
+  //     const firstname = req.body.firstname;
+  //     const surname = req.body.surname;
+  //     const id_number = req.body.id_number;
+  //     const email = req.body.email;
+  //     const referralCode = req.body.referral_code;
+  
+  //     // Check if all requested data is correct
+  //     const incorrectData = [];
+  //     const userData = await User.findOne({ email: email }).select();
+  //     const AmbassadorData = await User.findOne({ referral_code: referralCode }).select('is_active');
+  //     console.log("AmbassadorData", AmbassadorData)
+  
+  //     if (!userData) {
+  //       incorrectData.push("email");
+  //       console.log("Returning incorrect email data: ", { incorrectEmail: incorrectData });
+  //       return { incorrectEmail: incorrectData };
+  //     }
+  
+  //     const userId = userData._id;
+  
+  //     if (firstname !== userData.firstname) incorrectData.push("firstname");
+  //     if (surname !== userData.surname) incorrectData.push("surname");
+  //     if (id_number !== userData.id_number) incorrectData.push("id_number");
+  //     if (email !== userData.email) incorrectData.push("email");
+  //     if (AmbassadorData.is_active == false) incorrectData.push("referral_code");
+  
+  //     // If there are mismatches, return them
+  //     if (incorrectData.length > 0) {
+  //       console.log("incorrectData: ", incorrectData);
+  //       return { incorrectFields: incorrectData }; // Return mismatch data
+  //     }
+  
+  //     // Check if referral code is already used
+  //     const existingReferral = await Referral.findOne({
+  //       referral_code: referralCode,
+  //       userId: userId,
+  //       purchagedcourseId: { $ne: null }
+  //     });
+  
+  //     if (existingReferral) {
+  //       return;
+  //     }
+  
+  //     // If referral not used then save in database
+  //     const purchagedcourseData = await Purchasedcourses.find({ userId: userId }).select();
+  //     const purchagedcourseID = purchagedcourseData[0]._id;
+  
+  //     const referralData = await Referral.create({
+  //       referral_code: referralCode,
+  //       userId: userId,
+  //       // purchagedcourseId: purchagedcourseID,
+  //       is_active: true,
+  //       is_linked_by_admin: true,
+  //     });
+  
+  //     const createdReferralData = await referralData.save();
+  //     console.log("newReferralData", createdReferralData);
+  
+  //     return createdReferralData;
+  
+  //   } catch (error) {
+  //     console.error("Error:", error);
+  //     return { status: 500, error: "Internal Server Error" };
+  //   }
+  // }
+  
+  
+  
+  /*****************************************************************************************/
+  /*****************************************************************************************/
+  /**
+   * Get linked referral code by Admin
+   *
+   * @param {param}
+   *
+   * @returns Object|null
+   */
+//   async function getLinkedReferralCodeByAdmin() {
+//     try {
+//       const referralsData = await Referral.find({
+//         purchagedcourseId: { $eq: null },
+//         is_linked_by_admin: true,
+//       }).populate({
+//         path: 'userId',
+//         select: 'firstname surname id_number email referral_code',
+//       });
+      
+//       console.log("referralsData", referralsData);
+  
+//       return referralsData;
+  
+//     } catch (error) {
+//       console.error("Error:", error);
+//       return { status: 500, error: "Internal Server Error" };
+//     }
+//   };
+
+
+  async function getLinkedReferralCodeByAdmin() {
+    const query = {
+        purchagedcourseId: { $eq: null },
+        is_linked_by_admin: true
+    };
+
+    let referralData = await Referral.aggregate([
+        {
+            $match: query
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                as: "subscriber"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "referral_code",
+                foreignField: "referral_code",
+                as: "ambassador"
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                id_number: { $arrayElemAt: ["$subscriber._id", 0] },
+                subscriber_firstname: { $arrayElemAt: ["$subscriber.firstname", 0] },
+                subscriber_surname: { $arrayElemAt: ["$subscriber.surname", 0] },
+                email: { $arrayElemAt: ["$subscriber.email", 0] },
+                referral_code_used: "$referral_code",
+                ambassador_firstname: { $arrayElemAt: ["$ambassador.firstname", 0] },
+                ambassador_surname: { $arrayElemAt: ["$ambassador.surname", 0] },
+            }
+        },
+        { $sort: { "createdAt": 1 } }
+    ]).exec();
+
+    return referralData;
+};
+  
+  
+  /*****************************************************************************************/
+  /*****************************************************************************************/
+  /**
+   * Edit linked referral code by Admin
+   *
+   * @param {param}
+   *
+   * @returns Object|null
+   */
+  async function editLinkedReferralCodeByAdmin(req) {
+    try {
+      const email = req.body.email;
+      const referral_code = req.body.referral_code;
+      console.log("Requested email: ", email);
+  
+      const user = await User.find({ email: email }).select('_id');
+      const userId = user[0]._id;
+      console.log("user: ", user);
+  
+      //Check referral code is Active or not
+      // const incorrectData = {};
+      const AmbassadorData = await User.findOne({ referral_code: referral_code }).select('is_active');
+        console.log("AmbassadorData", AmbassadorData);
+  
+        if (AmbassadorData && AmbassadorData.is_active === false || AmbassadorData === null) {
+          // incorrectData.referral_code = referral_code;
+          const incorrectData = { referral_code: referral_code };
+          return { incorrectFields: incorrectData };
+        }
+  
+      const response = await Referral.findOneAndUpdate(
+        {userId: userId},
+        {referral_code: referral_code},
+        { new: true }
+      );
+  
+      console.log("Edited records:", response);
+      return response;
+  
+    } catch (error) {
+      console.error("Error:", error);
+      return { status: 500, error: "Internal Server Error" };
+    }
+  }
+  /*****************************************************************************************/
+  /*****************************************************************************************/
+  /**
+   * Delete linked referral code by Admin
+   *
+   * @param {param}
+   *
+   * @returns Object|null
+   */
+  async function deleteLinkedReferralCodeByAdmin(req) {
+    try {
+      const emails = req.body.emails;
+      console.log("Requested emails: ", emails);
+  
+      const users = await User.find({ email: { $in: emails } }).select('_id');
+      const userIds = users.map(user => user._id);
+  
+      const response = await Referral.deleteMany({
+        userId: { $in: userIds },
+        is_linked_by_admin: true,
+      });
+  
+      console.log("Deleted records:", response);
+      return response;
+  
+    } catch (error) {
+      console.error("Error:", error);
+      return { status: 500, error: "Internal Server Error" };
+    }
+  }
+  /*****************************************************************************************/
+  /*****************************************************************************************/
+  /**
+   * Submit linked referral code by Admin
+   *
+   * @param {param}
+   *
+   * @returns Object|null
+   */
+  async function submitLinkedReferralCodesByAdmin(req) {
+    try {
+      console.log("submitLinkedReferralCodesByAdmin body: ", req.body);
+  
+      const users = req.body;
+      const results = [];
+  
+      for (const user of users) {
+        const { email, referral_code } = user;
+  
+        const userData = await User.findOne({ email: email }).select();
+        const userId = userData._id;
+        const purchasedCourseData = await Purchasedcourses.find({ userId: userId }).select();
+        console.log("purchasedCourseData", purchasedCourseData)
+        const purchasedCourseId = purchasedCourseData[0]._id;
+  
+        // Update referral data
+        const response = await Referral.findOneAndUpdate(
+          { userId: userId, referral_code: referral_code },
+          { purchagedcourseId: purchasedCourseId },
+          { new: true, sort: { createdAt: -1 } }
+        );
+  
+        // console.log("Edited record for email:", email, response);
+        results.push({ email, response: response || 'Referral not found or updated' });
+      }
+  
+      return results;
+  
+    } catch (error) {
+      console.error("Error:", error);
+      return { status: 500, error: "Internal Server Error" };
+    }
+  }
+  
+  
+  
+  
+  // cron.schedule('*/1 * * * *', async () => {
+  //     // getUserData('upendra');
+  //     // getDashboardURL();
+  //     const moodleUrl = await loginToMoodle('shri_ram', 'Testing@12345');
+  //     console.log(`Redirect the user to: ${moodleUrl}`);
+  //   console.log('Successfully triggered');
+  //   });
+  
+  
+  //   async function loginToMoodle(username, password) {
+  //     try {
+  //         const response = await axios.get('https://skilltechsa.online/login/token.php', {
+  //             params: {
+  //                 service: 'moodle_mobile_app',
+  //                 username: username,
+  //                 password: password,
+  //             },
+  //         });
+  
+  //         console.log("loginToMoodle response: ", response.data);
+  
+  //     } catch (error) {
+  //         console.error('Error obtaining Moodle token:', error.message);
+  //     }
+  // };
+    
+  
+  //   const getUserData = async (username) => {
+  //     console.log("Username:", username);
+    
+  //     // Define Moodle URL and token from environment variables
+  //     const MOODLE_URL = process.env.MOODLE_COURSES_URL;
+  //     const MOODLE_TOKEN = process.env.MOODLE_TOKEN;
+  //     const MOODLE_SITE_INFO_FUNCTION = 'core_webservice_get_site_info';
+    
+  //     try {
+  //       const response = await axios.post(MOODLE_URL, null, {
+  //         params: {
+  //           wstoken: MOODLE_TOKEN,
+  //           moodlewsrestformat: 'json',
+  //           wsfunction: MOODLE_SITE_INFO_FUNCTION,
+  //         },
+  //       });
+    
+  //       // console.log("Full response data:", response.data);
+  //       console.log("Full response data- userprivateaccesskey:", response.data.userprivateaccesskey);
+  //       const private_token = response.data.userprivateaccesskey;
+  //       await handleMoodleAutoLogin(username, private_token);
+    
+  //     } catch (error) {
+  //       console.error("Error retrieving site info:", error.response ? error.response.data : error.message);
+  //       throw error;
+  //     }
+  //   };
+  
+  
+  // const handleMoodleAutoLogin = async (username, private_token) => {
+  //   console.log("username: ", username)
+  //   const MOODLE_URL = process.env.MOODLE_COURSES_URL;
+  //   const MOODLE_TOKEN = process.env.MOODLE_TOKEN;
+  //   const MOODLE_AUTO_LOGIN_FUNCTION = 'tool_mobile_get_autologin_key';
+  
+  //   try {
+  //     const response = await axios.post(MOODLE_URL, null, {
+  //       params: {
+  //         wstoken: MOODLE_TOKEN,
+  //         moodlewsrestformat: 'json',
+  //         wsfunction: MOODLE_AUTO_LOGIN_FUNCTION,
+  //         privatetoken: private_token,
+  //       },
+  //       data: {
+  //         username: username, // Moodle username
+  //         service: 'moodle_mobile_app', // Adjust if using a different Moodle service
+  //       },
+  //     });
+  
+  //     console.log("Full response data:", response.data);
+  
+  //     const { autologinurl } = response.data;
+  //     console.log("autologinUrl: ", autologinurl)
+  
+  //     // if (autologinurl) {
+  //     //   return autologinurl;
+  
+  //     // } else {
+  //     //   console.error("Failed to retrieve auto-login URL.");
+  //     //   return null;
+  //     // }
+  //   } catch (error) {
+  //     console.error("Error generating auto-login URL:", error);
+  //     // console.error("Error generating auto-login URL:", error.response ? error.response.data : error.message);
+  //     throw error;
+  //   }
+  // };
+  
 
 
 /*****************************************************************************************/
@@ -1675,8 +2129,7 @@ async function getSubscriptionObject(subscription_token) {
         handleMoodleUserDeletion(userBlocked.moodle_login_id);
     };
     
-  
-    //For Brevo email to SUBSCIBER, when stopped payment by Subscriber
+      //For Brevo email to SUBSCIBER, when stopped payment by Subscriber
     const receiverName = `${userBlocked.firstname} ${userBlocked.surname}`;
     const receiverEmail = userBlocked.email;
     let sendEmail;
