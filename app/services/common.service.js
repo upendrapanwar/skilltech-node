@@ -1365,7 +1365,7 @@ async function payFastNotify(param, spayId) {
             $set: {
               merchantData: JSON.stringify(itnData),
             },
-          },
+          }, 
           { 
             new: true, // return the updated document
             sort: { _id: -1 } // sort by _id in descending order to get the latest document

@@ -53,7 +53,7 @@ module.exports = {
     getLinkedReferralCodeByAdmin,
     editLinkedReferralCodeByAdmin,
     deleteLinkedReferralCodeByAdmin,
-    submitLinkedReferralCodesByAdmin,
+    submitLinkedReferralCodesByAdmin, 
 };
 
 /*****************************************************************************************/
@@ -1376,28 +1376,28 @@ async function saveLinkedReferralCodeByAdmin(req) {
       console.log('linkReferralCodeByAdmin req.body: ', req.body);
   
       const incorrectDataArray = [];
+      const emailExistedDataArray = [];
+      const validEntries = []; // Store valid user entries here
       const allCreatedReferralData = [];
   
       // Loop through each user object in req.body array
       for (const user of req.body) {
         const { email, referral_code } = user;
         const incorrectData = {};
+        const emailExisted = {};
   
         // Find user data in the database
-        const userData = await User.findOne({ email: email }).select();
+        const userData = await User.findOne({
+            email: email,
+            role: { $in: ["subscriber", "ambassador"] },
+          }).select();
         const AmbassadorData = await User.findOne({ referral_code: referral_code }).select('is_active');
         console.log("AmbassadorData", AmbassadorData);
   
         // Check for incorrect data and add to incorrectData object
         if (!userData) {
           incorrectData.email = email;
-        } 
-        // else {
-          // if (firstname !== userData.firstname) incorrectData.firstname = "Firstname does not match";
-          // if (surname !== userData.surname) incorrectData.surname = "Surname does not match";
-          // if (id_number !== userData.id_number) incorrectData.id_number = "ID number does not match";
-          // if (email !== userData.email) incorrectData.email = "Email does not match";
-        // }
+        }
   
         if (AmbassadorData && AmbassadorData.is_active === false || AmbassadorData === null) {
           incorrectData.referral_code = referral_code;
@@ -1405,39 +1405,55 @@ async function saveLinkedReferralCodeByAdmin(req) {
   
         // Only add to incorrectDataArray if there are any incorrect fields
         if (Object.keys(incorrectData).length > 0) {
-          incorrectDataArray.push(incorrectData );
-          continue;
+          incorrectDataArray.push(incorrectData);
+          continue; // Skip further processing for this user
         }
   
-        // Proceed with further steps if no incorrect data found
+        // Proceed with further checks
         const userId = userData._id;
   
         const existingReferral = await Referral.findOne({
           referral_code: referral_code,
           userId: userId,
-          purchagedcourseId: { $ne: null }
         });
   
-        if (existingReferral) continue;
+        if (existingReferral) {
+          emailExisted.email = email;
+        }
   
-        // const purchagedcourseData = await Purchasedcourses.find({ userId: userId }).select();
-        // const purchagedcourseID = purchagedcourseData[0]._id;
+        if (Object.keys(emailExisted).length > 0) {
+          emailExistedDataArray.push(emailExisted);
+          continue; // Skip further processing for this user
+        }
   
-        const referralData = await Referral.create({
-          referral_code: referral_code,
-          userId: userId,
-          is_active: true,
-          is_linked_by_admin: true,
-          // purchagedcourseId: { $ne: null }
-        });
-  
-        const createdReferralData = await referralData.save();
-        allCreatedReferralData.push(createdReferralData);
-        console.log("newReferralData", createdReferralData);
+        // If no incorrect or existing email found, add to valid entries
+        validEntries.push({ email, referral_code, userId });
       }
   
-      if (incorrectDataArray.length > 0) {
-        return {incorrectData: incorrectDataArray};
+      // Only create referral data if no errors exist
+      if (incorrectDataArray.length === 0 && emailExistedDataArray.length === 0) {
+        for (const validEntry of validEntries) {
+          const { referral_code, userId } = validEntry;
+  
+          const referralData = await Referral.create({
+            referral_code: referral_code,
+            userId: userId,
+            is_active: true,
+            is_linked_by_admin: true,
+          });
+  
+          const createdReferralData = await referralData.save();
+          allCreatedReferralData.push(createdReferralData);
+          console.log("newReferralData", createdReferralData);
+        }
+      }
+  
+      // Return the results
+      if (incorrectDataArray.length > 0 || emailExistedDataArray.length > 0) {
+        return [
+          { incorrectData: incorrectDataArray },
+          { emailExistedData: emailExistedDataArray },
+        ];
       } else {
         return allCreatedReferralData;
       }
@@ -1448,76 +1464,97 @@ async function saveLinkedReferralCodeByAdmin(req) {
     }
   }
   
+
+// async function saveLinkedReferralCodeByAdmin(req) {
+//     try {
+//       console.log('linkReferralCodeByAdmin req.body: ', req.body);
   
-  // async function saveLinkedReferralCodeByAdmin(req) {
-  //   try {
-  //     console.log('linkReferralCodeByAdmin req.body: ', req.body);
-  //     const firstname = req.body.firstname;
-  //     const surname = req.body.surname;
-  //     const id_number = req.body.id_number;
-  //     const email = req.body.email;
-  //     const referralCode = req.body.referral_code;
+//       const incorrectDataArray = [];
+//       const emailExistedDataArray = [];
+//       const allCreatedReferralData = [];
   
-  //     // Check if all requested data is correct
-  //     const incorrectData = [];
-  //     const userData = await User.findOne({ email: email }).select();
-  //     const AmbassadorData = await User.findOne({ referral_code: referralCode }).select('is_active');
-  //     console.log("AmbassadorData", AmbassadorData)
+//       // Loop through each user object in req.body array
+//       for (const user of req.body) {
+//         const { email, referral_code } = user;
+//         const incorrectData = {};
+//         const emailExisted = {};
   
-  //     if (!userData) {
-  //       incorrectData.push("email");
-  //       console.log("Returning incorrect email data: ", { incorrectEmail: incorrectData });
-  //       return { incorrectEmail: incorrectData };
-  //     }
+//         // Find user data in the database
+//         const userData = await User.findOne({ email: email }).select();
+//         const AmbassadorData = await User.findOne({ referral_code: referral_code }).select('is_active');
+//         console.log("AmbassadorData", AmbassadorData);
   
-  //     const userId = userData._id;
+//         // Check for incorrect data and add to incorrectData object
+//         if (!userData) {
+//           incorrectData.email = email;
+//         } 
+//         // else {
+//           // if (firstname !== userData.firstname) incorrectData.firstname = "Firstname does not match";
+//           // if (surname !== userData.surname) incorrectData.surname = "Surname does not match";
+//           // if (id_number !== userData.id_number) incorrectData.id_number = "ID number does not match";
+//           // if (email !== userData.email) incorrectData.email = "Email does not match";
+//         // }
   
-  //     if (firstname !== userData.firstname) incorrectData.push("firstname");
-  //     if (surname !== userData.surname) incorrectData.push("surname");
-  //     if (id_number !== userData.id_number) incorrectData.push("id_number");
-  //     if (email !== userData.email) incorrectData.push("email");
-  //     if (AmbassadorData.is_active == false) incorrectData.push("referral_code");
+//         if (AmbassadorData && AmbassadorData.is_active === false || AmbassadorData === null) {
+//           incorrectData.referral_code = referral_code;
+//         }
   
-  //     // If there are mismatches, return them
-  //     if (incorrectData.length > 0) {
-  //       console.log("incorrectData: ", incorrectData);
-  //       return { incorrectFields: incorrectData }; // Return mismatch data
-  //     }
+//         // Only add to incorrectDataArray if there are any incorrect fields
+//         if (Object.keys(incorrectData).length > 0) {
+//           incorrectDataArray.push(incorrectData );
+//           continue;
+//         }
   
-  //     // Check if referral code is already used
-  //     const existingReferral = await Referral.findOne({
-  //       referral_code: referralCode,
-  //       userId: userId,
-  //       purchagedcourseId: { $ne: null }
-  //     });
+//         // Proceed with further steps if no incorrect data found
+//         const userId = userData._id;
   
-  //     if (existingReferral) {
-  //       return;
-  //     }
+//         const existingReferral = await Referral.findOne({
+//           referral_code: referral_code,
+//           userId: userId,
+//         //   purchagedcourseId: { $ne: null }
+//         });
   
-  //     // If referral not used then save in database
-  //     const purchagedcourseData = await Purchasedcourses.find({ userId: userId }).select();
-  //     const purchagedcourseID = purchagedcourseData[0]._id;
+//         if (existingReferral) {
+//             emailExisted.email = email;
+//             console.log("emailExisted", emailExisted);
+//         };
+        
+//         if (Object.keys(emailExisted).length > 0) {
+//             emailExistedDataArray.push(emailExisted );
+//             console.log("emailExistedDataArray", emailExistedDataArray);
+//         continue;
+//         };
+          
+
+//         // Proceed with further steps if no incorrect data and existiing email found
+
+//         // const purchagedcourseData = await Purchasedcourses.find({ userId: userId }).select();
+//         // const purchagedcourseID = purchagedcourseData[0]._id;
   
-  //     const referralData = await Referral.create({
-  //       referral_code: referralCode,
-  //       userId: userId,
-  //       // purchagedcourseId: purchagedcourseID,
-  //       is_active: true,
-  //       is_linked_by_admin: true,
-  //     });
+//         const referralData = await Referral.create({
+//           referral_code: referral_code,
+//           userId: userId,
+//           is_active: true,
+//           is_linked_by_admin: true,
+//           // purchagedcourseId: { $ne: null }
+//         });
   
-  //     const createdReferralData = await referralData.save();
-  //     console.log("newReferralData", createdReferralData);
+//         const createdReferralData = await referralData.save();
+//         allCreatedReferralData.push(createdReferralData);
+//         console.log("newReferralData", createdReferralData);
+//       }
   
-  //     return createdReferralData;
+//       if (incorrectDataArray.length > 0 || emailExistedDataArray.length > 0) {
+//         return [{incorrectData: incorrectDataArray}, {emailExistedData : emailExistedDataArray}];
+//       } else {
+//         return allCreatedReferralData;
+//       }
   
-  //   } catch (error) {
-  //     console.error("Error:", error);
-  //     return { status: 500, error: "Internal Server Error" };
-  //   }
-  // }
-  
+//     } catch (error) {
+//       console.error("Error:", error);
+//       return { status: 500, error: "Internal Server Error" };
+//     }
+//   };
   
   
   /*****************************************************************************************/
@@ -1711,106 +1748,7 @@ async function saveLinkedReferralCodeByAdmin(req) {
       console.error("Error:", error);
       return { status: 500, error: "Internal Server Error" };
     }
-  }
-  
-  
-  
-  
-  // cron.schedule('*/1 * * * *', async () => {
-  //     // getUserData('upendra');
-  //     // getDashboardURL();
-  //     const moodleUrl = await loginToMoodle('shri_ram', 'Testing@12345');
-  //     console.log(`Redirect the user to: ${moodleUrl}`);
-  //   console.log('Successfully triggered');
-  //   });
-  
-  
-  //   async function loginToMoodle(username, password) {
-  //     try {
-  //         const response = await axios.get('https://skilltechsa.online/login/token.php', {
-  //             params: {
-  //                 service: 'moodle_mobile_app',
-  //                 username: username,
-  //                 password: password,
-  //             },
-  //         });
-  
-  //         console.log("loginToMoodle response: ", response.data);
-  
-  //     } catch (error) {
-  //         console.error('Error obtaining Moodle token:', error.message);
-  //     }
-  // };
-    
-  
-  //   const getUserData = async (username) => {
-  //     console.log("Username:", username);
-    
-  //     // Define Moodle URL and token from environment variables
-  //     const MOODLE_URL = process.env.MOODLE_COURSES_URL;
-  //     const MOODLE_TOKEN = process.env.MOODLE_TOKEN;
-  //     const MOODLE_SITE_INFO_FUNCTION = 'core_webservice_get_site_info';
-    
-  //     try {
-  //       const response = await axios.post(MOODLE_URL, null, {
-  //         params: {
-  //           wstoken: MOODLE_TOKEN,
-  //           moodlewsrestformat: 'json',
-  //           wsfunction: MOODLE_SITE_INFO_FUNCTION,
-  //         },
-  //       });
-    
-  //       // console.log("Full response data:", response.data);
-  //       console.log("Full response data- userprivateaccesskey:", response.data.userprivateaccesskey);
-  //       const private_token = response.data.userprivateaccesskey;
-  //       await handleMoodleAutoLogin(username, private_token);
-    
-  //     } catch (error) {
-  //       console.error("Error retrieving site info:", error.response ? error.response.data : error.message);
-  //       throw error;
-  //     }
-  //   };
-  
-  
-  // const handleMoodleAutoLogin = async (username, private_token) => {
-  //   console.log("username: ", username)
-  //   const MOODLE_URL = process.env.MOODLE_COURSES_URL;
-  //   const MOODLE_TOKEN = process.env.MOODLE_TOKEN;
-  //   const MOODLE_AUTO_LOGIN_FUNCTION = 'tool_mobile_get_autologin_key';
-  
-  //   try {
-  //     const response = await axios.post(MOODLE_URL, null, {
-  //       params: {
-  //         wstoken: MOODLE_TOKEN,
-  //         moodlewsrestformat: 'json',
-  //         wsfunction: MOODLE_AUTO_LOGIN_FUNCTION,
-  //         privatetoken: private_token,
-  //       },
-  //       data: {
-  //         username: username, // Moodle username
-  //         service: 'moodle_mobile_app', // Adjust if using a different Moodle service
-  //       },
-  //     });
-  
-  //     console.log("Full response data:", response.data);
-  
-  //     const { autologinurl } = response.data;
-  //     console.log("autologinUrl: ", autologinurl)
-  
-  //     // if (autologinurl) {
-  //     //   return autologinurl;
-  
-  //     // } else {
-  //     //   console.error("Failed to retrieve auto-login URL.");
-  //     //   return null;
-  //     // }
-  //   } catch (error) {
-  //     console.error("Error generating auto-login URL:", error);
-  //     // console.error("Error generating auto-login URL:", error.response ? error.response.data : error.message);
-  //     throw error;
-  //   }
-  // };
-  
+  };
 
 
 /*****************************************************************************************/
@@ -1827,9 +1765,9 @@ cron.schedule('1 0 * * *', () => {
     console.log('Successfully triggered');
 });
 
-// cron.schedule('*/1 * * * *', () => {
-//     // getRegularSubscriptionDataUpdate();
-//     getTestingOneRegularSubscriptionDataUpdate();
+// cron.schedule('*/2 * * * *', () => {
+//     getRegularSubscriptionDataUpdate();
+//     // getTestingOneRegularSubscriptionDataUpdate();
 //   console.log('Successfully triggered');
 // });
 
@@ -1870,12 +1808,16 @@ async function getRegularSubscriptionDataUpdate() {
                 let due_date = new Date(subscription_data.run_date);
                 due_date.setHours(0, 0, 0, 0);
 
-                if(current_date > due_date) {
+                // Add 2 more days to the due date
+                let extended_due_date = new Date(due_date);
+                extended_due_date.setDate(due_date.getDate() + 2);
+
+                if(current_date > extended_due_date) {
                     console.log(`Due date is ${due_date}`);
                     cancelPayfastSubscription(token, userId, orderId, due_date);
                 } else {
                     console.log("Due date reached. Stopping loop.");
-                    break;
+                    continue;
                 }
 
             } catch (error) {
@@ -1889,7 +1831,8 @@ async function getRegularSubscriptionDataUpdate() {
 };
 
 async function getSubscriptionObject(subscription_token) {
-      
+    console.log("subscription_token", subscription_token); 
+
     function generateTimestamp() {
       const now = new Date();
       const year = now.getFullYear();
@@ -2169,3 +2112,130 @@ async function getSubscriptionObject(subscription_token) {
 
 /*****************************************************************************************/
 /*****************************************************************************************/
+
+// cron.schedule('*/1 * * * *', () => {
+//     // cancelPayfastPayment();
+//     console.log('Successfully triggered');
+// });
+
+const getPaymentDetails = async (paymentId) => {
+    const data = {
+      'merchant_id': '25096247',
+      'merchant_key': 'ajvkteanjqdig',
+      'payment_id': paymentId
+    };
+    // const url = 'https://api.payfast.co.za/eng/query/merchant';
+    const url = 'https://api.payfast.co.za/subscriptions';
+    
+    try {
+      const response = await axios.post(url, data, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
+  
+      if (response.data && response.data.subscription_token) {
+        // You can access the subscription token here
+        console.log('Subscription Token:', response.data);
+        console.log('Subscription Token:', response.data.subscription_token);
+      } else {
+        console.log('No subscription token found');
+      }
+    } catch (error) {
+      console.error('Error fetching payment details:', error);
+    }
+  };
+
+
+  async function cancelPayfastPayment() {
+    const token_generated = "4e244f9f-b23c-4a6f-9c22-9d8429c80b98"; 
+      
+    function generateTimestamp() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const timezoneOffset = now.getTimezoneOffset();
+      const offsetHours = String(Math.floor(Math.abs(timezoneOffset) / 60)).padStart(2, '0');
+      const offsetMinutes = String(Math.abs(timezoneOffset) % 60).padStart(2, '0');
+      const offsetSign = timezoneOffset < 0 ? '+' : '-';
+      const formattedOffset = `${offsetSign}${offsetHours}:${offsetMinutes}`;
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${formattedOffset}`;
+    }
+  
+    function generateSignature() {
+      const data = {
+          'merchant-id': process.env.PAYFAST_MERCHANT_ID,
+          'passphrase': process.env.PAYFAST_PASSPHRASE,
+          'timestamp': generateTimestamp(),
+          'version': 'v1'
+      };
+  
+      const orderedKeys = ['merchant-id', 'passphrase', 'timestamp', 'version'];
+      let pfOutput = orderedKeys.map(key => `${key}=${encodeURIComponent(data[key]).replace(/%20/g, "+")}`).join('&');
+      console.log("signature String", pfOutput);
+  
+      const signature = crypto.createHash("md5").update(pfOutput).digest("hex");
+      console.log("signature", signature);
+      return signature;
+    }
+  
+    try {
+        const token = token_generated;
+        const merchantId = process.env.PAYFAST_MERCHANT_ID;
+        const signature = generateSignature();
+        const timestamp = generateTimestamp();
+    
+        console.log("Merchant ID:", merchantId);
+        console.log("Signature:", signature);
+        console.log("Timestamp:", timestamp);
+    
+        // const url = `https://api.payfast.co.za/subscriptions/${token}/cancel?testing=true`;
+        const url = `https://api.payfast.co.za/subscriptions/${token}/cancel`;
+        const version = 'v1';
+    
+        const options = {
+            headers: {
+                'merchant-id': merchantId,
+                'version': version,
+                'timestamp': timestamp,
+                'signature': signature
+            }
+        };
+    
+        console.log("Request URL:", url);
+        console.log("Request Options:", options);
+    
+        const response = await axios.put(url, null, options);
+        console.log("Request response:", response);
+  
+        if (response.status === 200) {
+            console.log("Cancellation successful.");
+            return response.data;
+        } else {
+            console.error("Cancellation failed:", response.data);
+            return response.data;
+        }
+    } catch (err) {
+        if (err.response) {
+            // The request was made and the server responded with a status code
+            console.error("Response data:", err.response.data);
+            console.error("Response status:", err.response.status);
+            console.error("Response headers:", err.response.headers);
+        } else if (err.request) {
+            // The request was made but no response was received
+            console.error("Request data:", err.request);
+        } else {
+            // Something happened in setting up the request that triggered an Error
+            console.error("Error message:", err.message);
+        }
+        console.error("Config:", err.config);
+        throw err;
+    }
+  };
+
+  
+  
