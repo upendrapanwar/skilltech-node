@@ -1377,7 +1377,7 @@ async function saveLinkedReferralCodeByAdmin(req) {
   
       const incorrectDataArray = [];
       const emailExistedDataArray = [];
-      const validEntries = []; // Store valid user entries here
+      const validEntries = [];
       const allCreatedReferralData = [];
   
       // Loop through each user object in req.body array
@@ -1393,6 +1393,7 @@ async function saveLinkedReferralCodeByAdmin(req) {
           }).select();
         const AmbassadorData = await User.findOne({ referral_code: referral_code }).select('is_active');
         console.log("AmbassadorData", AmbassadorData);
+        console.log("userData", userData);
   
         // Check for incorrect data and add to incorrectData object
         if (!userData) {
@@ -1404,26 +1405,25 @@ async function saveLinkedReferralCodeByAdmin(req) {
         }
   
         // Only add to incorrectDataArray if there are any incorrect fields
-        if (Object.keys(incorrectData).length > 0) {
+        if (   Object.keys(incorrectData).length > 0) {
           incorrectDataArray.push(incorrectData);
-          continue; // Skip further processing for this user
+          continue;
         }
   
         // Proceed with further checks
         const userId = userData._id;
-  
         const existingReferral = await Referral.findOne({
           referral_code: referral_code,
           userId: userId,
         });
-  
-        if (existingReferral) {
+        
+        //Already linked user and Ambassador data exemption code
+        if (existingReferral || userData.role == "ambassador") {
           emailExisted.email = email;
         }
-  
         if (Object.keys(emailExisted).length > 0) {
           emailExistedDataArray.push(emailExisted);
-          continue; // Skip further processing for this user
+          continue;
         }
   
         // If no incorrect or existing email found, add to valid entries
@@ -1444,7 +1444,6 @@ async function saveLinkedReferralCodeByAdmin(req) {
   
           const createdReferralData = await referralData.save();
           allCreatedReferralData.push(createdReferralData);
-          console.log("newReferralData", createdReferralData);
         }
       }
   
@@ -1464,98 +1463,6 @@ async function saveLinkedReferralCodeByAdmin(req) {
     }
   }
   
-
-// async function saveLinkedReferralCodeByAdmin(req) {
-//     try {
-//       console.log('linkReferralCodeByAdmin req.body: ', req.body);
-  
-//       const incorrectDataArray = [];
-//       const emailExistedDataArray = [];
-//       const allCreatedReferralData = [];
-  
-//       // Loop through each user object in req.body array
-//       for (const user of req.body) {
-//         const { email, referral_code } = user;
-//         const incorrectData = {};
-//         const emailExisted = {};
-  
-//         // Find user data in the database
-//         const userData = await User.findOne({ email: email }).select();
-//         const AmbassadorData = await User.findOne({ referral_code: referral_code }).select('is_active');
-//         console.log("AmbassadorData", AmbassadorData);
-  
-//         // Check for incorrect data and add to incorrectData object
-//         if (!userData) {
-//           incorrectData.email = email;
-//         } 
-//         // else {
-//           // if (firstname !== userData.firstname) incorrectData.firstname = "Firstname does not match";
-//           // if (surname !== userData.surname) incorrectData.surname = "Surname does not match";
-//           // if (id_number !== userData.id_number) incorrectData.id_number = "ID number does not match";
-//           // if (email !== userData.email) incorrectData.email = "Email does not match";
-//         // }
-  
-//         if (AmbassadorData && AmbassadorData.is_active === false || AmbassadorData === null) {
-//           incorrectData.referral_code = referral_code;
-//         }
-  
-//         // Only add to incorrectDataArray if there are any incorrect fields
-//         if (Object.keys(incorrectData).length > 0) {
-//           incorrectDataArray.push(incorrectData );
-//           continue;
-//         }
-  
-//         // Proceed with further steps if no incorrect data found
-//         const userId = userData._id;
-  
-//         const existingReferral = await Referral.findOne({
-//           referral_code: referral_code,
-//           userId: userId,
-//         //   purchagedcourseId: { $ne: null }
-//         });
-  
-//         if (existingReferral) {
-//             emailExisted.email = email;
-//             console.log("emailExisted", emailExisted);
-//         };
-        
-//         if (Object.keys(emailExisted).length > 0) {
-//             emailExistedDataArray.push(emailExisted );
-//             console.log("emailExistedDataArray", emailExistedDataArray);
-//         continue;
-//         };
-          
-
-//         // Proceed with further steps if no incorrect data and existiing email found
-
-//         // const purchagedcourseData = await Purchasedcourses.find({ userId: userId }).select();
-//         // const purchagedcourseID = purchagedcourseData[0]._id;
-  
-//         const referralData = await Referral.create({
-//           referral_code: referral_code,
-//           userId: userId,
-//           is_active: true,
-//           is_linked_by_admin: true,
-//           // purchagedcourseId: { $ne: null }
-//         });
-  
-//         const createdReferralData = await referralData.save();
-//         allCreatedReferralData.push(createdReferralData);
-//         console.log("newReferralData", createdReferralData);
-//       }
-  
-//       if (incorrectDataArray.length > 0 || emailExistedDataArray.length > 0) {
-//         return [{incorrectData: incorrectDataArray}, {emailExistedData : emailExistedDataArray}];
-//       } else {
-//         return allCreatedReferralData;
-//       }
-  
-//     } catch (error) {
-//       console.error("Error:", error);
-//       return { status: 500, error: "Internal Server Error" };
-//     }
-//   };
-  
   
   /*****************************************************************************************/
   /*****************************************************************************************/
@@ -1566,27 +1473,6 @@ async function saveLinkedReferralCodeByAdmin(req) {
    *
    * @returns Object|null
    */
-//   async function getLinkedReferralCodeByAdmin() {
-//     try {
-//       const referralsData = await Referral.find({
-//         purchagedcourseId: { $eq: null },
-//         is_linked_by_admin: true,
-//       }).populate({
-//         path: 'userId',
-//         select: 'firstname surname id_number email referral_code',
-//       });
-      
-//       console.log("referralsData", referralsData);
-  
-//       return referralsData;
-  
-//     } catch (error) {
-//       console.error("Error:", error);
-//       return { status: 500, error: "Internal Server Error" };
-//     }
-//   };
-
-
   async function getLinkedReferralCodeByAdmin() {
     const query = {
         purchagedcourseId: { $eq: null },
@@ -2112,9 +1998,10 @@ async function getSubscriptionObject(subscription_token) {
 
 /*****************************************************************************************/
 /*****************************************************************************************/
+// This code is for testing purpose
 
 // cron.schedule('*/1 * * * *', () => {
-//     // cancelPayfastPayment();
+//     cancelPayfastPayment();
 //     console.log('Successfully triggered');
 // });
 
@@ -2148,7 +2035,7 @@ const getPaymentDetails = async (paymentId) => {
 
 
   async function cancelPayfastPayment() {
-    const token_generated = "4e244f9f-b23c-4a6f-9c22-9d8429c80b98"; 
+    const token_generated = "99d7164c-8c59-457d-8b3f-84dfa157393d"; 
       
     function generateTimestamp() {
       const now = new Date();
