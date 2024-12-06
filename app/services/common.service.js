@@ -775,6 +775,34 @@ async function sendQRCodeEmailByBrevo(template_id, receiverEmailId, receiverName
   }
 };
 
+const sendBrevoWhatsAppMessage = async () => {
+  try {
+    const response = await axios.post(
+      'https://api.brevo.com/v3/whatsapp/sendMessage',
+      {
+        templateId: 3,
+        senderNumber: 27607649732,
+        params: {
+          FNAME: "Test",
+          LNAME: "User"
+        },
+        contactNumbers: [917999017149]
+      },
+      {
+        headers: {
+          'accept': 'application/json',
+          'content-type': 'application/json',
+          'api-key': process.env.BREVO_KEY
+        }
+      }
+    );
+
+    console.log('Message Sent:', response.data);
+  } catch (error) {
+    console.error('Error sending message:', error.response?.data || error.message);
+  }
+};
+
 // cron.schedule('*/1 * * * *', async() => {
 //   // let response = await User.findById("67179b918f3401f3c76ec438").select("qr_code");
 //   // let base64Image = response.qr_code;

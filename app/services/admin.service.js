@@ -1382,7 +1382,7 @@ async function saveLinkedReferralCodeByAdmin(req) {
       const selfLinkedDataArray = [];
       const validEntries = [];
       const allCreatedReferralData = [];
-  
+        
       // Loop through each user object in req.body array
       for (const user of req.body) {
         const { email, referral_code } = user;
@@ -1396,8 +1396,8 @@ async function saveLinkedReferralCodeByAdmin(req) {
             role: { $in: ["subscriber", "ambassador"] },
           }).select();
         const AmbassadorData = await User.findOne({ referral_code: referral_code }).select('is_active');
-        // console.log("AmbassadorData", AmbassadorData);
         // console.log("userData", userData);
+        // console.log("AmbassadorData", AmbassadorData);
   
         // Check for incorrect data and add to incorrectData object
         if (!userData) {
@@ -1413,13 +1413,13 @@ async function saveLinkedReferralCodeByAdmin(req) {
         let existingReferral = '';
         if(userData){
             //Check if user is not Subscriber or Ambassador
-            if(userData.role == 'ambassador'){
+            // if(userData.role == 'ambassador'){
                 if(userData.referral_code === referral_code){
                     selfLinkedData.email = email;
                     selfLinkedData.referral_code = referral_code;
-                } else{
-                    selfLinkedData.email = email;
-                }
+                // } else{
+                    // selfLinkedData.email = email;
+                // }
             } else {
                 existingReferral = await Referral.findOne({
                     userId: userId,
@@ -1453,7 +1453,7 @@ async function saveLinkedReferralCodeByAdmin(req) {
       if (incorrectDataArray.length === 0 && emailExistedDataArray.length === 0 && selfLinkedDataArray.length === 0) {
         for (const validEntry of validEntries) {
           const { referral_code, userId } = validEntry;
-  
+
           const referralData = await Referral.create({
             referral_code: referral_code,
             userId: userId,
@@ -1522,15 +1522,17 @@ async function editLinkedReferralCodeByAdmin(req) {
         // if(userData && userData.role !== oldUserData.role){
         if(userData){
             //Check if user is not Subscriber or Ambassador
-            if(userData.role == 'ambassador' || userData.referral_code === referral_code){
+            // if(userData.role == 'ambassador' || userData.referral_code === referral_code){
+            if(userData.referral_code === referral_code){
                 selfLinkedData.email = email;
             } else {
                 existingReferral = await Referral.findOne({
                   userId: userId,
+                //   purchagedcourseId: { $ne: null },
                 });
                 console.log("existingReferral", existingReferral)
                 //Check if user is assigned any referral code
-                if(existingReferral){
+                if(existingReferral && existingReferral.purchagedcourseId !== null){
                     emailExistedData.email = email;
                 }
             }
@@ -1552,13 +1554,15 @@ async function editLinkedReferralCodeByAdmin(req) {
               console.log("createdReferralData", createdReferralData);
               return [createdReferralData];
         } else {
-            const response = await Referral.findOneAndUpdate(
-            { userId: userId },
-            { referral_code: referral_code },
-            { new: true }
-            );
-            console.log("Edited records:", response);
-            return [{editedData: response}];
+            // if(existingReferral.purchagedcourseId === null){
+                const response = await Referral.findOneAndUpdate(
+                { userId: userId },
+                { referral_code: referral_code },
+                { new: true }
+                );
+                console.log("Edited records:", response);
+                return [{editedData: response}];
+            // }
         }
   
     } catch (error) {
