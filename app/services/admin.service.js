@@ -1394,8 +1394,9 @@ async function saveLinkedReferralCodeByAdmin(req) {
         const userData = await User.findOne({
             email: email,
             role: { $in: ["subscriber", "ambassador"] },
+            is_active: true,
           }).select();
-        const AmbassadorData = await User.findOne({ referral_code: referral_code }).select('is_active');
+        const AmbassadorData = await User.findOne({ referral_code: referral_code, is_active: true }).select('is_active');
         // console.log("userData", userData);
         // console.log("AmbassadorData", AmbassadorData);
   
@@ -1500,8 +1501,9 @@ async function editLinkedReferralCodeByAdmin(req) {
         const userData = await User.findOne({
             email: email,
             role: { $in: ["subscriber", "ambassador"] },
+            is_active: true
           }).select();
-        const AmbassadorData = await User.findOne({ referral_code: referral_code }).select('is_active');
+        const AmbassadorData = await User.findOne({ referral_code: referral_code, is_active: true }).select('is_active');
 
         // Check for incorrect email
         if (!userData) {
