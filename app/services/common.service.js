@@ -776,9 +776,35 @@ async function sendQRCodeEmailByBrevo(template_id, receiverEmailId, receiverName
 };
 
 // cron.schedule('*/1 * * * *', async() => {
-//   await sendBrevoWhatsAppMessage();
+//   // await sendBrevoWhatsAppMessage();
+//   await sendBrevoWhatsAppMessageTesting();
 //   console.log('Successfully triggered');
 //   });
+
+const sendBrevoWhatsAppMessageTesting = async () => {
+  try {
+    const response = await axios.post(
+      'https://api.brevo.com/v3/whatsapp/sendMessage',
+      {
+        "senderNumber": "+27607649732",
+        "recipient": "+919893399778",
+        "text": "{{https://bit.ly/4gmQWzG}} This is a simple text message for testing. "
+      },
+      {
+        headers: {
+          'accept': 'application/json',
+          'content-type': 'application/json',
+          'api-key': process.env.BREVO_KEY
+        }
+      }
+    );
+
+    console.log('Message Sent:', response.data);
+  } catch (error) {
+    console.error('Error sending message:', error.response?.data || error.message);
+  }
+};
+
 
 const sendBrevoWhatsAppMessage = async () => {
   try {
@@ -909,9 +935,9 @@ async function saveMembershipSubscription(param) {
       "-plan_name -payment_mode -payment_status -amount -payment_cycle -is_recurring -userid -is_active"
     );
 
-    if (!res) return false;
-
-    const courseDatas = param.coursesData;
+    if (!res) return false; 
+                
+    const courseDatas = param.coursesData; 
 
     if (courseDatas && param.payment_status === 'success') {
       for (var i = 0; i < Object.keys(courseDatas).length; i++) {
@@ -948,111 +974,7 @@ async function saveMembershipSubscription(param) {
     console.log("Error", err);
     return false;
   }
-}
-
-// async function saveMembershipSubscription(param) {
-//   try {
-//     console.log("Param data: ", param)
-//     const referralCode = param.referralCode;
-
-//     const data = await Subscriptionpayment.findOneAndUpdate(
-//       { _id: param.id },
-//       {
-//         $set: {
-//           // role: "subscriber",
-//           plan_name: param.merchantData.item_name,
-//           subscription_type: param.merchantData.subscription_type,
-//           frequency: param.merchantData.frequency,
-//           billing_date: param.merchantData.billing_date,
-//           payment_mode: "Credit Card",
-//           payment_status: param.payment_status,
-//           amount: param.merchantData.amount,
-//           payment_cycle: param.merchantData.cycles,
-//           item_name: param.merchantData.item_name,
-//           item_description: param.merchantData.item_description,
-//           m_payment_id: param.merchantData.m_payment_id,
-//           is_recurring: param.is_recurring,
-//           userid: param.userid,
-//           is_active: param.is_active,
-//           // merchantData : JSON.stringify(param.merchantData),
-//           uuid: param.uuid,
-//         },
-//       },
-//       {
-//         new: true
-//       }
-//     );
-
-//     let userData = '';
-//     if(param.payment_status !== 'cancel'){
-//       userData = await User.findOneAndUpdate(
-//         { _id: param.userid },
-//         {
-//           $set: {
-//             role: "subscriber",
-//             subscription_date: new Date(),
-//           },
-//         },
-//         {
-//           new: true
-//         }
-//       );
-//       console.log('userData=', userData);
-//     };
-
-//     console.log('subscriberdata=',data);
-//     if (param.id) {
-//       let res = await Subscriptionpayment.findById(param.id).select(
-//         "-plan_name -payment_mode -payment_status -amount -payment_cycle -is_recurring -userid -is_active"
-//       );
-//       if (res) {
-//         let courseDatas = param.coursesData;
-
-//         if (courseDatas && param.payment_status === 'success') {
-//           for (var i = 0; i < Object.keys(courseDatas).length; i++) {
-//             const purchasedcourses = new Purchasedcourses({
-//               courseid: courseDatas[i].id, 
-//               orderid: data._id,
-//               quantity: courseDatas[i].quantity,
-//               userId: param.userid,
-//               course_title: courseDatas[i].title,
-//               course_price: courseDatas[i].price,
-//               paymentType: courseDatas[i].paymentType,
-//               image: courseDatas[i].image,
-//               course_category: "",
-//               is_active : param.is_active,
-//             });
-//             await purchasedcourses.save();
-//             console.log("purchasedcourses", purchasedcourses);
-
-//             const purchagedcourseId = purchasedcourses._id;
-
-//             //Set purchagedcourseId in Referral document in database
-//             if(referralCode){
-//               await emailToAmbassadorForReferralCode(param.userid, referralCode, purchagedcourseId);
-//             };
-//           }
-//         }else{
-//           console.log(" Payment is Cancelled")
-//         }
-
-//         const result = {
-//           data: res,
-//           userData: userData
-//         }
-//         return result;
-//       } else {
-//         return false;
-//       }
-//     } else {
-//       console.log("Error in res ")
-//       return false;
-//     }
-//   } catch (err) {
-//     console.log("Error", err);
-//     return false;
-//   }
-// };
+};
 
 /*****************************************************************************************/
 /*****************************************************************************************/
@@ -1511,6 +1433,11 @@ async function checkReferralCode(req) {
       return;
     };
 
+    const ambassadorData = await User.findOne({ referral_code: referralCode, is_active: true }).select('is_active');
+    if (!ambassadorData) {
+      return;
+    };
+
     const referralData = await Referral.create({
       referral_code: referralCode,
       userId: userId,
@@ -1547,20 +1474,20 @@ async function emailToAmbassadorForReferralCode(userId, referralCode, purchagedc
 
      // Check if ambassadorData is an empty array
     if (!ambassadorData.length) {
-      return ;
+      return;
     };
 
     const updateReferral = await Referral.findOneAndUpdate(
       { referral_code: referralCode, userId: userId},
       { $set: { purchagedcourseId:  purchagedcourseId} },
-      { 
+      {
         new: true, // return the updated document
         sort: { _id: -1 } // sort by _id in descending order to get the latest document
       }
     );
     console.log("updateReferral", updateReferral);
 
-    //For Brevo Email to AMBASSADOR       
+    //For Brevo Email to AMBASSADOR
       const variables = {
         SUBSCRIBER_FIRSTNAME: subscriber_firstname,
         SUBSCRIBER_LASTNAME: subscriber_surname
@@ -1858,7 +1785,7 @@ async function updateContactAttributeBrevoForQuery(email, firstname, surname, co
     let apiInstance = new SibApiV3Sdk.ContactsApi();
 
     let identifier = email; 
-    let updateContact = new SibApiV3Sdk.UpdateContact(); 
+    let updateContact = new SibApiV3Sdk.UpdateContact();
 
     updateContact.attributes = {'SUBSCRIBER_FIRSTNAME':firstname, 'SUBSCRIBER_LASTNAME':surname, 'CONTACT_NUMBER':contact_number, 'QUERY': query, 'QUERY_EMAIL': query_email};
 
