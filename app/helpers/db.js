@@ -4,4 +4,5 @@ module.exports = {
     Purchasedcourses: require('../models/purchasedcourses.model'),
     Userquery: require('../models/userquery.model'),
     Referral: require('../models/referral.model'),
+    Sed: require('../models/sed.model'),
 }

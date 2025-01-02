@@ -763,6 +763,5 @@ function getAmbassadorMonthlyPay(req, res, next) {
   commonService.getAmbassadorMonthlyPay(req)
       .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
       .catch(err => next(res.json({ status: false, message: err })))
-}
-
+};
 

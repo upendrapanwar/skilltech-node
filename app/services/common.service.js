@@ -36,6 +36,7 @@ const {
   Purchasedcourses,
   Userquery,
   Referral,
+  Sed,
 } = require("../helpers/db");
 
 let transporter = nodemailer.createTransport({
@@ -177,6 +178,7 @@ function sendMail(mailOptions) {
 //   }
 // }
 async function create(param) {
+  console.log("create param", param);
   try {
     if (await User.findOne({ email: param.email })) {
       throw 'email "' + param.email + '" is already taken';
@@ -255,7 +257,7 @@ async function authenticate({ email, password }) {
       updatedAt,
       social_accounts,
       ...userWithoutHash
-    } = user.toObject(); 
+    } = user.toObject();
     const token = jwt.sign({ id: user.id }, config.secret, {
       expiresIn: "2h",
     });
@@ -289,7 +291,6 @@ async function subscription(param) {
   //console.log('test',test);
 
   if (await User.findOne(whereCondition)) {
-    // console.log('testttt');
     result = await User.updateMany({ _id: param.uid }, [
       {
         $set: { 
@@ -311,7 +312,7 @@ async function subscription(param) {
             ecommercePolicy: param.ecommercePolicy,
             privacy: param.privacy,
             userConsent: param.userConsent,
-          }, 
+          },
           opt_in_promotional: {
             receive_monthly_newsletters: param.monthly_newsletters,
             exclusive_deals_promotions: param.deals_promotion,
@@ -333,26 +334,21 @@ async function subscription(param) {
         }, 
       },
     ]);
-    // console.log('user result',result);
+    console.log('user result',result);
 
     if (result) {
       let res = await User.findById(param.uid).select(
         "-password -community -social_accounts -reset_password -image_url -phone"
       );
-      // console.log('res=',res);
       if (res) {
-        // console.log(res);
         return res;
       } else {
-        //   console.log('else');
         return false;
       }
     } else {
-      // console.log('ifelse');
       return false;
     }
   } else {
-    //console.log('elseee');
     return false;
   }
 }
@@ -586,11 +582,11 @@ async function addContactInBrevo(ambassadorData) {
       ACCOUNT_NUMBER: ambassadorData.account_number,
       BRANCH_CODE: ambassadorData.branch_code
     };
-    apiInstance.createContact(createContact).then(function(data) {
-      console.log('API called successfully. Returned data: ' + JSON.stringify(data));
-    }, function(error) {
-      console.error(error);
-    });
+    
+    const data = await apiInstance.createContact(createContact);
+    console.log('API called successfully. Returned data: ' + JSON.stringify(data));
+    return data;
+
   } catch {
     console.log("Error in sending Brevo email:", error.message);
     return null;
@@ -763,7 +759,7 @@ async function sendQRCodeEmailByBrevo(template_id, receiverEmailId, receiverName
         name: "QRCode.png",
         type: "image/png"
       }] : []
-    };
+    };  
 
     const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
     console.log('API called successfully. Returned data: ' + JSON.stringify(data));
@@ -2260,7 +2256,7 @@ async function getActiveReferral(req) {
     .exec();
 
     console.log("activeReferral", activeReferral);
-     
+    
     if (activeReferral.length > 0) {
         const result = activeReferral.filter(data => data.userId !== null).map(data => {
           const formatDate = (dateString) => {

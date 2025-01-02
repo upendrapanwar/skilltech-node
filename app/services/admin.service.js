@@ -18,12 +18,13 @@ const path = require('path');
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const msg = require("../helpers/messages.json");
-const { User, Subscriptionpayment, Purchasedcourses, Referral } = require('../helpers/db');
+const { User, Subscriptionpayment, Purchasedcourses, Referral, Sed } = require('../helpers/db');
 const crypto = require("crypto");
 const { unsubscribe } = require('diagnostics_channel');
 const SibApiV3Sdk = require('sib-api-v3-sdk');
 const cron = require('node-cron');
 const axios = require('axios');
+const { Buffer } = require('buffer');
 
 module.exports = {
     agentSubscription,
@@ -48,12 +49,15 @@ module.exports = {
     getBulkPaymentReport,
     getConsolidatedInformationReport,
     getSubscriberManullyLinkedReport,
-
+    getSEDProgressReport, 
+    
     saveLinkedReferralCodeByAdmin,
     getLinkedReferralCodeByAdmin,
     editLinkedReferralCodeByAdmin,
     deleteLinkedReferralCodeByAdmin,
     submitLinkedReferralCodesByAdmin, 
+    saveSEDSubscribers,
+    sendSEDEmails,
 };
 
 /*****************************************************************************************/
@@ -1196,7 +1200,7 @@ async function getBulkPaymentReport(param) {
 async function getConsolidatedInformationReport(param) {
     try {
         let query = {
-            role: { $in: ['subscriber', 'ambassador'] }
+            // role: { $in: ['subscriber', 'ambassador'] }
         };
         if (param && param.start_date && param.end_date) {
             query.subscription_date = {
@@ -1206,10 +1210,12 @@ async function getConsolidatedInformationReport(param) {
         }
 
         const userData = await User.find(query)
-            .select("firstname surname id_number email mobile_number alternate_mobile_number province race gender bank account_number account_holder_name type_of_account bank_proof certificate role is_active referral_code subscription_date subscription_cancellation_date subscription_stopped_payment_date")
-            .exec();
-
-        console.log("userData", userData);
+        .select("firstname surname id_number email mobile_number alternate_mobile_number province race gender bank account_number account_holder_name type_of_account bank_proof certificate role is_active referral_code subscription_date subscription_cancellation_date subscription_stopped_payment_date is_sed_subscriber sed_data")
+        .populate({
+            path: "sed_id",
+            model: Sed,
+            select: "benefactor_name benefactor_email benefactor_contact_firstname benefactor_contact_surname benefactor_contact_mobile_number start_date_sponsored_subscription end_date_sponsored_subscription",
+        })
 
         // Filter out admin users
         const filteredData = userData.filter(data => data.role !== 'admin');
@@ -1218,9 +1224,8 @@ async function getConsolidatedInformationReport(param) {
         const filteredUserData = await Promise.all(filteredData.map(async data => {
             // Fetch referral data for linked ambassador
             const referralData = await Referral.find({ userId: data._id, purchagedcourseId: { $ne: null } }).select("referral_code").exec();
-            console.log("referralData for linked referral", referralData);
+            // console.log("referralData for linked referral", referralData);
             
-            // Add linked ambassador referral if found
             if (referralData && referralData.length > 0) {
                 data.linked_ambassador_referral = referralData[0].referral_code;
             } else {
@@ -1229,16 +1234,18 @@ async function getConsolidatedInformationReport(param) {
             return data;
         }));
 
-        // Helper function to format dates
         const formatDate = (dateString) => {
-            if (dateString !== null) {
-                const date = new Date(dateString);
-                const day = String(date.getDate()).padStart(2, '0');
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const year = date.getFullYear();
-                return `${day}-${month}-${year}`;
+            if (!dateString) {
+                return 'none';
             }
-            return 'none';
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+                return 'none';
+            }
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
         };
 
         // Map the user data to the required format
@@ -1258,7 +1265,7 @@ async function getConsolidatedInformationReport(param) {
             type_of_account: data.type_of_account || 'none',
             proof_of_banking_uploaded: data.bank_proof ? 'Y' : 'N',
             id_uploaded: data.certificate ? 'Y' : 'N',
-            role: data.role === 'ambassador' ? 'Ambassador' : 'Subscriber',
+            role: data.role === 'ambassador' ? 'Ambassador' : data.role === 'subscriber' ? 'Subscriber' : 'none',
             is_active: data.is_active ? 'Active' : 'Inactive',
             referral_code: data.referral_code || 'none',
             linked_to_ambassador_status: data.linked_ambassador_referral !== 'none' ? 'Y' : 'N',
@@ -1268,6 +1275,18 @@ async function getConsolidatedInformationReport(param) {
             unsubscribed_date: formatDate(data.subscription_cancellation_date),
             stopped_payment_status: data.subscription_stopped_payment_date ? 'Y' : 'N',
             stopped_payment_date: formatDate(data.subscription_stopped_payment_date),
+            benefactor_name: data.sed_id?.benefactor_name || 'none',
+            benefactor_email: data.sed_id?.benefactor_email || 'none',
+            benefactor_contact_firstname: data.sed_id?.benefactor_contact_firstname || 'none',
+            benefactor_contact_surname: data.sed_id?.benefactor_contact_surname || 'none',
+            benefactor_contact_mobile_number: data.sed_id?.benefactor_contact_mobile_number || 'none',
+            is_sed_subscriber: data.is_sed_subscriber ? 'Yes' : 'No',
+            twelve_months_subscription: data.sed_data?.twelve_months_subscription === true ? 'Yes' : 'No',
+            start_date_sponsored_subscription: formatDate(data.sed_id?.start_date_sponsored_subscription),
+            end_date_sponsored_subscription: formatDate(data.sed_id?.end_date_sponsored_subscription),
+            employement_status: data.sed_data?.employement_status || 'none',
+            consultant_ambassador_firstname: data.sed_data?.consultant_ambassador_firstname || 'none',
+            consultant_ambassador_surname: data.sed_data?.consultant_ambassador_surname || 'none',
         }));
 
         return result;
@@ -1363,6 +1382,675 @@ async function getSubscriberManullyLinkedReport(param) {
 
     return formattedData;
 };
+
+
+/**
+ * Function for SED Progress Report
+ *   
+ * @param {param} 
+ * @result null|Object
+ * 
+ */
+async function getSEDProgressReport(param) {
+    try {        
+        const query = { is_sed_subscriber: true };
+
+        if (param.start_date && param.end_date) {
+            query.createdAt = {
+                $gte: new Date(param.start_date),
+                $lte: new Date(param.end_date)
+            };
+        }
+
+        const sedAllData = await User.aggregate([
+            {
+                $match: query
+            },
+            {
+                $lookup: {
+                    from: "seds",
+                    localField: "sed_id",
+                    foreignField: "_id",
+                    as: "sedData"
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    sedData: 1,
+                    benefactor_name: { $arrayElemAt: ["$sedData.benefactor_name", 0] },
+                    firstname: "$firstname",
+                    lastname: "$surname",
+                    race: "$race",
+                    gender: "$gender",
+                    role: "$role",
+                    referral_code: {
+                        $cond: {
+                            if: { $ne: ["$referral_code", ''] },
+                            then: "$referral_code",
+                            else: "none"
+                        }
+                    },
+                    is_active: "$sed_data.sed_status",
+                    // is_active: {
+                    //     $cond: {
+                    //         if: { $eq: ["$is_active", true] },
+                    //         then: "Active",
+                    //         else: "Inactive"
+                    //     }
+                    // },
+                    is_sed_subscriber: {
+                        $cond: {
+                            if: { $eq: ["$is_sed_subscriber", true] },
+                            then: "Yes",
+                            else: "No"
+                        }
+                    },
+                    twelve_months_subscription: {
+                        $cond: {
+                            if: { $eq: ["$sed_data.twelve_months_subscription", true] },
+                            then: "Yes",
+                            else: "No"
+                        }
+                    },
+                    start_date_sponsored_subscription: { $arrayElemAt: ["$sedData.start_date_sponsored_subscription", 0] },
+                    end_date_sponsored_subscription: { $arrayElemAt: ["$sedData.end_date_sponsored_subscription", 0] },
+                    employement_status: "$sed_data.employement_status",
+                    is_linked_to_consultant_ambassador: {
+                        $cond: {
+                            if: { $and: [{ $ne: ["$sed_data.consultant_ambassador_firstname", ""] }, { $ne: ["$sed_data.consultant_ambassador_surname", ""] }] },
+                            then: "Yes",
+                            else: "No"
+                        }
+                    },
+                    consultant_ambassador_firstname: "$sed_data.consultant_ambassador_firstname",
+                    consultant_ambassador_surname: "$sed_data.consultant_ambassador_surname",
+                    consultant_ambassador_referral_code: "$sed_data.consultant_ambassador_referral_code",
+                }
+            },
+            { $sort: { createdAt: 1 } }
+        ]).exec();
+        console.log("SED sedAllData: ", sedAllData);
+
+        const formatDate = (dateString) => {
+            if (!dateString) return null;
+            const date = new Date(dateString);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+        };
+
+        const formattedData = sedAllData.map(data => ({
+            ...data,
+            start_date_sponsored_subscription: formatDate(data.start_date_sponsored_subscription),
+            end_date_sponsored_subscription: formatDate(data.end_date_sponsored_subscription)
+        }));
+
+        console.log("SED formattedData: ", formattedData);
+
+        return formattedData;
+    } catch (error) {
+        console.error("Error:", error);
+        return { status: 500, error: "Internal Server Error" };
+    }
+}
+
+
+/**
+ * Function for saving SED Subscriber data
+ *
+ * @param {param}
+ *
+ * @returns Object|null
+ */
+async function saveSEDSubscribers(req) {
+  try {
+    const subscribersData = req.body;
+    console.log("Subscribers data: ", subscribersData);
+
+    if (!Array.isArray(subscribersData) || subscribersData.length === 0) {
+      throw new Error("Invalid input: Expected an array of subscriber objects.");
+    }
+
+    // Create SED Benefactors data
+    const savedBenefactor = [];
+    for (const benefactor of subscribersData) {
+        let benefactorEmail;
+        if (typeof benefactor.benefactorEmail === "string") {
+            benefactorEmail = benefactor.benefactorEmail;
+        } else if (
+            typeof benefactor.benefactorEmail === "object" &&
+            typeof benefactor.benefactorEmail.text === "string"
+        ) {
+            benefactorEmail = benefactor.benefactorEmail.text;
+        } else {
+            throw new Error(`Invalid email format for subscriber: ${JSON.stringify(benefactor)}`);
+        }
+
+        // Use the extracted email string in the query
+        const existingBenefactor = await Sed.findOne({
+        benefactor_email: benefactorEmail,
+        });
+
+      console.log("existingBenefactor", existingBenefactor);
+
+      if (!existingBenefactor) {
+        const sed_benefactor = new Sed({
+          benefactor_name: benefactor.benefactorName,
+          benefactor_email: benefactor.benefactorEmail,
+          benefactor_contact_firstname: benefactor.consultantAmbassadorFirstname,
+          benefactor_contact_surname: benefactor.benefactorContactSurname,
+          benefactor_contact_mobile_number: benefactor.benefactorMobile,
+          start_date_sponsored_subscription: new Date(),
+          end_date_sponsored_subscription: (() => {
+            const startDate = new Date();
+            const endDate = new Date(startDate);
+            endDate.setFullYear(endDate.getFullYear() + 1);
+            return endDate;
+          })(),
+        });
+
+        const sedBenefactors = await sed_benefactor.save();
+        savedBenefactor.push(sedBenefactors);
+      }
+    }
+    console.log("savedSedBenefactors", savedBenefactor);
+
+
+    // Create SED Subscribers
+    const users = [];
+    for (const subscriber of subscribersData) {
+      let email;
+      if (typeof subscriber.email === "string") {
+        email = subscriber.email;
+      } else if (
+        typeof subscriber.email === "object" &&
+        typeof subscriber.email.text === "string"
+      ) {
+        email = subscriber.email.text;
+      } else {
+        throw new Error(`Invalid email format for subscriber: ${JSON.stringify(subscriber)}`);
+      }
+
+      const benefactor = await Sed.findOne({
+        benefactor_email: subscriber.benefactorEmail,
+      });
+      const benefactorId = benefactor._id;
+
+      users.push(
+        new User({
+          firstname: subscriber.firstname,
+          surname: subscriber.surname,
+          id_number: subscriber.id_number,
+          email: email,
+          mobile_number: subscriber.mobile_number,
+          alternate_mobile_number: subscriber.alternate_mobile_number,
+          street: subscriber.street,
+          street_name: subscriber.street_name,
+          complex_n_unit: subscriber.complex_n_unit,
+          suburb_district: subscriber.suburb_district,
+          town_city: subscriber.town_city,
+          province: subscriber.province,
+          postal_code: subscriber.postal_code,
+          method_of_communication: subscriber.method_of_communication,
+          policy_consent: {
+            ecommercePolicy: subscriber.ecommercePolicy,
+            privacy: subscriber.privacy,
+            userConsent: subscriber.userConsent,
+          },
+          opt_in_promotional: {
+            receive_monthly_newsletters: subscriber.monthly_newsletters,
+            exclusive_deals_promotions: subscriber.deals_promotion,
+            keep_in_loop: subscriber.in_loop,
+          },
+          race: subscriber.race,
+          gender: subscriber.gender,
+          qualification: subscriber.qualification,
+          promotional_consent: subscriber.promotional_consent,
+          how_did_you_hear_about_us: subscriber.how_did_you_hear_about_us,
+          authname: subscriber.firstname + " " + subscriber.surname,
+          password: bcrypt.hashSync("HighV1sta!Guild2024", 10),
+          role: "subscriber",
+          isActive: true,
+          is_blocked: false,
+          subscription_date: new Date(),
+          is_sed_subscriber: true,
+          sed_id: benefactorId,
+          moodle_pass: Buffer.from("HighV1sta!Guild2024").toString('base64'),
+          sed_data: {
+            sed_status: "Active",
+            employement_status: subscriber.employment_status,
+            consultant_ambassador_firstname: subscriber.consultantAmbassadorFirstname,
+            consultant_ambassador_surname: subscriber.consultantAmbassadorSurname,
+            consultant_ambassador_referral_code: subscriber.consultantAmbassadorRerralCode,
+            twelve_months_subscription: true,
+          },
+        })
+      );
+    }
+
+    const savedUsers = await User.insertMany(users);
+    console.log("savedUsers", savedUsers)
+
+    if(savedUsers){
+        for (const user of savedUsers) {
+            const user_id = user._id;
+            const userId = user_id.toString();
+            handleMoodleCreateUser(user.firstname, user.surname, user.email, user.moodle_pass, userId);
+        }
+    }
+
+    return {
+      subscribers_data: savedUsers,
+      benefactors_data: savedBenefactor,
+    };
+  } catch (err) {
+    console.error("Error", err);
+    return {
+      error: true,
+      message: err.message,
+    };
+  }
+};
+
+async function handleMoodleCreateUser(firstname, surname, email, moodle_pass, user_id){
+    const MOODLE_URL = process.env.MOODLE_COURSES_URL;
+    const MOODLE_TOKEN = process.env.MOODLE_TOKEN;
+    const MOODLE_CREATE_FUNCTION = 'core_user_create_users';
+    const MOODLE_GET_COURSES_FUNCTION = 'core_course_get_courses_by_field';
+    const MOODLE_ENROLL_FUNCTION = 'enrol_manual_enrol_users';
+    const MOODLE_GET_USER_FUNCTION = 'core_user_get_users_by_field';
+    const CATEGORY_ID = '26';
+    const ROLE_ID = 5;
+    let moodleLoginId = '';
+    
+    // Generate base username
+    let baseUsername = `${firstname.split(' ').join('_').toLowerCase()}_${surname.split(' ').join('_').toLowerCase()}`;
+    let username = baseUsername;
+    let userExists = true;
+    let suffix = 1;
+  
+    try {
+      // Step 1: Check if the username already exists in Moodle
+      while (userExists) {
+        const checkUserResponse = await axios.post(MOODLE_URL, null, {
+          params: {
+            wstoken: MOODLE_TOKEN,
+            moodlewsrestformat: 'json',
+            wsfunction: MOODLE_GET_USER_FUNCTION,
+            field: 'username',
+            values: [username],
+          },
+        });
+  
+        if (checkUserResponse.data.length) {
+          username = `${baseUsername}${suffix}`;
+          suffix++;
+        } else {
+          userExists = false;
+        }
+      }
+      console.log('Final unique username:', username);
+  
+      // Step 2: Create user in Moodle
+      const createUserResponse = await axios.post(MOODLE_URL, null, {
+        params: {
+          wstoken: MOODLE_TOKEN,
+          moodlewsrestformat: 'json',
+          wsfunction: MOODLE_CREATE_FUNCTION,
+          users: [
+            {
+              username: username,
+              email: email,
+              password: Buffer.from(moodle_pass, 'base64').toString('utf-8'),
+              firstname: firstname,
+              lastname: surname,
+            },
+          ],
+        },
+      });
+  
+      if (createUserResponse.data && createUserResponse.data[0]) {
+        moodleLoginId = createUserResponse.data[0].id;
+        console.log('User created with moodleLoginId:', moodleLoginId);
+      } else {
+        console.error('Failed to create user in Moodle.');
+        return;
+      }
+  
+      // Step 3: Get all courses in the category
+      const getCoursesResponse = await axios.post(MOODLE_URL, null, {
+        params: {
+          wstoken: MOODLE_TOKEN,
+          moodlewsrestformat: 'json',
+          wsfunction: MOODLE_GET_COURSES_FUNCTION,
+          field: 'category',
+          value: CATEGORY_ID,
+        },
+      });
+  
+      const courses = getCoursesResponse.data.courses || [];
+      console.log('Courses in category:', courses);
+  
+      if (!courses.length) {
+        console.error('No courses found in this category.');
+        return;
+      }
+  
+      // Step 4: Enroll the user in all courses within the category
+      const enrolments = courses.map(course => ({
+        roleid: ROLE_ID,
+        userid: moodleLoginId,
+        courseid: course.id,
+      }));
+  
+      const enrollResponse = await axios.post(MOODLE_URL, null, {
+        params: {
+          wstoken: MOODLE_TOKEN,
+          moodlewsrestformat: 'json',
+          wsfunction: MOODLE_ENROLL_FUNCTION,
+          enrolments: enrolments,
+        },
+      });
+      console.log('User enrolled in all courses in category:', enrollResponse.data);
+
+      // Step 5: Save Moodle Id in the database
+      const data = await User.findOneAndUpdate(
+        { _id: user_id },
+        {
+            $set: { moodle_login_id: moodleLoginId, },
+        },
+        { new: true }
+        );
+        console.log("data: ", data);
+  
+    } catch (error) {
+      console.error('Error:', error.response ? error.response.data : error.message);
+    }
+  };
+
+
+
+/**
+ * Function for sending SED Subscriber and Benefactor
+ *   
+ * @param {param} 
+ * @result null|Object
+ * 
+ */
+async function sendSEDEmails(req) {
+    try {
+        const emailsData = req.body;
+        console.log("sendSEDEmails data: ", emailsData);
+
+          const endDate = () => {
+            const startDate = new Date();
+            const endDate = new Date(startDate);
+            endDate.setFullYear(endDate.getFullYear() + 1);
+            return formatDate(endDate);
+          }
+
+          const formatDate = (dateString) => {
+            if (!dateString) return null;
+            const date = new Date(dateString);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        };
+        
+        const currentDate = new Date();
+        const benefactorAllEmailsArray = emailsData.map(item => ({
+            benefactorName: item.benefactorName,
+            benefactorEmail: item.benefactorEmail,
+            start_date: formatDate(currentDate),
+            end_date: endDate()
+        }));
+        
+        const benefactorArray = Array.from(
+            // Check to ensure uniqueness of benefactor email
+            benefactorAllEmailsArray.reduce((map, item) => {
+                if (!map.has(item.benefactorEmail)) {
+                    map.set(item.benefactorEmail, item);
+                }
+                return map;
+            }, new Map()).values()
+        ); 
+        console.log('Benefactor Array:', benefactorArray);
+        
+        //Benefactor Confirmation Email
+        for (const benefactor of benefactorArray) {
+            const benefactorData = {
+                email: benefactor.benefactorEmail,
+                firstname: benefactor.benefactorName,
+                surname: benefactor.start_date,
+                referral_code: benefactor.end_date,
+                bank: '',
+                branch:'',
+                type_of_account:'',
+                account_number:'',
+                branch_code:''
+            }
+            const create_contact = await commonService.addContactInBrevo(benefactorData);
+            let sendBenefactorEmail;
+            const benefactorName = benefactor.benefactorName;
+            const benefactorEmail = benefactor.benefactorEmail;
+            if(create_contact){
+                sendBenefactorEmail = await commonService.sendEmailByBrevo(90, benefactorEmail, benefactorName);
+            }
+            if(sendBenefactorEmail){
+                await commonService.deleteContactBrevo(benefactorEmail);
+            }
+        }
+
+        //Subscriber Welcome Email
+        const subscriberArray = emailsData.map(item => ({
+            email: item.email,
+            subscriberName: item.firstname +' '+ item.surname,
+            benefactorName: item.benefactorName,
+        }));
+        console.log('Subscriber Array:', subscriberArray);
+        
+        for (const subscriber of subscriberArray) {
+            const subscriberData = {
+                email: subscriber.email,
+                firstname: subscriber.benefactorName,
+                surname: '',
+                referral_code: '',
+                bank: '',
+                branch:'',
+                type_of_account:'',
+                account_number:'',
+                branch_code:''
+            }
+            const createContact = await commonService.addContactInBrevo(subscriberData);
+            let sendSubscriberEmail;
+            const subscriberName = subscriber.subscriberName;
+            const subscriberEmail = subscriber.email;
+            if(createContact){
+                sendSubscriberEmail = await commonService.sendEmailByBrevo(89, subscriberEmail, subscriberName);
+            }
+            if(sendSubscriberEmail){
+                await commonService.deleteContactBrevo(subscriberEmail); 
+            }
+        }
+
+        return true;
+
+    } catch (error) {
+      console.error('Error in sending SED Emails:', error);
+    }
+  };
+
+  /**
+   * Function for SED grant Expiration check
+   *   
+   * @param {param} 
+   * @result null|Object
+   * 
+   */
+cron.schedule('0 0 * * *', async () => { 
+    console.log("Running daily cron job at midnight");
+
+    // Benefactor Expiring Subscription Email
+    const today = new Date();
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + 60);
+
+    const sed_data = await Sed.find({
+        is_notified: false,
+        end_date_sponsored_subscription: {
+            $gte: today,
+            $lte: targetDate
+        }
+    }).exec();
+    console.log("sed_data: ", sed_data);
+
+    for (const data of sed_data) {
+        const benefactorName = data.benefactor_name;
+        const benefactorEmail = data.benefactor_email;
+        console.log("benefactorName: ", benefactorName);
+        console.log("userDataArray: ", benefactorEmail);
+        await commonService.sendEmailByBrevo(91, benefactorEmail, benefactorName);
+
+        const sedData = await Sed.findOneAndUpdate(
+            { _id: data._id },
+            {
+                $set: { is_notified: true },
+            },
+            { new: true }
+        );
+        console.log("data: ", sedData);
+    }
+        
+    // When Subscriber's SED Subscription ends
+    const userDataArray = await User.find({
+        is_sed_subscriber: true,
+        "sed_data.sed_status": "Active"
+    })
+    .populate({
+        path: 'sed_id',
+        select: 'benefactor_name benefactor_email start_date_sponsored_subscription end_date_sponsored_subscription',
+        options: {
+            sort: { createdAt: 1 }
+        }
+    })
+    .exec();
+    console.log("userDataArray: ", userDataArray);
+
+    const formatDate = (dateString) => {
+        if (!dateString) return null;
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    };
+
+    
+    for (const userData of userDataArray) {
+        const currentDate = new Date();
+        if (currentDate > userData.sed_id.end_date_sponsored_subscription) {
+            const subscriberData = {
+                email: userData.email,
+                firstname: userData.firstname,
+                surname: userData.surname,
+                referral_code: formatDate(userData.sed_id.end_date_sponsored_subscription),
+                bank: '',
+                branch:'',
+                type_of_account:'',
+                account_number:'',
+                branch_code:''
+            }
+            console.log("subscriberData: ", subscriberData);
+            const createContact = await commonService.addContactInBrevo(subscriberData);
+            let sendSubscriberEmail;
+            const subscriberName = userData.firstname +" "+ userData.surname;
+            const subscriberEmail = userData.email;
+            if(createContact){
+                sendSubscriberEmail = await commonService.sendEmailByBrevo(92, subscriberEmail, subscriberName);
+            }
+            if(sendSubscriberEmail){
+                await commonService.deleteContactBrevo(subscriberEmail); 
+            }
+        
+            const data = await User.findOneAndUpdate(
+                { email: userData.email },
+                {
+                    $set: { "sed_data.sed_status": "Pending" },
+                },
+                { new: true }
+            );
+            console.log("data: ", data);
+
+            await handleMoodleUserDeletion(userData.moodleLoginId)
+        };
+
+        async function handleMoodleUserDeletion(moodleLoginId) {
+            const MOODLE_URL = process.env.MOODLE_COURSES_URL;
+            const MOODLE_TOKEN = process.env.MOODLE_TOKEN;
+            const MOODLE_DELETE_FUNCTION = 'core_user_delete_users';
+        
+            try {
+                const response = await axios.post(MOODLE_URL, null, {
+                    params: {
+                        wstoken: MOODLE_TOKEN,
+                        moodlewsrestformat: 'json',
+                        wsfunction: MOODLE_DELETE_FUNCTION,
+                        userids: [moodleLoginId],
+                    },
+                });
+        
+                if (response.data.error) {
+                    console.error('Moodle API Error:', response.data.error);
+                } else {
+                    console.log('Moodle user deleted successfully:', response.data);
+                }
+            } catch (error) {
+                console.error('Error deleting Moodle user:', error.message);
+            }
+        }
+
+        //When Subscriber's SED Subscription expiry period extend more than 30 days
+        const pendingUserDataArray = await User.find({
+            is_sed_subscriber: true,
+            "sed_data.sed_status": "Pending"
+        })
+        .populate({
+            path: 'sed_id',
+            select: 'benefactor_name benefactor_email start_date_sponsored_subscription end_date_sponsored_subscription',
+            options: {
+                sort: { createdAt: 1 }
+            }
+        })
+        .exec();
+        console.log("pendingUserDataArray: ", pendingUserDataArray);
+        
+        for (const pendingUser of pendingUserDataArray) {
+            const currentDate = new Date();
+            const endDate = new Date(pendingUser.sed_id.end_date_sponsored_subscription); // Ensure endDate is a Date object
+            const diffInDays = Math.floor((endDate - currentDate) / (1000 * 60 * 60 * 24)); // Calculate days difference
+            console.log("endDate: ", endDate);
+            console.log("diffInDays: ", diffInDays);
+            
+            if (diffInDays > 30) {
+                const data = await User.findOneAndUpdate(
+                    { email: pendingUser.email },
+                    {
+                        $set: {
+                        is_active: false,
+                        "sed_data.sed_status": "Inactive"
+                        },
+                    },
+                    { new: true }
+                );
+                console.log("pendingUser updated data: ", data);
+            }
+        }
+    }
+    });
+
 
 /*****************************************************************************************/
 /*****************************************************************************************/
@@ -1495,7 +2183,7 @@ async function editLinkedReferralCodeByAdmin(req) {
       const selfLinkedData = {};
   
         const { email, referral_code, old_email } = req.body;
-        console.log("req.body", req.body)
+        console.log("req.body", req.body);
   
         // Find user data in the database
         const userData = await User.findOne({
@@ -2234,5 +2922,4 @@ const getPaymentDetails = async (paymentId) => {
     }
   };
 
-  
   

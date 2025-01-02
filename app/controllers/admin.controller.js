@@ -39,6 +39,8 @@ router.get('/consolidated-information-report', getAllConsolidatedInformationRepo
 router.get('/consolidated-information-report/:start_date/:end_date', getConsolidatedInformationReport);
 router.get('/subscriber-manually-linked-report', getAllSubscriberManullyLinkedReport);
 router.get('/subscriber-manually-linked-report/:start_date/:end_date', getSubscriberManullyLinkedReport);
+router.get('/sed-progress-report', getAllSEDProgressReport);
+router.get('/sed-progress-report/:start_date/:end_date', getSEDProgressReport);
 
 router.post('/varify-email-forgot-password/:id', varifyEmailForgotPassword);
 router.post('/forgot-password', forgotPassword);
@@ -47,6 +49,8 @@ router.get('/get-linked-referral-by-admin', getLinkedReferralCodeByAdmin);
 router.post('/edit-linked-referral-by-admin', editLinkedReferralCodeByAdmin);
 router.post('/delete-linked-referral-by-admin', deleteLinkedReferralCodeByAdmin);
 router.post('/submit-linked-referral-by-admin', submitLinkedReferralCodesByAdmin);
+router.post('/save-sed-subscriber', saveSEDSubscribers);
+router.post('/send-sed-emails', sendSEDEmails);
 
 
 module.exports = router;
@@ -489,6 +493,25 @@ function getSubscriberManullyLinkedReport(req, res, next) {
         .catch(err => next(res.json({ status: false, message: err })));
 
 };
+/**
+ * Function for getting SED Progress Report
+ * @param {*} req 
+ * @param {*} res
+ * @param {*} next
+ * 
+ */
+function getAllSEDProgressReport(req, res, next) {
+    adminService.getSEDProgressReport(req.params)
+        .then(responseData => responseData ? res.status(200).json({ status: true, data: responseData }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })));
+
+}
+function getSEDProgressReport(req, res, next) {
+    adminService.getSEDProgressReport(req.params)
+        .then(responseData => responseData ? res.status(200).json({ status: true, data: responseData }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })));
+
+};
 
 
 /**
@@ -593,4 +616,33 @@ function saveLinkedReferralCodeByAdmin(req, res, next) {
         .catch(err => next(res.json({ status: false, message: err })))
   }
   
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function for saving SED Subscriber data
+ * @param {*} req 
+ * @param {*} res  
+ * @param {*} next
+ *                  
+ */
+function saveSEDSubscribers(req, res, next) {
+    adminService.saveSEDSubscribers(req)
+        .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })))
+  };
 
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function for sending SED emails to Subscriber and benefactor
+ * @param {*} req 
+ * @param {*} res  
+ * @param {*} next
+ *                  
+ */
+function sendSEDEmails(req, res, next) {
+    adminService.sendSEDEmails(req)
+        .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })))
+  }
