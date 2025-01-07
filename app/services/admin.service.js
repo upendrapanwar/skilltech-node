@@ -1466,6 +1466,9 @@ async function getSEDProgressReport(param) {
                     consultant_ambassador_firstname: "$sed_data.consultant_ambassador_firstname",
                     consultant_ambassador_surname: "$sed_data.consultant_ambassador_surname",
                     consultant_ambassador_referral_code: "$sed_data.consultant_ambassador_referral_code",
+                    course_started: "none",
+                    course_completed: "none",
+                    course_completion_percentage: "0%"
                 }
             },
             { $sort: { createdAt: 1 } }
