@@ -1654,6 +1654,71 @@ async function saveSEDSubscribers(req) {
   }
 };
 
+// cron.schedule('*/1 * * * *', async () => {
+//     // handleMoodleCreateUser("Aaashish", "Mishraaaa", "assshish@gmail.com", "VGVzdGluZ0AxMjM0NQ==", "12345")
+    
+//     const MOODLE_URL = process.env.MOODLE_COURSES_URL;
+//     const MOODLE_TOKEN = process.env.MOODLE_TOKEN;
+//     const MOODLE_GET_COURSES_FUNCTION = 'core_course_get_courses_by_field';
+//     const MOODLE_ENROLL_FUNCTION = 'enrol_manual_enrol_users';
+//     const CATEGORY_ID = '26';
+//     const ROLE_ID = 5;
+//     // Step 3: Get all courses in the category
+//     const getCoursesResponse = await axios.post(MOODLE_URL, null, {
+//         params: {
+//           wstoken: MOODLE_TOKEN,
+//           moodlewsrestformat: 'json',
+//           wsfunction: MOODLE_GET_COURSES_FUNCTION,
+//           field: 'category',
+//           value: CATEGORY_ID,
+//         },
+//       });
+  
+//       const courses = getCoursesResponse.data.courses || [];
+//       console.log('Courses in category:', courses.length);
+  
+//       if (!courses.length) {
+//         console.error('No courses found in this category.');
+//         return;
+//       }
+  
+//       // Step 4: Enroll the user in all courses within the category
+//     const enrolments = courses.map(course => ({
+//         roleid: ROLE_ID,
+//         userid: "457",
+//         courseid: course.id,
+//       }));
+//       console.log("enrolments: ", enrolments);
+
+//       const params = {
+//         wstoken: MOODLE_TOKEN,
+//         moodlewsrestformat: 'json',
+//         wsfunction: MOODLE_ENROLL_FUNCTION,
+//       };
+      
+//       // Add each enrolment object to the params
+//       enrolments.forEach((enrolment, index) => {
+//         params[`enrolments[${index}][roleid]`] = enrolment.roleid;
+//         params[`enrolments[${index}][userid]`] = enrolment.userid;
+//         params[`enrolments[${index}][courseid]`] = enrolment.courseid;
+//       });
+      
+//       const enrollResponse = await axios.post(MOODLE_URL, null, { params });
+//       console.log('User enrolled in all courses in category:', enrollResponse.data);
+  
+//     //   const enrollResponse = await axios.post(MOODLE_URL, null, {
+//     //     params: {
+//     //       wstoken: MOODLE_TOKEN,
+//     //       moodlewsrestformat: 'json',
+//     //       wsfunction: MOODLE_ENROLL_FUNCTION,
+//     //       enrolments: enrolments,
+//     //     },
+//     //   });
+//     //   console.log('User enrolled in all courses in category:', enrollResponse.data);
+// });
+
+
+
 async function handleMoodleCreateUser(firstname, surname, email, moodle_pass, user_id){
     const MOODLE_URL = process.env.MOODLE_COURSES_URL;
     const MOODLE_TOKEN = process.env.MOODLE_TOKEN;
@@ -1731,7 +1796,7 @@ async function handleMoodleCreateUser(firstname, surname, email, moodle_pass, us
       });
   
       const courses = getCoursesResponse.data.courses || [];
-      console.log('Courses in category:', courses);
+      console.log('Courses in category:', courses.length);
   
       if (!courses.length) {
         console.error('No courses found in this category.');
@@ -1755,7 +1820,7 @@ async function handleMoodleCreateUser(firstname, surname, email, moodle_pass, us
       });
       console.log('User enrolled in all courses in category:', enrollResponse.data);
 
-      // Step 5: Save Moodle Id in the database
+    //   Step 5: Save Moodle Id in the database
       const data = await User.findOneAndUpdate(
         { _id: user_id },
         {
@@ -1809,20 +1874,27 @@ async function sendSEDEmails(req) {
         }));
         
         const benefactorArray = Array.from(
-            // Check to ensure uniqueness of benefactor email
             benefactorAllEmailsArray.reduce((map, item) => {
-                if (!map.has(item.benefactorEmail)) {
-                    map.set(item.benefactorEmail, item);
+                const email = typeof item.benefactorEmail === 'object' 
+                    ? item.benefactorEmail.text 
+                    : item.benefactorEmail;
+        
+                if (!map.has(email)) {
+                    map.set(email, item);
                 }
                 return map;
             }, new Map()).values()
-        ); 
+        );
         console.log('Benefactor Array:', benefactorArray);
         
         //Benefactor Confirmation Email
         for (const benefactor of benefactorArray) {
+            console.log("benefactor for testing: ", benefactor);
+            const benefactor_email = typeof benefactor.benefactorEmail === 'object' ? benefactor.benefactorEmail.text : benefactor.benefactorEmail;
+            console.log("benefactor_email: ", benefactor_email);
             const benefactorData = {
-                email: benefactor.benefactorEmail,
+                // email: benefactor.benefactorEmail,
+                email: benefactor_email,
                 firstname: benefactor.benefactorName,
                 surname: benefactor.start_date,
                 referral_code: benefactor.end_date,
@@ -1835,7 +1907,7 @@ async function sendSEDEmails(req) {
             const create_contact = await commonService.addContactInBrevo(benefactorData);
             let sendBenefactorEmail;
             const benefactorName = benefactor.benefactorName;
-            const benefactorEmail = benefactor.benefactorEmail;
+            const benefactorEmail = benefactor_email;
             if(create_contact){
                 sendBenefactorEmail = await commonService.sendEmailByBrevo(90, benefactorEmail, benefactorName);
             }
@@ -1853,8 +1925,12 @@ async function sendSEDEmails(req) {
         console.log('Subscriber Array:', subscriberArray);
         
         for (const subscriber of subscriberArray) {
+            console.log("subscriber for testing: ", subscriber);
+            const subscriber_email = typeof subscriber.email === 'object' ? subscriber.email.text : subscriber.email;
+            console.log("subscriber_email: ", subscriber_email);
             const subscriberData = {
-                email: subscriber.email,
+                // email: subscriber.email,
+                email: subscriber_email,
                 firstname: subscriber.benefactorName,
                 surname: '',
                 referral_code: '',
@@ -1867,12 +1943,12 @@ async function sendSEDEmails(req) {
             const createContact = await commonService.addContactInBrevo(subscriberData);
             let sendSubscriberEmail;
             const subscriberName = subscriber.subscriberName;
-            const subscriberEmail = subscriber.email;
+            const subscriberEmail = subscriber_email;
             if(createContact){
                 sendSubscriberEmail = await commonService.sendEmailByBrevo(89, subscriberEmail, subscriberName);
             }
             if(sendSubscriberEmail){
-                await commonService.deleteContactBrevo(subscriberEmail); 
+                await commonService.deleteContactBrevo(subscriberEmail);
             }
         }
 
@@ -1890,7 +1966,7 @@ async function sendSEDEmails(req) {
    * @result null|Object
    * 
    */
-cron.schedule('0 0 * * *', async () => { 
+cron.schedule('0 0 * * *', async () => {
     console.log("Running daily cron job at midnight");
 
     // Benefactor Expiring Subscription Email
