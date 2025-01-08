@@ -1519,21 +1519,11 @@ async function saveSEDSubscribers(req) {
     // Create SED Benefactors data
     const savedBenefactor = [];
     for (const benefactor of subscribersData) {
-        let benefactorEmail;
-        if (typeof benefactor.benefactorEmail === "string") {
-            benefactorEmail = benefactor.benefactorEmail;
-        } else if (
-            typeof benefactor.benefactorEmail === "object" &&
-            typeof benefactor.benefactorEmail.text === "string"
-        ) {
-            benefactorEmail = benefactor.benefactorEmail.text;
-        } else {
-            throw new Error(`Invalid email format for subscriber: ${JSON.stringify(benefactor)}`);
-        }
+        let benefactor_email = typeof benefactor.benefactorEmail === 'object' ? benefactor.benefactorEmail.text : benefactor.benefactorEmail;
 
         // Use the extracted email string in the query
         const existingBenefactor = await Sed.findOne({
-        benefactor_email: benefactorEmail,
+        benefactor_email: benefactor_email,
         });
 
       console.log("existingBenefactor", existingBenefactor);
@@ -1541,7 +1531,7 @@ async function saveSEDSubscribers(req) {
       if (!existingBenefactor) {
         const sed_benefactor = new Sed({
           benefactor_name: benefactor.benefactorName,
-          benefactor_email: benefactor.benefactorEmail,
+          benefactor_email: benefactor_email,
           benefactor_contact_firstname: benefactor.consultantAmbassadorFirstname,
           benefactor_contact_surname: benefactor.benefactorContactSurname,
           benefactor_contact_mobile_number: benefactor.benefactorMobile,
@@ -1564,20 +1554,11 @@ async function saveSEDSubscribers(req) {
     // Create SED Subscribers
     const users = [];
     for (const subscriber of subscribersData) {
-      let email;
-      if (typeof subscriber.email === "string") {
-        email = subscriber.email;
-      } else if (
-        typeof subscriber.email === "object" &&
-        typeof subscriber.email.text === "string"
-      ) {
-        email = subscriber.email.text;
-      } else {
-        throw new Error(`Invalid email format for subscriber: ${JSON.stringify(subscriber)}`);
-      }
+        let email = typeof subscriber.email === 'object' ? subscriber.email.text : subscriber.email;
+        let benefactor_email = typeof subscriber.benefactorEmail === 'object' ? subscriber.benefactorEmail.text : subscriber.benefactorEmail;
 
       const benefactor = await Sed.findOne({
-        benefactor_email: subscriber.benefactorEmail,
+        benefactor_email: benefactor_email,
       });
       const benefactorId = benefactor._id;
 
@@ -1839,6 +1820,41 @@ async function handleMoodleCreateUser(firstname, surname, email, moodle_pass, us
   };
 
 
+//   cron.schedule('*/1 * * * *', async () => {
+//     const axios = require('axios');
+
+//     const MOODLE_URL = process.env.MOODLE_COURSES_URL;
+//     const MOODLE_TOKEN = process.env.MOODLE_TOKEN;
+//     const MOODLE_GET_ENROLLED_USERS = 'core_enrol_get_enrolled_users';
+
+//     try {
+//         const response = await axios.post(MOODLE_URL, null, {
+//         params: {
+//             wstoken: MOODLE_TOKEN,
+//             moodlewsrestformat: 'json',
+//             wsfunction: MOODLE_GET_ENROLLED_USERS,
+//             courseid: courseId, // Specify the course ID
+//         },
+//         });
+
+//         const users = response.data || [];
+//         const user = users.find((u) => u.id === userId);
+
+//         if (user) {
+//         console.log(`User ${userId} is enrolled in course ${courseId}.`);
+//         return user;
+//         } else {
+//         console.log(`User ${userId} is not enrolled in course ${courseId}.`);
+//         return null;
+//         }
+//     } catch (error) {
+//         console.error('Error fetching enrolled users:', error.response?.data || error.message);
+//     }
+
+//   });
+
+
+
 
 /**
  * Function for sending SED Subscriber and Benefactor
@@ -1894,9 +1910,7 @@ async function sendSEDEmails(req) {
         for (const benefactor of benefactorArray) {
             console.log("benefactor for testing: ", benefactor);
             const benefactor_email = typeof benefactor.benefactorEmail === 'object' ? benefactor.benefactorEmail.text : benefactor.benefactorEmail;
-            console.log("benefactor_email: ", benefactor_email);
             const benefactorData = {
-                // email: benefactor.benefactorEmail,
                 email: benefactor_email,
                 firstname: benefactor.benefactorName,
                 surname: benefactor.start_date,
@@ -1930,9 +1944,7 @@ async function sendSEDEmails(req) {
         for (const subscriber of subscriberArray) {
             console.log("subscriber for testing: ", subscriber);
             const subscriber_email = typeof subscriber.email === 'object' ? subscriber.email.text : subscriber.email;
-            console.log("subscriber_email: ", subscriber_email);
             const subscriberData = {
-                // email: subscriber.email,
                 email: subscriber_email,
                 firstname: subscriber.benefactorName,
                 surname: '',
