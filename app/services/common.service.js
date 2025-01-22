@@ -593,12 +593,21 @@ async function addContactInBrevo(ambassadorData) {
   }
 };
 
+
 async function addSubscriberContactInBrevo(email, subscriber_firstname, subscriber_lastname, token) {
   try {
     let defaultClient = SibApiV3Sdk.ApiClient.instance;
     let apiKey = defaultClient.authentications['api-key'];
     apiKey.apiKey = process.env.BREVO_KEY;
     let apiInstance = new SibApiV3Sdk.ContactsApi();
+
+    // Check if the contact exists
+    const existingContact = await apiInstance.getContactInfo(email).catch(() => null);
+
+    if (existingContact) {
+      console.log("Contact already exists:", email);
+      return existingContact;
+    }
 
     let createContact = new SibApiV3Sdk.CreateContact();
     createContact.email = email;
@@ -614,7 +623,7 @@ async function addSubscriberContactInBrevo(email, subscriber_firstname, subscrib
     console.log('API called successfully. Returned data: ' + JSON.stringify(data));
     return data;
     
-  } catch {
+  } catch (error) {
     console.log("Error in sending Brevo email:", error.message);
     return null;
   }
@@ -641,11 +650,24 @@ async function updateContactAttributeBrevo(email, subscriber_firstname, subscrib
     console.log('API called successfully. Returned data: ' + JSON.stringify(data));
     return 'Updated';
    
-  } catch {
+  } catch (error) {
     console.log("Error in sending Brevo email:", error.message);
     return null;
   }
 };
+
+// cron.schedule('* * * * *', async () => {
+//   try {
+//     const email = 'mpanzazanele02@gmail.com';
+
+//     await deleteContactBrevo(email);
+//     console.log('Email successfully triggered');
+//   } catch (error) {
+//     console.error('Error sending email:', error);
+//   }
+
+//   console.log('Successfully triggered cron job');
+// });
 
 
 async function deleteContactBrevo(email) {
@@ -811,7 +833,7 @@ const sendBrevoWhatsAppMessage = async () => {
         senderNumber: '+27607649732',
         params: {
           // IMAGE: "https://miro.medium.com/v2/resize:fit:720/format:webp/1*A9YcoX1YxBUsTg7p-P6GBQ.png",
-          IMAGE: "https://bit.ly/4gmQWzG",
+          IMAGE: "https://",
         },
         contactNumbers: ['+919893399778']
       },

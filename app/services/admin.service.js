@@ -49,7 +49,8 @@ module.exports = {
     getBulkPaymentReport,
     getConsolidatedInformationReport,
     getSubscriberManullyLinkedReport,
-    getSEDProgressReport, 
+    getSEDProgressReport,
+    getSubscriberLoginCredentials, 
     
     saveLinkedReferralCodeByAdmin,
     getLinkedReferralCodeByAdmin,
@@ -58,6 +59,7 @@ module.exports = {
     submitLinkedReferralCodesByAdmin, 
     saveSEDSubscribers,
     sendSEDEmails,
+    checkSEDBulkUploadEmails,
 };
 
 /*****************************************************************************************/
@@ -1069,7 +1071,7 @@ async function getPaymentDueToAmbassador(param) {
 
         const result = ambassadorData.reduce((acc, data) => {
             const referralCount = ambassadors.filter(referral => referral.referral_code === data.referral_code).length;
-            const amountDue = referralCount * 5;
+            const amountDue = referralCount * 250;
             acc.push({
                 Ambassador_firstname: data.firstname,
                 Ambassador_lastname: data.surname,
@@ -1134,11 +1136,12 @@ async function getBulkPaymentReport(param) {
             }
         }
         console.log("ambassadorData", ambassadorData); 
-
+        
         
         const result = ambassadorData.reduce((acc, data) => {
             const referralCount = ambassadors.filter(referral => referral.referral_code === data.referral_code).length;
-            const amountDue = referralCount * 5;
+            console.log("referralCount************", referralCount); 
+            const amountDue = referralCount * 250;
             acc.push({
                 recipient_name: `${data.firstname} ${data.surname}`,
                 recipient_account: data.account_number || 'N/A',
@@ -1498,6 +1501,46 @@ async function getSEDProgressReport(param) {
         return { status: 500, error: "Internal Server Error" };
     }
 }
+/**
+ * Function for Subscriber login credentials
+ *   
+ * @param {param} 
+ * @result null|Object
+ * 
+ */
+async function getSubscriberLoginCredentials(param) {
+    try {        
+        const query = { is_sed_subscriber: true };
+
+        if (param.start_date && param.end_date) {
+            query.createdAt = {
+                $gte: new Date(param.start_date),
+                $lte: new Date(param.end_date)
+            };
+        }
+
+        const subscribersAllData = await User.aggregate([
+            {
+                $match: query
+            },
+            {
+                $project: {
+                    Subscriber_firstname: "$firstname",
+                    Subscriber_lastname: "$surname",
+                    subscriber_email: "$email",
+                    subscriber_password: "$moodle_pass",
+                }
+            },
+            { $sort: { createdAt: 1 } }
+        ]).exec();
+        console.log("subscribersAllData: ", subscribersAllData);
+
+        return subscribersAllData;
+    } catch (error) {
+        console.error("Error:", error);
+        return { status: 500, error: "Internal Server Error" };
+    }
+}
 
 
 /**
@@ -1639,7 +1682,7 @@ async function saveSEDSubscribers(req) {
 };
 
 // cron.schedule('*/1 * * * *', async () => {
-//     // handleMoodleCreateUser("Aaashish", "Mishraaaa", "assshish@gmail.com", "VGVzdGluZ0AxMjM0NQ==", "12345")
+//     //     // handleMoodleCreateUser("Aaashish", "Mishraaaa", "assshish@gmail.com", "VGVzdGluZ0AxMjM0NQ==", "12345")
     
 //     const MOODLE_URL = process.env.MOODLE_COURSES_URL;
 //     const MOODLE_TOKEN = process.env.MOODLE_TOKEN;
@@ -1671,34 +1714,34 @@ async function saveSEDSubscribers(req) {
 //         roleid: ROLE_ID,
 //         userid: "457",
 //         courseid: course.id,
-//       }));
-//       console.log("enrolments: ", enrolments);
+//     }));
+//     console.log("enrolments: ", enrolments);
 
-//       const params = {
-//         wstoken: MOODLE_TOKEN,
-//         moodlewsrestformat: 'json',
-//         wsfunction: MOODLE_ENROLL_FUNCTION,
-//       };
+//     //   const params = {
+//     //     wstoken: MOODLE_TOKEN,
+//     //     moodlewsrestformat: 'json',
+//     //     wsfunction: MOODLE_ENROLL_FUNCTION,
+//     //   };
       
-//       // Add each enrolment object to the params
-//       enrolments.forEach((enrolment, index) => {
-//         params[`enrolments[${index}][roleid]`] = enrolment.roleid;
-//         params[`enrolments[${index}][userid]`] = enrolment.userid;
-//         params[`enrolments[${index}][courseid]`] = enrolment.courseid;
-//       });
-      
-//       const enrollResponse = await axios.post(MOODLE_URL, null, { params });
-//       console.log('User enrolled in all courses in category:', enrollResponse.data);
-  
-//     //   const enrollResponse = await axios.post(MOODLE_URL, null, {
-//     //     params: {
-//     //       wstoken: MOODLE_TOKEN,
-//     //       moodlewsrestformat: 'json',
-//     //       wsfunction: MOODLE_ENROLL_FUNCTION,
-//     //       enrolments: enrolments,
-//     //     },
+//     //   // Add each enrolment object to the params
+//     //   enrolments.forEach((enrolment, index) => {
+//     //     params[`enrolments[${index}][roleid]`] = enrolment.roleid;
+//     //     params[`enrolments[${index}][userid]`] = enrolment.userid;
+//     //     params[`enrolments[${index}][courseid]`] = enrolment.courseid;
 //     //   });
+      
+//     //   const enrollResponse = await axios.post(MOODLE_URL, null, { params });
 //     //   console.log('User enrolled in all courses in category:', enrollResponse.data);
+  
+//       const enrollResponse = await axios.post(MOODLE_URL, null, {
+//         params: {
+//           wstoken: MOODLE_TOKEN,
+//           moodlewsrestformat: 'json',
+//           wsfunction: MOODLE_ENROLL_FUNCTION,
+//           enrolments: enrolments,
+//         },
+//       });
+//       console.log('User enrolled in all courses in category:', enrollResponse.data);
 // });
 
 
@@ -1821,35 +1864,86 @@ async function handleMoodleCreateUser(firstname, surname, email, moodle_pass, us
 
 
 //   cron.schedule('*/1 * * * *', async () => {
-//     const axios = require('axios');
-
+   
+//     // Moodle configuration
 //     const MOODLE_URL = process.env.MOODLE_COURSES_URL;
 //     const MOODLE_TOKEN = process.env.MOODLE_TOKEN;
-//     const MOODLE_GET_ENROLLED_USERS = 'core_enrol_get_enrolled_users';
 
+//     // API Functions
+//     const GET_USER_ENROLLED_COURSES_FUNCTION = 'core_enrol_get_users_courses';
+//     const GET_COURSE_COMPLETION_FUNCTION = 'core_completion_get_course_completion_status';
+
+//     // Function to get all courses a user is enrolled in
+//     async function getEnrolledCourses(userId) {
 //     try {
 //         const response = await axios.post(MOODLE_URL, null, {
 //         params: {
 //             wstoken: MOODLE_TOKEN,
 //             moodlewsrestformat: 'json',
-//             wsfunction: MOODLE_GET_ENROLLED_USERS,
-//             courseid: courseId, // Specify the course ID
+//             wsfunction: GET_USER_ENROLLED_COURSES_FUNCTION,
+//             userid: userId, // Specify the user ID
 //         },
 //         });
 
-//         const users = response.data || [];
-//         const user = users.find((u) => u.id === userId);
-
-//         if (user) {
-//         console.log(`User ${userId} is enrolled in course ${courseId}.`);
-//         return user;
-//         } else {
-//         console.log(`User ${userId} is not enrolled in course ${courseId}.`);
-//         return null;
-//         }
+//         return response.data || [];
 //     } catch (error) {
-//         console.error('Error fetching enrolled users:', error.response?.data || error.message);
+//         console.error('Error fetching enrolled courses:', error.response?.data || error.message);
+//         return [];
 //     }
+//     }
+
+//     // Function to check if a user has started a course   
+//     async function hasUserStartedCourse(userId, courseId) {
+//     try {
+//         const response = await axios.post(MOODLE_URL, null, {
+//         params: {
+//             wstoken: MOODLE_TOKEN,
+//             moodlewsrestformat: 'json',
+//             wsfunction: GET_COURSE_COMPLETION_FUNCTION,
+//             userid: userId,
+//             courseid: courseId,
+//         },
+//         });
+
+//         const { completionstatus } = response.data;
+//         return completionstatus && completionstatus.completed !== 0; // Started if progress exists
+//     } catch (error) {
+//         console.error(
+//         `Error fetching completion status for user ${userId} in course ${courseId}:`,
+//         error.response?.data || error.message
+//         );
+//         return false;
+//     }
+//     }
+
+//     // Main function to get count of started courses
+//     async function getStartedCoursesCount(userId) {
+//     try {
+//         const enrolledCourses = await getEnrolledCourses(userId);
+//         console.log(`User ${userId} is enrolled in ${enrolledCourses.length} courses.`);
+
+//         let startedCoursesCount = 0;
+
+//         for (const course of enrolledCourses) {
+//         const isStarted = await hasUserStartedCourse(userId, course.id);
+//         if (isStarted) {
+//             startedCoursesCount++;
+//         }
+//         }
+
+//         console.log(`User ${userId} has started ${startedCoursesCount} courses.`);
+//         return startedCoursesCount;
+//     } catch (error) {
+//         console.error('Error calculating started courses count:', error.message);
+//     }
+//     }
+
+//     // Example usage
+//     const userId = 457;
+//     getStartedCoursesCount(userId)
+//     .then((count) => console.log(`Started courses count for user ${userId}:`, count))
+//     .catch((error) => console.error('Error:', error));
+
 
 //   });
 
@@ -1968,6 +2062,38 @@ async function sendSEDEmails(req) {
         }
 
         return true;
+
+    } catch (error) {
+      console.error('Error in sending SED Emails:', error);
+    }
+  };
+
+/**
+ * Function for checking SED uploaded email Ids
+ *   
+ * @param {param} 
+ * @result null|Object
+ * 
+ */
+async function checkSEDBulkUploadEmails(req) {
+    try {
+        const emailsData = req.body;
+        console.log("sendSEDEmails data: ", emailsData);
+        
+        const existingEmails = [];
+        for (const email of emailsData) {
+            console.log("email data: ", email);
+            const existingEmailCheck = await User.findOne({
+                email: email,
+            });
+            console.log("existingEmailCheck", existingEmailCheck);
+            if(existingEmailCheck){
+                existingEmails.push(email);
+            };
+        };
+        console.log("existingEmails data: ", existingEmails);
+          
+        return existingEmails;
 
     } catch (error) {
       console.error('Error in sending SED Emails:', error);
@@ -2606,7 +2732,7 @@ async function getRegularSubscriptionDataUpdate() {
 };
 
 async function getSubscriptionObject(subscription_token) {
-    console.log("subscription_token", subscription_token); 
+    console.log("subscription_token", subscription_token);
 
     function generateTimestamp() {
       const now = new Date();

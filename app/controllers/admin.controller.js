@@ -41,6 +41,8 @@ router.get('/subscriber-manually-linked-report', getAllSubscriberManullyLinkedRe
 router.get('/subscriber-manually-linked-report/:start_date/:end_date', getSubscriberManullyLinkedReport);
 router.get('/sed-progress-report', getAllSEDProgressReport);
 router.get('/sed-progress-report/:start_date/:end_date', getSEDProgressReport);
+router.get('/sed-subscriber-login-credentials', getAllSubscriberLoginCredentials);
+router.get('/sed-subscriber-login-credentials/:start_date/:end_date', getSubscriberLoginCredentials);
 
 router.post('/varify-email-forgot-password/:id', varifyEmailForgotPassword);
 router.post('/forgot-password', forgotPassword);
@@ -51,6 +53,7 @@ router.post('/delete-linked-referral-by-admin', deleteLinkedReferralCodeByAdmin)
 router.post('/submit-linked-referral-by-admin', submitLinkedReferralCodesByAdmin);
 router.post('/save-sed-subscriber', saveSEDSubscribers);
 router.post('/send-sed-emails', sendSEDEmails);
+router.post('/check-sed-upload-emails', checkSEDBulkUploadEmails);
 
 
 module.exports = router;
@@ -504,13 +507,28 @@ function getAllSEDProgressReport(req, res, next) {
     adminService.getSEDProgressReport(req.params)
         .then(responseData => responseData ? res.status(200).json({ status: true, data: responseData }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
         .catch(err => next(res.json({ status: false, message: err })));
-
 }
 function getSEDProgressReport(req, res, next) {
     adminService.getSEDProgressReport(req.params)
         .then(responseData => responseData ? res.status(200).json({ status: true, data: responseData }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
         .catch(err => next(res.json({ status: false, message: err })));
-
+};
+/**
+ * Function for getting Subscribers login credentials
+ * @param {*} req 
+ * @param {*} res
+ * @param {*} next
+ * 
+ */
+function getAllSubscriberLoginCredentials(req, res, next) {
+    adminService.getSubscriberLoginCredentials(req.params)
+        .then(responseData => responseData ? res.status(200).json({ status: true, data: responseData }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })));
+}
+function getSubscriberLoginCredentials(req, res, next) {
+    adminService.getSubscriberLoginCredentials(req.params)
+        .then(responseData => responseData ? res.status(200).json({ status: true, data: responseData }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })));
 };
 
 
@@ -643,6 +661,21 @@ function saveSEDSubscribers(req, res, next) {
  */
 function sendSEDEmails(req, res, next) {
     adminService.sendSEDEmails(req)
+        .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
+        .catch(err => next(res.json({ status: false, message: err })))
+  }
+
+/*****************************************************************************************/
+/*****************************************************************************************/
+/**
+ * Function for checking SED uploaded email Ids
+ * @param {*} req 
+ * @param {*} res  
+ * @param {*} next
+ *                  
+ */
+function checkSEDBulkUploadEmails(req, res, next) {
+    adminService.checkSEDBulkUploadEmails(req)
         .then(data => data ? res.status(200).json({ status: true, data: data }) : res.status(400).json({ status: false, message: msg.common.no_data_err, data: null }))
         .catch(err => next(res.json({ status: false, message: err })))
   }
