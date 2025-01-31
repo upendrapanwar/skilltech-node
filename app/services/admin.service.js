@@ -1501,6 +1501,164 @@ async function getSEDProgressReport(param) {
         return { status: 500, error: "Internal Server Error" };
     }
 }
+
+
+// Check Task 6 - SED Bulk report for LMS course completion
+
+//   cron.schedule('*/1 * * * *', async () => {
+   
+//     // Moodle configuration
+//     const MOODLE_URL = process.env.MOODLE_COURSES_URL;
+//     const MOODLE_TOKEN = process.env.MOODLE_TOKEN;
+
+//     // API Functions
+//     const GET_USER_ENROLLED_COURSES_FUNCTION = 'core_enrol_get_users_courses';
+//     const GET_COURSE_COMPLETION_FUNCTION = 'core_completion_get_course_completion_status';
+
+//     // Function to get all courses a user is enrolled in
+//     async function getEnrolledCourses(userId) {
+//     try {
+//         const response = await axios.post(MOODLE_URL, null, {
+//         params: {
+//             wstoken: MOODLE_TOKEN,
+//             moodlewsrestformat: 'json',
+//             wsfunction: GET_USER_ENROLLED_COURSES_FUNCTION,
+//             userid: userId, // Specify the user ID
+//         },
+//         });
+
+//         return response.data || [];
+//     } catch (error) {
+//         console.error('Error fetching enrolled courses:', error.response?.data || error.message);
+//         return [];
+//     }
+//     }
+
+//     // Function to check if a user has started a course   
+//     async function hasUserStartedCourse(userId, courseId) {
+//     try {
+//         const response = await axios.post(MOODLE_URL, null, {
+//         params: {
+//             wstoken: MOODLE_TOKEN,
+//             moodlewsrestformat: 'json',
+//             wsfunction: GET_COURSE_COMPLETION_FUNCTION,
+//             userid: userId,
+//             courseid: courseId,
+//         },
+//         });
+
+//         console.log("response:  ", response.config.params);
+//         console.log("response:  ", response.data);
+
+//         const { completionstatus } = response.data;
+//         return completionstatus && completionstatus.completed !== 0; // Started if progress exists
+//     } catch (error) {
+//         console.error(
+//         `Error fetching completion status for user ${userId} in course ${courseId}:`,
+//         error.response?.data || error.message
+//         );
+//         return false;
+//     }
+//     }
+
+//     // Main function to get count of started courses
+//     async function getStartedCoursesCount(userId) {
+//     try {
+//         const enrolledCourses = await getEnrolledCourses(userId);
+//         console.log(`User ${userId} is enrolled in ${enrolledCourses.length} courses.`);
+
+//         let startedCoursesCount = 0;
+
+//         for (const course of enrolledCourses) {
+//         const isStarted = await hasUserStartedCourse(userId, course.id);
+//         if (isStarted) {
+//             startedCoursesCount++;
+//         }
+//         }
+
+//         console.log(`User ${userId} has started ${startedCoursesCount} courses.`);
+//         return startedCoursesCount;
+//     } catch (error) {
+//         console.error('Error calculating started courses count:', error.message);
+//     }
+//     }
+
+//     // Example usage
+//     const userId = 494;
+//     getStartedCoursesCount(userId)
+//     .then((count) => console.log(`Started courses count for user ${userId}:`, count))
+//     .catch((error) => console.error('Error:', error));
+//   });
+
+
+
+// cron.schedule('*/1 * * * *', async () => {
+//     // Moodle configuration
+//     const MOODLE_URL = process.env.MOODLE_COURSES_URL;
+//     const MOODLE_TOKEN = process.env.MOODLE_TOKEN;
+
+//     // Function to get course completion status
+//     async function getCourseCompletionPercentage(userId, courseId) {
+//         try {
+//           const response = await axios.post(MOODLE_URL, null, {
+//             params: {
+//               wstoken: MOODLE_TOKEN,
+//               moodlewsrestformat: 'json',
+//               wsfunction: 'core_completion_get_course_completion_status',
+//               userid: userId,
+//               courseid: courseId,
+//             },
+//           });
+          
+//           const completionData = response.data.completionstatus?.completions || [];
+//         //   console.log("completionData:", completionData)
+
+//           if (completionData.length > 0) {
+//             let completedActivities = completionData.filter(activity => activity.complete).length;
+//             let totalActivities = completionData.length;
+      
+//             if (totalActivities > 0) {
+//               const completionPercentage = (completedActivities / totalActivities) * 100;
+//               console.log(`User ${userId} has completed ${completionPercentage.toFixed(2)}% of course ${courseId}`);
+//               return completionPercentage.toFixed(2);
+//             } else {
+//               console.log(`No activities found for course ${courseId}`);
+//               return 0;
+//             }
+//           } else {
+//             console.log(`No completion data available for user ${userId} in course ${courseId}`);
+//             return 0;
+//           }
+//         } catch (error) {
+//           console.error(`Error fetching course completion status:`, error.response?.data || error.message);
+//           return 0;
+//         }
+//       }     
+
+//     const userId = 494;
+//     // const AllcourseId = [82, 68, 63, 60, 78, 62, 65, 64, 66, 79, 67, 80, 61, 69, 81];
+//     const AllcourseId = [78];
+
+//     const allCoursesCompletionPercentage = [];
+//     for (const courseId of AllcourseId) {
+//         getCourseCompletionPercentage(userId, courseId)
+//         .then((percentage) => {
+//             console.log(`Course completion percentage: ${percentage}%`);
+//             allCoursesCompletionPercentage.push({
+//                 courseId: courseId,
+//                 percentageCompletion: percentage
+//             })
+//             console.log(`allCoursesCompletionPercentage: ${percentage}`);
+//         })
+//         .catch((error) => console.error('Error:', error));
+//     }
+//     console.log("allCoursesCompletionPercentage: ", allCoursesCompletionPercentage);
+// });
+
+
+
+
+
 /**
  * Function for Subscriber login credentials
  *   
@@ -1613,9 +1771,9 @@ async function saveSEDSubscribers(req) {
           email: email,
           mobile_number: subscriber.mobile_number,
           alternate_mobile_number: subscriber.alternate_mobile_number,
-          street: subscriber.street,
-          street_name: subscriber.street_name,
-          complex_n_unit: subscriber.complex_n_unit,
+          street: subscriber.house_or_unit_number,
+          street_name: subscriber.street_address,
+          complex_n_unit: subscriber.complex_name,
           suburb_district: subscriber.suburb_district,
           town_city: subscriber.town_city,
           province: subscriber.province,
@@ -1861,92 +2019,6 @@ async function handleMoodleCreateUser(firstname, surname, email, moodle_pass, us
       console.error('Error:', error.response ? error.response.data : error.message);
     }
   };
-
-
-//   cron.schedule('*/1 * * * *', async () => {
-   
-//     // Moodle configuration
-//     const MOODLE_URL = process.env.MOODLE_COURSES_URL;
-//     const MOODLE_TOKEN = process.env.MOODLE_TOKEN;
-
-//     // API Functions
-//     const GET_USER_ENROLLED_COURSES_FUNCTION = 'core_enrol_get_users_courses';
-//     const GET_COURSE_COMPLETION_FUNCTION = 'core_completion_get_course_completion_status';
-
-//     // Function to get all courses a user is enrolled in
-//     async function getEnrolledCourses(userId) {
-//     try {
-//         const response = await axios.post(MOODLE_URL, null, {
-//         params: {
-//             wstoken: MOODLE_TOKEN,
-//             moodlewsrestformat: 'json',
-//             wsfunction: GET_USER_ENROLLED_COURSES_FUNCTION,
-//             userid: userId, // Specify the user ID
-//         },
-//         });
-
-//         return response.data || [];
-//     } catch (error) {
-//         console.error('Error fetching enrolled courses:', error.response?.data || error.message);
-//         return [];
-//     }
-//     }
-
-//     // Function to check if a user has started a course   
-//     async function hasUserStartedCourse(userId, courseId) {
-//     try {
-//         const response = await axios.post(MOODLE_URL, null, {
-//         params: {
-//             wstoken: MOODLE_TOKEN,
-//             moodlewsrestformat: 'json',
-//             wsfunction: GET_COURSE_COMPLETION_FUNCTION,
-//             userid: userId,
-//             courseid: courseId,
-//         },
-//         });
-
-//         const { completionstatus } = response.data;
-//         return completionstatus && completionstatus.completed !== 0; // Started if progress exists
-//     } catch (error) {
-//         console.error(
-//         `Error fetching completion status for user ${userId} in course ${courseId}:`,
-//         error.response?.data || error.message
-//         );
-//         return false;
-//     }
-//     }
-
-//     // Main function to get count of started courses
-//     async function getStartedCoursesCount(userId) {
-//     try {
-//         const enrolledCourses = await getEnrolledCourses(userId);
-//         console.log(`User ${userId} is enrolled in ${enrolledCourses.length} courses.`);
-
-//         let startedCoursesCount = 0;
-
-//         for (const course of enrolledCourses) {
-//         const isStarted = await hasUserStartedCourse(userId, course.id);
-//         if (isStarted) {
-//             startedCoursesCount++;
-//         }
-//         }
-
-//         console.log(`User ${userId} has started ${startedCoursesCount} courses.`);
-//         return startedCoursesCount;
-//     } catch (error) {
-//         console.error('Error calculating started courses count:', error.message);
-//     }
-//     }
-
-//     // Example usage
-//     const userId = 457;
-//     getStartedCoursesCount(userId)
-//     .then((count) => console.log(`Started courses count for user ${userId}:`, count))
-//     .catch((error) => console.error('Error:', error));
-
-
-//   });
-
 
 
 

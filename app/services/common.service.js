@@ -794,36 +794,9 @@ async function sendQRCodeEmailByBrevo(template_id, receiverEmailId, receiverName
 };
 
 // cron.schedule('*/1 * * * *', async() => {
-//   // await sendBrevoWhatsAppMessage();
-//   await sendBrevoWhatsAppMessageTesting();
+//   await sendBrevoWhatsAppMessage();
 //   console.log('Successfully triggered');
 //   });
-
-const sendBrevoWhatsAppMessageTesting = async () => {
-  try {
-    const response = await axios.post(
-      'https://api.brevo.com/v3/whatsapp/sendMessage',
-      {
-        "senderNumber": "+27607649732",
-        "recipient": "+919893399778",
-        "text": "{{https://bit.ly/4gmQWzG}} This is a simple text message for testing. "
-      },
-      {
-        headers: {
-          'accept': 'application/json',
-          'content-type': 'application/json',
-          'api-key': process.env.BREVO_KEY
-        }
-      }
-    );
-
-    console.log('Message Sent:', response.data);
-  } catch (error) {
-    console.error('Error sending message:', error.response?.data || error.message);
-  }
-};
-
-
 const sendBrevoWhatsAppMessage = async () => {
   try {
     const response = await axios.post(
@@ -833,9 +806,9 @@ const sendBrevoWhatsAppMessage = async () => {
         senderNumber: '+27607649732',
         params: {
           // IMAGE: "https://miro.medium.com/v2/resize:fit:720/format:webp/1*A9YcoX1YxBUsTg7p-P6GBQ.png",
-          IMAGE: "https://",
+          IMAGE: "https://localhost.com",
         },
-        contactNumbers: ['+919893399778']
+        contactNumbers: ['+917999017149']
       },
       {
         headers: {
@@ -851,42 +824,6 @@ const sendBrevoWhatsAppMessage = async () => {
     console.error('Error sending message:', error.response?.data || error.message);
   }
 };
-
-// cron.schedule('*/1 * * * *', async() => {
-//   // let response = await User.findById("67179b918f3401f3c76ec438").select("qr_code");
-//   // let base64Image = response.qr_code;
-//   // base64Image = base64Image.replace(/^data:image\/[a-z]+;base64,/, '');
-//   await sendWhatsAppMessage();
-//   console.log('Successfully triggered');
-//   });
-
-
-//   async function sendWhatsAppMessage() {
-//     try {
-//       const response = await axios.post(
-//         'https://api.brevo.com/v3/whatsapp/sendMessage',
-//         {
-//           contactNumbers: ['+917999017149'],
-//           templateId: 1,
-//           senderNumber: '+919090909090'
-//         },
-//         {
-//           headers: {
-//             'accept': 'application/json',
-//             'api-key': process.env.BREVO_KEY, // Use your Brevo API key from env or directly here
-//             'content-type': 'application/json'
-//           }
-//         }
-//       );
-      
-//       console.log('API Response:', response.data);
-//       return response.data;
-  
-//     } catch (error) {
-//       console.error('Error sending WhatsApp message:', error.response ? error.response.data : error.message);
-//     }
-//   }
-
 
 
 /*****************************************************************************************/
@@ -960,7 +897,7 @@ async function saveMembershipSubscription(param) {
     if (courseDatas && param.payment_status === 'success') {
       for (var i = 0; i < Object.keys(courseDatas).length; i++) {
         const purchasedcourses = new Purchasedcourses({
-          courseid: courseDatas[i].id, 
+          courseid: courseDatas[i].id,
           orderid: data._id,
           quantity: courseDatas[i].quantity,
           userId: param.userid,
@@ -1351,47 +1288,6 @@ async function payFastNotify(param, spayId) {
     return null;
   }
 }
-
-// async function payFastNotify(param,spay) {
-//   const requestData = param;
-
-//   // Perform signature verification
-//   const signature = requestData.signature;
-//   delete requestData.signature; // Remove signature from data to verify
-
-//   const dataString = Object.keys(requestData)
-//     .sort()
-//     .map((key) => `${key}=${requestData[key]}`)
-//     .join('&');
-
-//   const calculatedSignature = crypto
-//     .createHash('md5')
-//     .update(`${dataString}&${payfastSettings.passphrase}`)
-//     .digest('hex');
-
-//   /*const subscriptionPayment = new Subscriptionpayment({
-//     merchantData: JSON.stringify(dataString),
-//     uuid : JSON.stringify(dataString)
-//   });*/
-
-//   //const data = await subscriptionPayment.save();
-//   console.log('payfast',dataString);
-//   await Subscriptionpayment.updateMany(
-//     { _id: spay.id },
-//     {
-//       $set: {
-//         uuid: JSON.stringify(dataString),
-//       },
-//     }
-//   );
-//   /*let countReferral = await User.find({ role: "ambassador" }).count();
-
-//   if (countReferral) {
-//     return countReferral;
-//   } else {
-//     return null;
-//   }*/
-// }
 
 /*****************************************************************************************/
 /*****************************************************************************************/
@@ -1915,155 +1811,6 @@ async function cancelPayfastPayment(req) {
   }
 };
 
-// cron.schedule('*/1 * * * *', () => {
-//   getpayfastTransactionHistory();
-//   console.log('Successfully triggered');
-//   });
-// async function getpayfastTransactionHistory() {
-//   function generateTimestamp() {
-//     const now = new Date();
-//     const year = now.getFullYear();
-//     const month = String(now.getMonth() + 1).padStart(2, '0');
-//     const day = String(now.getDate()).padStart(2, '0');
-//     const hours = String(now.getHours()).padStart(2, '0');
-//     const minutes = String(now.getMinutes()).padStart(2, '0');
-//     const seconds = String(now.getSeconds()).padStart(2, '0');
-//     const timezoneOffset = now.getTimezoneOffset();
-//     const offsetHours = String(Math.floor(Math.abs(timezoneOffset) / 60)).padStart(2, '0');
-//     const offsetMinutes = String(Math.abs(timezoneOffset) % 60).padStart(2, '0');
-//     const offsetSign = timezoneOffset < 0 ? '+' : '-';
-//     const formattedOffset = `${offsetSign}${offsetHours}:${offsetMinutes}`;
-//     return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${formattedOffset}`;
-//   }
-
-//   function generateSignature() {
-//     let timestamp = generateTimestamp();
-//     console.log("Timestamp: ", timestamp);
-//     const data = {
-//         'date': '2024-07-24',
-//         'merchant-id': process.env.PAYFAST_MERCHANT_ID,
-//         'passphrase': process.env.PAYFAST_PASSPHRASE,
-//         'timestamp': timestamp,
-//         'version': 'v1'
-//     };
-
-//     const orderedKeys = ['date', 'merchant-id', 'passphrase', 'timestamp', 'version'];
-//     let pfOutput = orderedKeys.map(key => `${key}=${encodeURIComponent(data[key]).replace(/%20/g, "+")}`).join('&');
-//     console.log("signature String", pfOutput);
-
-//     const signature = crypto.createHash("md5").update(pfOutput).digest("hex");
-//     return signature;
-//   }
-//   let signature = generateSignature();
-//   console.log("Signature: ", signature);
-// }
-
-
-/*****************************************************************************************/
-/*****************************************************************************************/
-/**
- * Get Payfast payment status
- *
- * @param {param}
- *
- * @returns Object|null
- */
-// cron.schedule('*/1 * * * *', () => {
-//   getPayfastPaymentStatus();
-//   console.log('Successfully triggered');
-// });
-
-// async function getPayfastPaymentStatus(req) {
-//   // const token_generated = req.body.token;
-  
-//   function generateTimestamp() {
-//     const now = new Date();
-//     const year = now.getFullYear();
-//     const month = String(now.getMonth() + 1).padStart(2, '0');
-//     const day = String(now.getDate()).padStart(2, '0');
-//     const hours = String(now.getHours()).padStart(2, '0');
-//     const minutes = String(now.getMinutes()).padStart(2, '0');
-//     const seconds = String(now.getSeconds()).padStart(2, '0');
-//     const timezoneOffset = now.getTimezoneOffset();
-//     const offsetHours = String(Math.floor(Math.abs(timezoneOffset) / 60)).padStart(2, '0');
-//     const offsetMinutes = String(Math.abs(timezoneOffset) % 60).padStart(2, '0');
-//     const offsetSign = timezoneOffset < 0 ? '+' : '-';
-//     const formattedOffset = `${offsetSign}${offsetHours}:${offsetMinutes}`;
-//     return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${formattedOffset}`;
-//   }
-
-//   function generateSignature() {
-//     const data = {
-//         'merchant-id': process.env.PAYFAST_MERCHANT_ID,
-//         'passphrase': process.env.PAYFAST_PASSPHRASE,
-//         'timestamp': generateTimestamp(),
-//         'version': 'v1'
-//     };
-
-//     const orderedKeys = ['merchant-id', 'passphrase', 'timestamp', 'version'];
-//     let pfOutput = orderedKeys.map(key => `${key}=${encodeURIComponent(data[key]).replace(/%20/g, "+")}`).join('&');
-//     console.log("signature String", pfOutput);
-
-//     const signature = crypto.createHash("md5").update(pfOutput).digest("hex");
-//     console.log("signature", signature);
-//     return signature;
-//   }
-
-//   try {
-//       const token = '6cdd65ec-f079-4df9-985b-86805f50ea09';
-//       // const token = token_generated;
-//       const merchantId = process.env.PAYFAST_MERCHANT_ID;
-//       const signature = generateSignature();
-//       const timestamp = generateTimestamp();
-  
-//       console.log("Merchant ID:", merchantId);
-//       console.log("Signature:", signature);
-//       console.log("Timestamp:", timestamp);
-  
-//       const url = `https://api.payfast.co.za/subscriptions/${token}/fetch?testing=true`;
-//       const version = 'v1';
-  
-//       const options = {
-//           headers: {
-//               'merchant-id': merchantId,
-//               'version': version,
-//               'timestamp': timestamp,
-//               'signature': signature
-//           }
-//       };
-  
-//       console.log("Request URL:", url);
-//       console.log("Request Options:", options);
-  
-//       const response = await axios.put(url, null, options);
-//       console.log("Request response:", response);
-
-//       if (response.status === 200) {
-//           console.log("Data found successful.");
-//           return response.data;
-//       } else {
-//           console.error("Data not found:", response.data);
-//           return response.data;
-//       }
-//   } catch (err) {
-//       if (err.response) {
-//           // The request was made and the server responded with a status code
-//           console.error("Response data:", err.response.data);
-//           console.error("Response status:", err.response.status);
-//           console.error("Response headers:", err.response.headers);
-//       } else if (err.request) {
-//           // The request was made but no response was received
-//           console.error("Request data:", err.request);
-//       } else {
-//           // Something happened in setting up the request that triggered an Error
-//           console.error("Error message:", err.message);
-//       }
-//       console.error("Config:", err.config);
-//       throw err;
-//   }
-// };
-
-
 /*****************************************************************************************/
 /*****************************************************************************************/
 /**
@@ -2438,72 +2185,7 @@ async function getSubscriptionCancelledbySubscriber(req) {
     throw error;
   }
 }
-// async function getSubscriptionCancelledbySubscriber(param) {
-//   try {
-//     const startDate = param && param.start_date ? new Date(param.start_date) : new Date(0);
-//     const endDate = param && param.end_date ? new Date(param.end_date) : new Date();
-//     const pipeline = [
-//         {
-//             $match: {
-//                 is_active: false,
-//                 cancellation_date: {
-//                     $gte: new Date(startDate),
-//                     $lte: new Date(endDate)
-//                 }
-//             }
-//         },
-//         {
-//             $lookup: {
-//                 from: "users",
-//                 localField: "userId",
-//                 foreignField: "_id",
-//                 as: "user"
-//             }
-//         },
-//         {
-//             $unwind: "$user"
-//         },
-//         {
-//             $match: {
-//                 "user.role": "subscriber"
-//             }
-//         },
-//         {
-//             $project: {
-//                 _id: 0,
-//                 Subscriber_firstname: "$user.firstname",
-//                 Subscriber_lastname: "$user.surname",
-//                 referral_code: "$user.referral_code",
-//                 cancellation_date: 1
-//             }
-//         },
-//         {
-//             $sort: {
-//                 cancellation_date: -1
-//             }
-//         }
-//     ];
 
-//     const cancellationRecords = await Purchasedcourses.aggregate(pipeline);
-    
-//     const formatDate = (dateString) => {
-//         const date = new Date(dateString);
-//         const day = String(date.getDate()).padStart(2, '0');
-//         const month = String(date.getMonth() + 1).padStart(2, '0');
-//         const year = date.getFullYear();
-//         return `${day}-${month}-${year}`;
-//     };
-//     const formattedRecords = cancellationRecords.map(record => ({
-//         ...record,
-//         cancellation_date: formatDate(record.cancellation_date)
-//     }));
-//     console.log("getSubscriptionCancelledBySubscriber.......", cancellationRecords);
-//     return formattedRecords;
-// } catch (error) {
-//     console.error("Error in getSubscriptionCancelledBySubscriber:", error);
-//     throw error;
-// }
-// }
 /*****************************************************************************************/
 /*****************************************************************************************/
 /**
@@ -2666,7 +2348,7 @@ async function getAmbassadorMonthlyPay(req) {
       console.log("getAmbassadorMonthlyPay subscribers: ", subscribers);
       
       const referralCount = subscribers.filter(referral => referral.referral_code === referralCode).length;
-      const monthlyPay = referralCount * 5;
+      const monthlyPay = referralCount * 250;
 
       lastFourMonthsData.push({
         month: startDate.toLocaleString('default', { month: 'long' }),
@@ -2793,7 +2475,7 @@ async function getAmbassadorDetails(req) {
       console.log("userData", userData);
 
       return userData;
-      
+
   } catch (err) {
       console.error("Error in getting user data:", err);
       return false;

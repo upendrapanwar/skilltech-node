@@ -276,6 +276,7 @@ function checkReferralCode(req, res, next) {
     )
     .catch((err) => next(res.json({ status: false, message: err })));
 }
+
 /**
  * Function to get the user courses
  *
